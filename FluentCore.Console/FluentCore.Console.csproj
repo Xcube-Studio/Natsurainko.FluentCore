@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="FluentCore">
+      <HintPath>..\FluentCore\bin\Debug\net5.0\FluentCore.dll</HintPath>
+    </Reference>
+    <Reference Include="FluentCore.Extend">
+      <HintPath>..\FluentCore.Extend\bin\Debug\net5.0\FluentCore.Extend.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Event\Handler\" />
+    <Folder Include="Event\Launcher\" />
+    <Folder Include="Event\Server\" />
+    <Folder Include="Exception\Launcher\" />
+    <Folder Include="Exception\Server\" />
+    <Folder Include="Model\Auth\" />
+    <Folder Include="Service\Component\Authenticator\" />
+    <Folder Include="Service\Component\DependencesResolver\" />
+    <Folder Include="Service\Network\News\" />
+  </ItemGroup>
+
+</Project>
