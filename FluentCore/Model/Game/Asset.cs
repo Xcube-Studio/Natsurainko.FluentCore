@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Model.Game
 {
-    class Asset : IDependence
+    class Asset
     {
     }
 }

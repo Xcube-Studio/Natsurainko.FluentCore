@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Model.Game
 {
-    class Native : Library
+    public class Native : Library
     {
+        public bool Enable { get; set; }
     }
 }

@@ -74,6 +74,11 @@ namespace FluentCore.Service.Local
         public event EventHandler Unresponded;
 
         /// <summary>
+        /// 当ProcessState改变时发生
+        /// </summary>
+        public event EventHandler<ProcessStateChangedEventArgs> ProcessStateChanged;
+
+        /// <summary>
         /// 进程容器的根进程
         /// </summary>
         public Process Process { get; private set; }
@@ -82,7 +87,7 @@ namespace FluentCore.Service.Local
         /// 进程容器中根进程的运行状态
         /// <para>修改此项可能会导致错误</para>
         /// </summary>
-        public ProcessState ProcessState { get; set; } = ProcessState.Undefined;
+        public ProcessState ProcessState { get { return state; } set { state = value; ProcessStateChanged?.Invoke(null, new ProcessStateChangedEventArgs { ProcessState = value }); } }
 
         /// <summary>
         /// 测量运行时间
@@ -109,6 +114,8 @@ namespace FluentCore.Service.Local
 
         protected CancellationTokenSource tokenSource;
 
+        protected ProcessState state = ProcessState.Undefined;
+
         /// <summary>
         /// 启动容器根进程
         /// </summary>
@@ -126,7 +133,7 @@ namespace FluentCore.Service.Local
             if (!this.HasStarted)
                 this.HasStarted = true;
 
-            this.Started.Invoke(this, new EventArgs());
+            this.Started?.Invoke(this, new EventArgs());
         }
 
         private void Process_Exited(object sender, EventArgs e)
@@ -134,7 +141,7 @@ namespace FluentCore.Service.Local
             this.ProcessState = ProcessState.Exited;
             this.Stopwatch.Stop();
 
-            this.Exited.Invoke(sender, new ProcessExitedEventArgs
+            this.Exited?.Invoke(sender, new ProcessExitedEventArgs
             {
                 RunTime = this.Stopwatch.Elapsed,
                 ExitCode = this.Process.ExitCode,
@@ -142,7 +149,7 @@ namespace FluentCore.Service.Local
             });
 
             if (this.Process.ExitCode != 0)
-                this.Crashed.Invoke(sender, new ProcessCrashedEventArgs
+                this.Crashed?.Invoke(sender, new ProcessCrashedEventArgs
                 {
                     CrashData = ErrorData
                 });
@@ -150,8 +157,8 @@ namespace FluentCore.Service.Local
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            this.ErrorDataReceived.Invoke(sender, e);
-            this.OutputDataReceived.Invoke(sender, e);
+            this.ErrorDataReceived?.Invoke(sender, e);
+            this.OutputDataReceived?.Invoke(sender, e);
 
             this.ErrorData.Append(e.Data);
             this.OutputData.Append(e.Data);
@@ -159,7 +166,7 @@ namespace FluentCore.Service.Local
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            this.OutputDataReceived.Invoke(sender, e);
+            this.OutputDataReceived?.Invoke(sender, e);
 
             this.OutputData.Append(e.Data);
         }
@@ -226,7 +233,7 @@ namespace FluentCore.Service.Local
                         switch (this.ProcessState)
                         {
                             case ProcessState.Running:
-                                this.Unresponded.Invoke(this, new EventArgs());
+                                this.Unresponded?.Invoke(this, new EventArgs());
 
                                 if (!this.Process.Responding)
                                     this.ProcessState = ProcessState.Unresponding;
