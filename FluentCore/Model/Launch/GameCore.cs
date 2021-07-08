@@ -9,6 +9,12 @@ namespace FluentCore.Model.Launch
 {
     public class GameCore
     {
+        public AssetIndex AsstesIndex { get; set; }
+
+        //public Logging Logging { get; set; }
+
+        public Dictionary<string, FileModel> Downloads { get; set; }
+
         public string Root { get; set; }
 
         public IEnumerable<Library> Libraries { get; set; }
@@ -17,10 +23,14 @@ namespace FluentCore.Model.Launch
 
         public string MainClass { get; set; }
 
-        public IEnumerable<string> FrontArguments { get; set; }
+        public string MainJar { get; set; }
 
-        public IEnumerable<string> BehindArguments { get; set; }
+        public string FrontArguments { get; set; }
+
+        public string BehindArguments { get; set; }
         
         public string Id { get; set; }
+
+        public string Type { get; set; }
     }
 }

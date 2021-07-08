@@ -6,12 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="FluentCore">
-      <HintPath>..\FluentCore\bin\Debug\net5.0\FluentCore.dll</HintPath>
-    </Reference>
-    <Reference Include="FluentCore.Extend">
-      <HintPath>..\FluentCore.Extend\bin\Debug\net5.0\FluentCore.Extend.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\FluentCore.Extend\FluentCore.Extend.csproj" />
+    <ProjectReference Include="..\FluentCore\FluentCore.csproj" />
   </ItemGroup>
 
 </Project>

@@ -63,9 +63,66 @@ namespace FluentCore.Model.Game
     public class Arguments
     {
         [JsonProperty("game")] 
-        public List<object> Game { get; set; }
+        public IEnumerable<object> Game { get; set; }
 
         [JsonProperty("jvm")] 
-        public List<object> Jvm { get; set; }
+        public IEnumerable<object> Jvm { get; set; }
+    }
+
+    public class JavaVersion
+    {
+        [JsonProperty("component")]
+        public string Component { get; set; }
+
+        [JsonProperty("majorVersion")]
+        public int MajorVersion { get; set; }
+    }
+
+    public class AuthenticationDataModel
+    {
+        [JsonProperty("accessToken")]
+        public string AccessToken { get; set; }
+
+        [JsonProperty("properties")]
+        public IEnumerable<PropertyModel> Properties { get; set; }
+
+        [JsonProperty("username")]
+        public string Username { get; set; }
+    }
+
+    public class PropertyModel
+    {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("profileId")]
+        public string ProfileId { get; set; }
+
+        [JsonProperty("userId")]
+        public string UserId { get; set; }
+
+        [JsonProperty("value")]
+        public string Value { get; set; }
+    }
+
+    public class LauncherVersionModel
+    {
+        [JsonProperty("format")]
+        public int Format { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("profilesFormat")]
+        public int ProfilesFormat { get; set; }
+    }
+
+    public class SelectedUserModel
+    {
+        [JsonProperty("account")]
+        public string Account { get; set; }
+
+        [JsonProperty("profile")]
+        public string Profile { get; set; }
     }
 }

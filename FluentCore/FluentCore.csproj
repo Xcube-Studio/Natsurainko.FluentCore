@@ -14,7 +14,6 @@
     <Folder Include="Event\Server\" />
     <Folder Include="Exception\Launcher\" />
     <Folder Include="Exception\Server\" />
-    <Folder Include="Model\Auth\" />
     <Folder Include="Service\Component\Authenticator\" />
     <Folder Include="Service\Component\DependencesResolver\" />
     <Folder Include="Service\Network\News\" />

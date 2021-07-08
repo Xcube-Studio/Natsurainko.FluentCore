@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Interface
 {
-    interface IArgumentsParser
+    public interface IAuthenticator : IDisposable
     {
+        //Authenticate();
     }
 }

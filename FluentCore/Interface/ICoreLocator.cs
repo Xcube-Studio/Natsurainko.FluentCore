@@ -1,4 +1,5 @@
-﻿using FluentCore.Model.Launch;
+﻿using FluentCore.Model.Game;
+using FluentCore.Model.Launch;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,10 @@ namespace FluentCore.Interface
 
         IEnumerable<GameCore> GetAllGameCores();
 
-        GameCore GetGameCore(string id);
+        IEnumerable<CoreModel> GetAllCoreModels();
+
+        GameCore GetGameCoreFromId(string id);
+
+        CoreModel GetCoreModelFromId(string id);
     }
 }

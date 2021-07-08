@@ -281,18 +281,32 @@ namespace FluentCore.Service.Local
 
         public void Dispose()
         {
-            Process.OutputDataReceived -= Process_OutputDataReceived;
-            Process.ErrorDataReceived -= Process_ErrorDataReceived;
-            Process.Exited -= Process_Exited;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            if (tokenSource != null)
-                StopObserveRespond();
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (Process != null)
+                {
+                    foreach (Process process in Process.GetProcesses())
+                        if (process.Id.Equals(Process.Id))
+                            Process.Kill();
 
-            foreach (Process process in Process.GetProcesses())
-                if (process.Id.Equals(Process.Id))
-                    Process.Kill();
+                    Process.Close();
+                    Process.Dispose();
+                    Process = null;
+                }
 
-            Process.Close();
+                Process.OutputDataReceived -= Process_OutputDataReceived;
+                Process.ErrorDataReceived -= Process_ErrorDataReceived;
+                Process.Exited -= Process_Exited;
+
+                if (tokenSource != null)
+                    StopObserveRespond();
+            }
         }
     }
 }

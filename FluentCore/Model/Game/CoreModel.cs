@@ -15,8 +15,11 @@ namespace FluentCore.Model.Game
         [JsonProperty("assetIndex")]
         public AssetIndex AssetIndex { get; set; }
 
-        [JsonProperty("sssets")]
+        [JsonProperty("assets")]
         public string Assets { get; set; }
+
+        [JsonProperty("javaVersion")]
+        public JavaVersion JavaVersion { get; set; }
 
         [JsonProperty("downloads")]
         public Dictionary<string, FileModel> Downloads { get; set; }
@@ -25,7 +28,7 @@ namespace FluentCore.Model.Game
         public string Id { get; set; }
 
         [JsonProperty("libraries")]
-        public List<Library> Libraries { get; set; }
+        public IEnumerable<Library> Libraries { get; set; }
 
         [JsonProperty("logging")]
         public Logging Logging { get; set; }

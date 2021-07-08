@@ -20,6 +20,10 @@ namespace FluentCore.Model
 
         [JsonProperty("url")]
         public string Url { get; set; }
+
+        //for client-x.xx.xml
+        [JsonProperty("id")]
+        public string Id { get; set; }
     }
 
 }

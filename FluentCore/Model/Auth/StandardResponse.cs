@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FluentCore.Service.Network
+namespace FluentCore.Model.Auth
 {
-    public class HttpHelper
+    public class StandardResponseModel
     {
 
     }
