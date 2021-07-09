@@ -21,7 +21,7 @@ namespace FluentCore.Service.Local
 
         public string Id { get; set; }
 
-        public void Decompress(IEnumerable<Native> natives, string nativesFolder = null)
+        public void Decompress(IEnumerable<Native> natives, string nativesFolder = default)
         {
             nativesFolder = string.IsNullOrEmpty(nativesFolder) ? $"{PathHelper.GetVersionFolder(Root, Id)}{PathHelper.X}natives" : nativesFolder;
 

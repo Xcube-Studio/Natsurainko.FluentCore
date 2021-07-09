@@ -37,9 +37,6 @@ namespace FluentCore.Model.Game
     {
         [JsonProperty("totalSize")]
         public int TotalSize { get; set; }
-
-        [JsonProperty("id")]
-        public string Id { get; set; }
     }
 
     public class Client
