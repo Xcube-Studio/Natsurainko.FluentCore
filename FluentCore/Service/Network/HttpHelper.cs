@@ -1,4 +1,5 @@
-﻿using FluentCore.Service.Local;
+﻿using FluentCore.Model;
+using FluentCore.Service.Local;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,14 +61,23 @@ namespace FluentCore.Service.Network
             }
         }
 
-        public static async Task<FileInfo> HttpDownloadAsync(string url,string folder)
+        public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url,string folder)
         {
             using var responseMessage = await HttpGetAsync(url, default, HttpCompletionOption.ResponseHeadersRead);
+
+            if (!responseMessage.IsSuccessStatusCode)
+                return new HttpDownloadResponse
+                {
+                    FileInfo = null,
+                    HttpStatusCode = responseMessage.StatusCode,
+                    Message = responseMessage.ReasonPhrase
+                };
+
             FileInfo fileInfo = default;
 
             if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
                 fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
-            else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
+            //else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
 
             using var fileStream = File.Create(fileInfo.FullName);
             using var stream = await responseMessage.Content.ReadAsStreamAsync();
@@ -84,7 +94,12 @@ namespace FluentCore.Service.Network
             fileStream.Close();
             stream.Close();
 
-            return fileInfo;
+            return new HttpDownloadResponse
+            {
+                FileInfo = fileInfo,
+                HttpStatusCode = responseMessage.StatusCode,
+                Message = responseMessage.ReasonPhrase
+            };
         }
     }
 }

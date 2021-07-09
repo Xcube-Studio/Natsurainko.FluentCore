@@ -40,7 +40,7 @@ namespace FluentCore.Console
             System.Console.WriteLine(argumentsBuilder.BulidArguments(true));
             */
 
-            FileInfo file = HttpHelper.HttpDownloadAsync("https://bmclapi.bangbang93.com/java/jre_x64.exe", "C:\\Users\\Admin\\Desktop").GetAwaiter().GetResult();
+            var file = HttpHelper.HttpDownloadAsync("https://bmclapi.bangbang93.com/java/jre_x64.exe", "C:\\Users\\Admin\\Desktop").GetAwaiter().GetResult();
 
             System.Console.Read();
         }
