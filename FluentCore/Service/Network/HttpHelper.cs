@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -20,24 +21,32 @@ namespace FluentCore.Service.Network
 
         public static async Task<HttpResponseMessage> HttpGetAsync(string url, Tuple<string, string> authorization = default, HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
         {
-            HttpClient.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue() { NoCache = true, NoStore = true };
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
             if (authorization != null)
-                HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorization.Item1, authorization.Item2);
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue(authorization.Item1, authorization.Item2);
 
-            var responseMessage = await HttpClient.GetAsync(url, httpCompletionOption);
-            HttpClient.DefaultRequestHeaders.Authorization = null;
+            var responseMessage = await HttpClient.SendAsync(requestMessage, httpCompletionOption);
+
+            if (responseMessage.StatusCode.Equals(HttpStatusCode.Found))
+            {
+                string redirectUrl = responseMessage.Headers.Location.AbsoluteUri;
+                responseMessage.Dispose();
+                return await HttpGetAsync(redirectUrl, authorization, httpCompletionOption);
+            }
 
             return responseMessage;
         }
 
         public static async Task<HttpResponseMessage> HttpPostAsync(string url, Stream content, string contentType = "application/json")
         {
-            using (var httpContent = new StreamContent(content))
-            {
-                httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-                return await HttpClient.PostAsync(url, httpContent);
-            }
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            using var httpContent = new StreamContent(content);
+
+            httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            requestMessage.Content = httpContent;
+
+            return await HttpClient.SendAsync(requestMessage);
         }
 
         public static async Task<HttpResponseMessage> HttpPostAsync(string url, string content, string contentType = "application/json")
@@ -54,8 +63,11 @@ namespace FluentCore.Service.Network
         public static async Task<FileInfo> HttpDownloadAsync(string url,string folder)
         {
             using var responseMessage = await HttpGetAsync(url, default, HttpCompletionOption.ResponseHeadersRead);
+            FileInfo fileInfo = default;
 
-            var fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
+            if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
+                fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
+            else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
 
             using var fileStream = File.Create(fileInfo.FullName);
             using var stream = await responseMessage.Content.ReadAsStreamAsync();
