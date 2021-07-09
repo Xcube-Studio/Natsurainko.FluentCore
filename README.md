@@ -1,2 +1,6 @@
 # FluentCore
-A Core Work for Minecraft Launcher , Server
+
+一个高效的核心用于Minecraft启动器/服务器的开发
+---------------------------------------------------------
+
+### 介绍
