@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FluentCore.Service.Network
@@ -27,7 +28,7 @@ namespace FluentCore.Service.Network
             if (authorization != null)
                 requestMessage.Headers.Authorization = new AuthenticationHeaderValue(authorization.Item1, authorization.Item2);
 
-            var responseMessage = await HttpClient.SendAsync(requestMessage, httpCompletionOption);
+            var responseMessage = await HttpClient.SendAsync(requestMessage, httpCompletionOption, CancellationToken.None);
 
             if (responseMessage.StatusCode.Equals(HttpStatusCode.Found))
             {
@@ -77,9 +78,9 @@ namespace FluentCore.Service.Network
 
             if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
                 fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
-            //else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
+            else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
 
-            using var fileStream = File.Create(fileInfo.FullName);
+            using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
             using var stream = await responseMessage.Content.ReadAsStreamAsync();
 
             byte[] bytes = new byte[BufferSize];

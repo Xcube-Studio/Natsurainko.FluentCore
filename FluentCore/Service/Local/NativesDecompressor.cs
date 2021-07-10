@@ -28,10 +28,10 @@ namespace FluentCore.Service.Local
             if (!Directory.Exists(nativesFolder))
                 Directory.CreateDirectory(nativesFolder);
 
-            foreach(var item in natives)
+            foreach (var item in natives)
                 using (ZipArchive zip = ZipFile.OpenRead($"{PathHelper.GetLibrariesFolder(Root)}{PathHelper.X}{item.GetRelativePath()}"))
                     foreach (ZipArchiveEntry entry in zip.Entries)
-                        if (entry.FullName.Contains(".dll"))
+                        if (entry.Name.Contains(".dll") || entry.Name.Contains(".so") || entry.Name.Contains(".dylib"))
                             entry.ExtractToFile($"{nativesFolder}{PathHelper.X}{entry.Name}", true);
         }
     }
