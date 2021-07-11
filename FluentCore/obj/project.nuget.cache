@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "vcehcFa6PecMi9rlijsojXyIg7E5j1wdBaBkCe3YWOIWjjlDuNp8SL2tAQBVwZKufNU+j0WgwcbloYu7v0SumQ==",
+  "dgSpecHash": "oxOsHfJfWOCuZbXG7qkckYpe34zpYOvw3/FyZLWljE1ipzk2GiWsBGi7DVKlZLwAnHBRmqCzVdtkC4wyv+FBAw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Admin\\Desktop\\FluentCore\\FluentCore\\FluentCore.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512"
+    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\system.threading.tasks.dataflow\\5.0.0\\system.threading.tasks.dataflow.5.0.0.nupkg.sha512"
   ],
   "logs": []
 }

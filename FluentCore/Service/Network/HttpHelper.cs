@@ -15,7 +15,7 @@ namespace FluentCore.Service.Network
 {
     public class HttpHelper
     {
-        public static int BufferSize { get; set; } = 4096;
+        public static int BufferSize { get; set; } = 1024 * 1024;
 
         public static readonly HttpClient HttpClient;
 
@@ -64,43 +64,55 @@ namespace FluentCore.Service.Network
 
         public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url,string folder)
         {
-            using var responseMessage = await HttpGetAsync(url, default, HttpCompletionOption.ResponseHeadersRead);
+            FileInfo fileInfo = default;
 
-            if (!responseMessage.IsSuccessStatusCode)
+            try
+            {
+                using var responseMessage = await HttpGetAsync(url, default, HttpCompletionOption.ResponseHeadersRead);
+
+                if (!responseMessage.IsSuccessStatusCode)
+                    return new HttpDownloadResponse
+                    {
+                        FileInfo = null,
+                        HttpStatusCode = responseMessage.StatusCode,
+                        Message = responseMessage.ReasonPhrase
+                    };
+
+                if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
+                    fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
+                else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
+
+                await using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                await using var stream = await responseMessage.Content.ReadAsStreamAsync();
+
+                byte[] bytes = new byte[BufferSize];
+                int read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
+                while (read > 0)
+                {
+                    await fileStream.WriteAsync(bytes.AsMemory(0, read));
+                    read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
+                }
+
+                fileStream.Flush();
+                fileStream.Close();
+                stream.Close();
+
                 return new HttpDownloadResponse
                 {
-                    FileInfo = null,
+                    FileInfo = fileInfo,
                     HttpStatusCode = responseMessage.StatusCode,
                     Message = responseMessage.ReasonPhrase
                 };
-
-            FileInfo fileInfo = default;
-
-            if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
-                fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
-            else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
-
-            using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-            using var stream = await responseMessage.Content.ReadAsStreamAsync();
-
-            byte[] bytes = new byte[BufferSize];
-            int read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
-            while (read > 0)
-            {
-                await fileStream.WriteAsync(bytes.AsMemory(0, read));
-                read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
             }
-
-            fileStream.Flush();
-            fileStream.Close();
-            stream.Close();
-
-            return new HttpDownloadResponse
+            catch (HttpRequestException e)
             {
-                FileInfo = fileInfo,
-                HttpStatusCode = responseMessage.StatusCode,
-                Message = responseMessage.ReasonPhrase
-            };
+                return new HttpDownloadResponse
+                {
+                    FileInfo = fileInfo,
+                    HttpStatusCode = e.StatusCode.Value,
+                    Message = e.Message
+                };
+            }
         }
     }
 }

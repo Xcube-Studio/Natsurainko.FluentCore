@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace FluentCore.Console
 {
@@ -77,11 +78,36 @@ namespace FluentCore.Console
             }
             List<HttpDownloadResponse> responses = new List<HttpDownloadResponse>();
 
+            /*
             Parallel.ForEach(items, new ParallelOptions { MaxDegreeOfParallelism = -1 }, async x => 
             {
                 responses.Add(await HttpHelper.HttpDownloadAsync(x.url, "C:\\Users\\Admin\\Desktop\\新建文件夹"));
                 System.Console.WriteLine($"Download Done [{x.url}]");
+            });*/
+
+            var manyBlock = new TransformManyBlock<IEnumerable<DownloadItem>, DownloadItem>(x => x);
+
+            var actionBlock = new ActionBlock<DownloadItem>(async x =>
+            {
+                responses.Add(await HttpHelper.HttpDownloadAsync(x.url, "C:\\Users\\Admin\\Desktop\\新建文件夹"));
+                System.Console.WriteLine($"Download Done [{x.url}]");
+            }, new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = 64,
+                MaxDegreeOfParallelism = 64
             });
+
+            var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
+            manyBlock.LinkTo(actionBlock, linkOptions);
+            manyBlock.Post(items);
+            manyBlock.Complete();
+
+            actionBlock.Completion.Wait();
+            System.Console.WriteLine("Download Done");
+
+            System.Console.Read();
+            GC.Collect();
+            System.Console.WriteLine("GC.Collect();");
 
             //var tasks = new SimpleDownloadTaskQueue(items);
             //tasks.Root = "C:\\Users\\Admin\\Desktop\\新建文件夹";
@@ -89,7 +115,6 @@ namespace FluentCore.Console
             //tasks.Start();
 
             //tasks.Wait().Wait();
-            System.Console.Read();
             System.Console.Read();
         }
 
