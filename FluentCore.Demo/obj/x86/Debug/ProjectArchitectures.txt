@@ -1,1 +1,0 @@
-C:\Users\Admin\Desktop\FluentCore\FluentCore.Demo\FluentCore.Demo.csproj;x86

@@ -33,7 +33,10 @@ namespace FluentCore.Service.Network
             if (responseMessage.StatusCode.Equals(HttpStatusCode.Found))
             {
                 string redirectUrl = responseMessage.Headers.Location.AbsoluteUri;
+
                 responseMessage.Dispose();
+                GC.Collect();
+
                 return await HttpGetAsync(redirectUrl, authorization, httpCompletionOption);
             }
 
@@ -62,7 +65,7 @@ namespace FluentCore.Service.Network
             }
         }
 
-        public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url,string folder)
+        public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url, string folder)
         {
             FileInfo fileInfo = default;
 
@@ -82,20 +85,30 @@ namespace FluentCore.Service.Network
                     fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
                 else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
 
+                //.net 5
                 await using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
                 await using var stream = await responseMessage.Content.ReadAsStreamAsync();
 
+                //using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                //using var stream = await responseMessage.Content.ReadAsStreamAsync();
+
                 byte[] bytes = new byte[BufferSize];
-                int read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
+                int read = await stream.ReadAsync(bytes.AsMemory(0, BufferSize));
+                //int read = await stream.ReadAsync(bytes, 0, BufferSize);
                 while (read > 0)
                 {
                     await fileStream.WriteAsync(bytes.AsMemory(0, read));
-                    read = await stream.ReadAsync(bytes.AsMemory(0, bytes.Length));
+                    read = await stream.ReadAsync(bytes.AsMemory(0, BufferSize));
+
+                    //await fileStream.WriteAsync(bytes, 0, read);
+                    //read = await stream.ReadAsync(bytes, 0, BufferSize);
                 }
 
                 fileStream.Flush();
                 fileStream.Close();
                 stream.Close();
+
+                GC.Collect();
 
                 return new HttpDownloadResponse
                 {
@@ -106,13 +119,19 @@ namespace FluentCore.Service.Network
             }
             catch (HttpRequestException e)
             {
+                GC.Collect();
+
                 return new HttpDownloadResponse
                 {
                     FileInfo = fileInfo,
-                    HttpStatusCode = e.StatusCode.Value,
+                    //HttpStatusCode = ,
                     Message = e.Message
                 };
             }
         }
+
+        public static async Task<HttpDownloadResponse> HttpDownloadAsync(HttpDownloadRequest request) => await HttpDownloadAsync(request.Url, request.Directory.FullName);
+
+        public static void SetTimeout(int milliseconds) => HttpClient.Timeout = new TimeSpan(0, 0, 0, 0, milliseconds);
     }
 }

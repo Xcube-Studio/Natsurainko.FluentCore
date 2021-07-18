@@ -16,7 +16,7 @@ namespace FluentCore.Model
         public string Sha1 { get; set; }
 
         [JsonProperty("size")]
-        public long Size { get; set; }
+        public int Size { get; set; }
 
         [JsonProperty("url")]
         public string Url { get; set; }

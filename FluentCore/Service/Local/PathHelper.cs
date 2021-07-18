@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentCore.Model.Game;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -15,11 +16,13 @@ namespace FluentCore.Service.Local
 
         public static string GetVersionsFolder(string root) => $"{root}{X}versions";
 
-        public static string GetLibrariesFolder(string root) => $"{root}{X}libraries";
-
         public static string GetVersionFolder(string root, string id) => $"{root}{X}versions{X}{id}";
 
+        public static string GetLibrariesFolder(string root) => $"{root}{X}libraries";
+
         public static string GetAssetsFolder(string root) => $"{root}{X}assets";
+
+        public static string GetAssetIndexFolder(string root) => $"{root}{X}assets{X}indexes";
 
         public static string GetLogConfigsFolder(string root) => $"{GetAssetsFolder(root)}{X}log_configs";
     }

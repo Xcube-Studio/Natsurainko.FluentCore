@@ -15,12 +15,12 @@ namespace FluentCore.Model.Game
         [JsonProperty("classifiers")]
         public Dictionary<string, FileModel> Classifiers { get; set; }
     }
-
-    public class Extract
-    {
-        [JsonProperty("exclude")] 
-        public List<string> Exclude { get; set; }
-    }
+    
+    //public class Extract
+    //{
+    //    [JsonProperty("exclude")] 
+    //    public List<string> Exclude { get; set; }
+    //}
 
     public class RuleModel
     {
@@ -121,5 +121,11 @@ namespace FluentCore.Model.Game
 
         [JsonProperty("profile")]
         public string Profile { get; set; }
+    }
+
+    public class AssetsObjectsModel
+    {
+        [JsonProperty("objects")]
+        public Dictionary<string, Asset> Objects { get; set; }
     }
 }

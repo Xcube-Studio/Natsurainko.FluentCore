@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentCore.Service.Network.Api;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -47,5 +48,6 @@ namespace FluentCore.Service.Local
             }
         }
 
+        public static BaseApi Api { get; set; } = new Mcbbs();
     }
 }

@@ -11,13 +11,16 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("FluentCore")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Xcube Studio")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2021 Xcube Studio, All rights reserved")]
+[assembly: System.Reflection.AssemblyDescriptionAttribute("一个高效的核心用于Minecraft启动器/服务器的开发\r\nA Core Work for Minecraft Launcher , Server")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("FluentCore")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FluentCore")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyMetadataAttribute("RepositoryUrl", "https://github.com/Xcube-Studio/FluentCore")]
 
 // 由 MSBuild WriteCodeFragment 类生成。
 

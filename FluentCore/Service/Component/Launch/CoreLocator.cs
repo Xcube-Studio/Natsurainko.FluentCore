@@ -29,30 +29,22 @@ namespace FluentCore.Service.Component.Launch
 
         public IEnumerable<GameCore> GetAllGameCores()
         {
-            List<GameCore> cores = new List<GameCore>();
-
             foreach (DirectoryInfo info in new DirectoryInfo(PathHelper.GetVersionsFolder(this.Root)).GetDirectories())
             {
                 GameCore core = GetGameCoreFromId(info.Name);
                 if (core != null)
-                    cores.Add(core);
+                    yield return core;
             }
-
-            return cores;
         }
 
         public IEnumerable<CoreModel> GetAllCoreModels()
         {
-            List<CoreModel> models = new List<CoreModel>();
-
             foreach(DirectoryInfo info in new DirectoryInfo(PathHelper.GetVersionsFolder(this.Root)).GetDirectories())
             {
                 CoreModel model = GetCoreModelFromId(info.Name);
                 if (model != null)
-                    models.Add(model);
+                    yield return model;
             }
-
-            return models;
         }
 
         public GameCore GetGameCoreFromId(string id)
@@ -89,7 +81,7 @@ namespace FluentCore.Service.Component.Launch
                     if (!obj.ToString().Contains("rules"))
                         bArg.Append($" {obj}");
 
-            if (coreModel.Arguments != null)
+            if (coreModel.Arguments != null && coreModel.Arguments.Jvm != null) 
                 foreach (object obj in coreModel.Arguments.Jvm)
                     if (!obj.ToString().Contains("rules"))
                         fArg.Append($" {obj}");
@@ -113,8 +105,8 @@ namespace FluentCore.Service.Component.Launch
 
         public CoreModel GetCoreModelFromId(string id)
         {
-            DirectoryInfo info = new(PathHelper.GetVersionFolder(this.Root, id));
-            FileInfo file = new($"{PathHelper.GetVersionFolder(this.Root, id)}{PathHelper.X}{id}.json");
+            var info = new DirectoryInfo(PathHelper.GetVersionFolder(this.Root, id));
+            var file = new FileInfo($"{PathHelper.GetVersionFolder(this.Root, id)}{PathHelper.X}{id}.json");
 
             if (info.Exists && file.Exists)
                 try { return JsonConvert.DeserializeObject<CoreModel>(File.ReadAllText(file.FullName)); } catch { Console.WriteLine("Error in GetCoreModelFromId(string id)"); }
