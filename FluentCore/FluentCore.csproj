@@ -26,8 +26,7 @@ A Core Work for Minecraft Launcher , Server</Description>
     <Folder Include="Event\Handler\" />
     <Folder Include="Event\Launcher\" />
     <Folder Include="Event\Server\" />
-    <Folder Include="Exception\Launcher\" />
-    <Folder Include="Exception\Server\" />
+    <Folder Include="Exceptions\Server\" />
     <Folder Include="Service\Component\Serve\" />
     <Folder Include="Service\Network\News\" />
   </ItemGroup>

@@ -47,5 +47,18 @@ namespace FluentCore.UWP.Service.Local
 
             return BitConverter.ToString(bytes).Replace("-", "");
         }
+
+        public static void DeleteAllFiles(DirectoryInfo directory)
+        {
+            foreach (FileInfo file in directory.GetFiles())
+            {
+                file.Delete();
+                directory.GetDirectories().ToList().ForEach(x =>
+                {
+                    DeleteAllFiles(x);
+                    x.Delete();
+                });
+            }
+        }
     }
 }

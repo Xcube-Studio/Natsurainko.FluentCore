@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,6 +47,19 @@ namespace FluentCore.Service.Local
             byte[] bytes = sha1.ComputeHash(fileStream);
 
             return BitConverter.ToString(bytes).Replace("-", "");
+        }
+
+        public static void DeleteAllFiles(DirectoryInfo directory)
+        {
+            foreach(FileInfo file in directory.GetFiles())
+            {
+                file.Delete();
+                directory.GetDirectories().ToList().ForEach(x =>
+                {
+                    DeleteAllFiles(x);
+                    x.Delete();
+                });
+            }
         }
     }
 }

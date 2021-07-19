@@ -14,7 +14,7 @@ namespace FluentCore.Interface
 
         LaunchConfig LaunchConfig { get; }
 
-        string Root { get; }
+        ICoreLocator CoreLocator { get; set; }
 
         void Launch(string id);
 

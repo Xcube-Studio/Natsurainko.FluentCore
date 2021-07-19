@@ -124,6 +124,8 @@
     <Compile Include="Event\Process\ProcessCrashedEventArgs.cs" />
     <Compile Include="Event\Process\ProcessExitedEventArgs.cs" />
     <Compile Include="Event\Process\ProcessStateChangedEventArgs.cs" />
+    <Compile Include="Exception\Launcher\GameCoreNotFoundException.cs" />
+    <Compile Include="Exception\Launcher\GameHasRanException.cs" />
     <Compile Include="Interface\IArgumentsBuilder.cs" />
     <Compile Include="Interface\IAuthenticator.cs" />
     <Compile Include="Interface\ICoreLocator.cs" />
@@ -186,7 +188,6 @@
     <Folder Include="Event\Handler\" />
     <Folder Include="Event\Launcher\" />
     <Folder Include="Event\Server\" />
-    <Folder Include="Exception\Launcher\" />
     <Folder Include="Exception\Server\" />
     <Folder Include="Service\Component\Serve\" />
     <Folder Include="Service\Network\News\" />

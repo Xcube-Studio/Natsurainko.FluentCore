@@ -28,6 +28,8 @@ namespace FluentCore.Service.Local
             if (!Directory.Exists(nativesFolder))
                 Directory.CreateDirectory(nativesFolder);
 
+            FileHelper.DeleteAllFiles(new DirectoryInfo(nativesFolder));
+
             foreach (var item in natives)
                 using (ZipArchive zip = ZipFile.OpenRead($"{PathHelper.GetLibrariesFolder(Root)}{PathHelper.X}{item.GetRelativePath()}"))
                     foreach (ZipArchiveEntry entry in zip.Entries)

@@ -14,13 +14,13 @@ namespace FluentCore.Model.Launch
 
         public string NativesFolder { get; set; }
 
-        public int MaximumMemory { get; set; }
+        public int MaximumMemory { get; set; } = 1024;
 
-        public int? MinimumMemory { get; set; }
+        public int? MinimumMemory { get; set; } = 512;
 
-        public string MoreFrontArgs { get; set; }
+        public string MoreFrontArgs { get; set; } = default;
 
-        public string MoreBehindArgs { get; set; }
+        public string MoreBehindArgs { get; set; } = default;
 
         public string ClientToken { get; set; } = Guid.NewGuid().ToString("N");
 
