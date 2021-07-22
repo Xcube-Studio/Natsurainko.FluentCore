@@ -85,6 +85,9 @@ namespace FluentCore.Service.Network
                     fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
                 else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
 
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
                 //.net 5
                 await using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
                 await using var stream = await responseMessage.Content.ReadAsStreamAsync();

@@ -49,9 +49,9 @@ namespace FluentCore.Wrapper
         /// <param name="id"></param>
         public virtual void Launch(string id)
         {
-            if (this.ProcessContainer?.ProcessState != Model.ProcessState.Exited)
+            if (this.ProcessContainer?.ProcessState == Model.ProcessState.Running)
                 throw new GameHasRanException() { ProcessContainer = this.ProcessContainer };
-            else this.ProcessContainer.Dispose();
+            else this.ProcessContainer?.Dispose();
 
             var core = this.CoreLocator.GetGameCoreFromId(id);
             if (core == null)
@@ -68,6 +68,7 @@ namespace FluentCore.Wrapper
             this.ProcessContainer = new ProcessContainer(
                 new ProcessStartInfo
                 {
+                    WorkingDirectory = core.Root,
                     Arguments = ArgumentsBuilder.BulidArguments(),
                     FileName = this.LaunchConfig.JavaPath,
                 });

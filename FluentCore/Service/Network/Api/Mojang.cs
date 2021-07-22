@@ -10,10 +10,10 @@ namespace FluentCore.Service.Network.Api
     {
         public Mojang()
         {
-            Url = string.Empty;
-            VersionManifest = $"http://launchermeta.mojang.com/mc/game/version_manifest.json";
-            Assets = $"http://resources.download.minecraft.net/assets";
-            Libraries = $"https://libraries.minecraft.net//maven";
+            Url = "https://launcher.mojang.com";
+            VersionManifest = "http://launchermeta.mojang.com/mc/game/version_manifest.json";
+            Assets = "http://resources.download.minecraft.net/assets";
+            Libraries = "https://libraries.minecraft.net/maven";
         }
     }
 }

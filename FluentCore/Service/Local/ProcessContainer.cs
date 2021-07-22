@@ -103,12 +103,12 @@ namespace FluentCore.Service.Local
         /// <summary>
         /// 错误日志集合
         /// </summary>
-        public IEnumerable<string> ErrorData { get; private set; }
+        public List<string> ErrorData { get; private set; }
 
         /// <summary>
         /// 日志集合
         /// </summary>
-        public IEnumerable<string> OutputData { get; private set; }
+        public List<string> OutputData { get; private set; }
 
         protected Task observeRespondTask;
 
@@ -132,6 +132,9 @@ namespace FluentCore.Service.Local
 
             if (!this.HasStarted)
                 this.HasStarted = true;
+
+            ErrorData = new List<string>();
+            OutputData = new List<string>();
 
             this.Started?.Invoke(this, new EventArgs());
         }
