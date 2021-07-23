@@ -1,4 +1,5 @@
 ﻿using FluentCore.Interface;
+using FluentCore.Model;
 using FluentCore.Model.Game;
 using FluentCore.Model.Launch;
 using FluentCore.Service.Local;

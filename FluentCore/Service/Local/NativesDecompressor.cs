@@ -33,7 +33,7 @@ namespace FluentCore.Service.Local
             foreach (var item in natives)
                 using (ZipArchive zip = ZipFile.OpenRead($"{PathHelper.GetLibrariesFolder(Root)}{PathHelper.X}{item.GetRelativePath()}"))
                     foreach (ZipArchiveEntry entry in zip.Entries)
-                        if (entry.Name.Contains(".dll") || entry.Name.Contains(".so") || entry.Name.Contains(".dylib"))
+                        if (Path.GetExtension(entry.Name).Contains(".dll") || Path.GetExtension(entry.Name).Contains(".so") || Path.GetExtension(entry.Name).Contains(".dylib"))
                             entry.ExtractToFile($"{nativesFolder}{PathHelper.X}{entry.Name}", true);
         }
     }

@@ -1,6 +1,6 @@
 ﻿using FluentCore.Interface;
 using FluentCore.Model.Auth;
-using FluentCore.Model.Auth.Mojang;
+using FluentCore.Model.Auth.Yggdrasil;
 using FluentCore.Model.Game;
 using FluentCore.Service.Local;
 using System;
@@ -23,7 +23,7 @@ namespace FluentCore.Service.Component.Authenticator
 
         public Guid Uuid { get; private set; }
 
-        public Tuple<StandardResponseModel, AuthResponseTypeModel> Authenticate()
+        public Tuple<ResponseModel, AuthResponseTypeModel> Authenticate()
         {
             Uuid = Uuid.Equals(null) ? UuidHelper.FromString(UserName) : Guid.NewGuid();
 
@@ -50,10 +50,10 @@ namespace FluentCore.Service.Component.Authenticator
                 }
             };
 
-            return new Tuple<StandardResponseModel, AuthResponseTypeModel>(model, AuthResponseTypeModel.Succeeded);
+            return new Tuple<ResponseModel, AuthResponseTypeModel>(model, AuthResponseTypeModel.Succeeded);
         }
 
-        public Task<Tuple<StandardResponseModel, AuthResponseTypeModel>> AuthenticateAsync() => Task.Run(Authenticate);
+        public Task<Tuple<ResponseModel, AuthResponseTypeModel>> AuthenticateAsync() => Task.Run(Authenticate);
 
         public void Dispose() => GC.SuppressFinalize(this);
 

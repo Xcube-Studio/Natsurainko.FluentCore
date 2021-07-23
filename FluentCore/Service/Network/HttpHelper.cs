@@ -88,23 +88,16 @@ namespace FluentCore.Service.Network
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
-                //.net 5
                 await using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
                 await using var stream = await responseMessage.Content.ReadAsStreamAsync();
 
-                //using var fileStream = new FileStream(fileInfo.FullName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-                //using var stream = await responseMessage.Content.ReadAsStreamAsync();
-
                 byte[] bytes = new byte[BufferSize];
                 int read = await stream.ReadAsync(bytes.AsMemory(0, BufferSize));
-                //int read = await stream.ReadAsync(bytes, 0, BufferSize);
+
                 while (read > 0)
                 {
                     await fileStream.WriteAsync(bytes.AsMemory(0, read));
                     read = await stream.ReadAsync(bytes.AsMemory(0, BufferSize));
-
-                    //await fileStream.WriteAsync(bytes, 0, read);
-                    //read = await stream.ReadAsync(bytes, 0, BufferSize);
                 }
 
                 fileStream.Flush();
@@ -127,7 +120,7 @@ namespace FluentCore.Service.Network
                 return new HttpDownloadResponse
                 {
                     FileInfo = fileInfo,
-                    //HttpStatusCode = ,
+                    HttpStatusCode = e.StatusCode.Value,
                     Message = e.Message
                 };
             }

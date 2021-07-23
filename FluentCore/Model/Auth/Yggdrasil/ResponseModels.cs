@@ -6,9 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FluentCore.Model.Auth.Mojang
+namespace FluentCore.Model.Auth.Yggdrasil
 {
-    public class StandardResponseModel
+    public class ResponseModel { }
+
+    public class StandardResponseModel : ResponseModel
     {
         [JsonProperty("user")]
         public User User { get; set; }
@@ -26,7 +28,7 @@ namespace FluentCore.Model.Auth.Mojang
         public ProfileModel SelectedProfile { get; set; }
     }
 
-    public class ErrorResponseModel
+    public class ErrorResponseModel : ResponseModel
     {
         [JsonProperty("error")]
         public string Error { get; set; }
