@@ -59,11 +59,11 @@ namespace FluentCore.Model.Game
 
     public class Arguments
     {
-        [JsonProperty("game")] 
-        public IEnumerable<object> Game { get; set; }
+        [JsonProperty("game")]
+        public List<object> Game { get; set; } = new List<object>();
 
-        [JsonProperty("jvm")] 
-        public IEnumerable<object> Jvm { get; set; }
+        [JsonProperty("jvm")]
+        public List<object> Jvm { get; set; } = new List<object>();
     }
 
     public class JavaVersion

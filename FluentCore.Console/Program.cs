@@ -88,6 +88,8 @@ namespace FluentCore.Console
             var launcher = new MinecraftLauncher(coreLocator, launchConfig);
             launcher.Launch(id);
             launcher.ProcessContainer.OutputDataReceived += ProcessContainer_OutputDataReceived;
+            System.Console.WriteLine("[FluentCore]Stop");
+            System.Console.WriteLine(launcher.ProcessContainer.Process.StartInfo.Arguments);
 
             System.Console.ReadLine();
 

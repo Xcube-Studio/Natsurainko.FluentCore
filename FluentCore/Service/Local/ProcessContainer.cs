@@ -159,15 +159,15 @@ namespace FluentCore.Service.Local
             this.ErrorDataReceived?.Invoke(sender, e);
             this.OutputDataReceived?.Invoke(sender, e);
 
-            this.ErrorData.Append(e.Data);
-            this.OutputData.Append(e.Data);
+            this.ErrorData.Add(e.Data);
+            this.OutputData.Add(e.Data);
         }
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             this.OutputDataReceived?.Invoke(sender, e);
 
-            this.OutputData.Append(e.Data);
+            this.OutputData.Add(e.Data);
         }
 
         /// <summary>

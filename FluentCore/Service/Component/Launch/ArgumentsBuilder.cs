@@ -43,6 +43,7 @@ namespace FluentCore.Service.Component.Launch
         public string GetFrontArguments()
         {
             var stringBuilder = new StringBuilder();
+            string separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
 
             stringBuilder.Append($" -Xmx{this.LaunchConfig.MaximumMemory}M");
             stringBuilder.Append(this.LaunchConfig.MinimumMemory.HasValue ? $" -Xmn{this.LaunchConfig.MinimumMemory}M" : string.Empty);
@@ -66,6 +67,7 @@ namespace FluentCore.Service.Component.Launch
             stringBuilder.Replace("${natives_directory}", this.LaunchConfig.NativesFolder.Contains(" ") ? $"\"{LaunchConfig.NativesFolder}\"" : LaunchConfig.NativesFolder);
             stringBuilder.Replace("${launcher_name}", "Fluent.Core");
             stringBuilder.Replace("${launcher_version}", "3");
+            stringBuilder.Replace("${classpath_separator}", separator);
             stringBuilder.Replace("${classpath}", GetClasspath());
 
             return stringBuilder.ToString().Replace("  ", " ");
@@ -110,7 +112,8 @@ namespace FluentCore.Service.Component.Launch
             foreach (var library in this.GameCore.Libraries)
                 stringbuilder.Append($"{PathHelper.GetLibrariesFolder(this.GameCore.Root)}{PathHelper.X}{library.GetRelativePath()}{separator}");
 
-            stringbuilder.Append(this.GameCore.MainJar);
+            if (ArgumentsBuilder.LoadMainClass(this.GameCore.MainClass))
+                stringbuilder.Append(this.GameCore.MainJar);
             return stringbuilder.ToString().Contains(" ") ? $"\"{stringbuilder}\"" : stringbuilder.ToString();
         }
 
@@ -135,6 +138,15 @@ namespace FluentCore.Service.Component.Launch
 
             stringBuilder.Append(SystemConfiguration.Arch == "32" ? "-Xss1M" : string.Empty);
             return stringBuilder.ToString();
+        }
+
+        public static bool LoadMainClass(string mainClass)
+        {
+            return mainClass switch
+            {
+                "cpw.mods.bootstraplauncher.BootstrapLauncher" => false,
+                _ => true,
+            };
         }
     }
 }

@@ -63,8 +63,8 @@ namespace FluentCore.Service.Component.Launch
 
             if (coreModel.InheritsFrom != null)
             {
-                coreModel = MergeInheritsFromCoreWithRaw(coreModel, GetCoreModelFromId(coreModel.InheritsFrom));
                 mainJar = $"{PathHelper.GetVersionFolder(this.Root, coreModel.InheritsFrom)}{PathHelper.X}{coreModel.InheritsFrom}.jar";
+                coreModel = MergeInheritsFromCoreWithRaw(coreModel, GetCoreModelFromId(coreModel.InheritsFrom));
             }
 
             foreach (Library library in coreModel.Libraries)
@@ -76,15 +76,36 @@ namespace FluentCore.Service.Component.Launch
             if (coreModel.MinecraftArguments != null)
                 bArg.Append($"{coreModel.MinecraftArguments}");
 
-            if (coreModel.Arguments != null)
+            if (coreModel.Arguments != null && coreModel.Arguments.Game != null)
                 foreach (object obj in coreModel.Arguments.Game)
                     if (!obj.ToString().Contains("rules"))
                         bArg.Append($" {obj}");
 
-            if (coreModel.Arguments != null && coreModel.Arguments.Jvm != null) 
-                foreach (object obj in coreModel.Arguments.Jvm)
+            if (coreModel.Arguments != null && coreModel.Arguments.Jvm != null)
+                //fix for forge 1.17
+                for (int i = 0; i < coreModel.Arguments.Jvm.Count; i++)
+                {
+                    object obj = coreModel.Arguments.Jvm[i];
+
                     if (!obj.ToString().Contains("rules"))
+                    {
+                        if (obj.ToString().Contains("-DlibraryDirectory"))
+                        {
+                            fArg.Append($" {obj.ToString().Replace("${library_directory}", this.Root.Contains(" ") ? $"\"{PathHelper.GetLibrariesFolder(this.Root)}\"" : PathHelper.GetLibrariesFolder(this.Root))}");
+                            continue;
+                        };
+
+                        if (obj.ToString().Contains("${library_directory}"))
+                        {
+                            string value = obj.ToString().Replace("/", PathHelper.X).Replace("${library_directory}", PathHelper.GetLibrariesFolder(this.Root));
+                            value = this.Root.Contains(" ") ? $"\"{value}\"" : value;
+                            fArg.Append($" {value}");
+                            continue;
+                        };
+
                         fArg.Append($" {obj}");
+                    }
+                }
 
             return new GameCore
             {
@@ -118,8 +139,8 @@ namespace FluentCore.Service.Component.Launch
         {
             if (raw.Arguments != null)
             {
-                raw.Arguments.Game = raw.Arguments.Game.Union(inheritsFrom.Arguments.Game);
-                raw.Arguments.Jvm = raw.Arguments.Jvm.Union(inheritsFrom.Arguments.Jvm);
+                raw.Arguments.Game = raw.Arguments.Game.Union(inheritsFrom.Arguments.Game).ToList();
+                raw.Arguments.Jvm = raw.Arguments.Jvm.Concat(inheritsFrom.Arguments.Jvm).ToList();
             }
             raw.AssetIndex = inheritsFrom.AssetIndex;
             raw.Assets = inheritsFrom.Assets;
