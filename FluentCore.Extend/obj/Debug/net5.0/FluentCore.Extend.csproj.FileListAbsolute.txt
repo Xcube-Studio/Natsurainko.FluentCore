@@ -1,0 +1,15 @@
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\FluentCore.Extend.deps.json
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\FluentCore.Extend.dll
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\ref\FluentCore.Extend.dll
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\FluentCore.Extend.pdb
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\FluentCore.dll
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\bin\Debug\net5.0\FluentCore.pdb
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.csprojAssemblyReference.cache
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.GeneratedMSBuildEditorConfig.editorconfig
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.AssemblyInfoInputs.cache
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.AssemblyInfo.cs
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.csproj.CoreCompileInputs.cache
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.csproj.CopyComplete
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.dll
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\ref\FluentCore.Extend.dll
+F:\GitHubDesktop\Git\FluentCore\FluentCore.Extend\obj\Debug\net5.0\FluentCore.Extend.pdb

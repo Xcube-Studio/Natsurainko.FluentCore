@@ -18,14 +18,21 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using FluentCore.Service.Component.Authenticator;
+using FluentCore.Model.Auth.Yggdrasil;
+using FluentCore.Interface;
+using FluentCore.Wrapper;
 
 namespace FluentCore.Console
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
+            #region
+            
             HttpHelper.SetTimeout(60000);
+
             System.Console.Write("Minecraft Path:");
             CoreLocator coreLocator = new CoreLocator(System.Console.ReadLine());
             System.Console.Write("Java Path:");
@@ -34,8 +41,31 @@ namespace FluentCore.Console
             string id = System.Console.ReadLine();
             GameCore core = coreLocator.GetGameCoreFromId(id);
 
-            #region
+            #endregion
             /*
+            System.Console.WriteLine("Loading AuthlibInjector...");
+            var injector = new AuthlibInjector("https://skin.greenspray.cn/api/yggdrasil", "C:\\Users\\Admin\\AppData\\Roaming\\.hmcl\\authlib-injector.jar");
+            var vs = await injector.GetArgumentsAsync();*/
+
+            System.Console.WriteLine("Loading YggdrasilAuthenticator...");
+
+            System.Console.Write("Email:");
+            string email = System.Console.ReadLine();
+            System.Console.Write("Password:");
+            string password = System.Console.ReadLine();
+
+            using var auth = new YggdrasilAuthenticator(email, password);
+            var res = (StandardResponseModel)(await auth.AuthenticateAsync()).Item1;
+
+            System.Console.WriteLine("Loading DependencesCompleter...");
+            var completer = new DependencesCompleter(core);
+
+            completer.SingleDownloadDoneEvent += Completer_SingleDownloadDoneEvent;
+
+            await completer.CompleteAsync();
+
+            #region
+
             LaunchConfig launchConfig = new LaunchConfig
             {
                 MoreBehindArgs = string.Empty,
@@ -45,32 +75,33 @@ namespace FluentCore.Console
                 NativesFolder = $"{PathHelper.GetVersionFolder(coreLocator.Root, id)}{PathHelper.X}natives",
                 AuthDataModel = new AuthDataModel
                 {
-                    AccessToken = "8888-8888-8888-8888",
-                    UserName = "steve",
-                    Uuid = Guid.NewGuid()
+                    AccessToken = res.AccessToken,
+                    UserName = res.SelectedProfile.Name,
+                    Uuid = Guid.Parse(res.SelectedProfile.Id)
                 }
             };
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(core, launchConfig);
 
-            System.Console.WriteLine(argumentsBuilder.BulidArguments(true));
+            /*
+            foreach (string value in vs)
+                launchConfig.MoreFrontArgs += $" {value}";*/
+
+            var launcher = new MinecraftLauncher(coreLocator, launchConfig);
+            launcher.Launch(id);
+            launcher.ProcessContainer.OutputDataReceived += ProcessContainer_OutputDataReceived;
+
             System.Console.ReadLine();
-            foreach(Native native in core.Natives)
-            {
-                FileInfo file = new FileInfo(Path.Combine(PathHelper.GetLibrariesFolder(core.Root), native.GetRelativePath()));
-                System.Console.WriteLine(file.FullName);
-                HttpDownloadResponse response = HttpHelper.HttpDownloadAsync(native.Downloads.Classifiers[$"natives-{SystemConfiguration.PlatformName.ToLower()}"].Url, file.Directory.FullName).GetAwaiter().GetResult();
-                System.Console.WriteLine($"[{response.FileInfo.Name}]{response.HttpStatusCode}");
-            }
 
-            NativesDecompressor nativesDecompressor = new NativesDecompressor(core.Root, id);
-            nativesDecompressor.Decompress(core.Natives);
-            */
             #endregion
+        }
 
-            var completer = new DependencesCompleter(core);
-            completer.CompleteAsync().Wait();
+        private static void ProcessContainer_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            System.Console.WriteLine($"[FluentCore.MinecraftLauncher]{e.Data}");
+        }
 
-            System.Console.ReadLine();
+        private static void Completer_SingleDownloadDoneEvent(object sender, HttpDownloadResponse e)
+        {
+            System.Console.WriteLine($"[{e.HttpStatusCode}][{e.Message}][{e.FileInfo}]");
         }
     }
 }

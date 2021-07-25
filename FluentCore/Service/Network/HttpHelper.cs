@@ -45,24 +45,31 @@ namespace FluentCore.Service.Network
 
         public static async Task<HttpResponseMessage> HttpPostAsync(string url, Stream content, string contentType = "application/json")
         {
-            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-            using var httpContent = new StreamContent(content);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            var httpContent = new StreamContent(content);
 
             httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
             requestMessage.Content = httpContent;
 
-            return await HttpClient.SendAsync(requestMessage);
+            var res = await HttpClient.SendAsync(requestMessage);
+
+            content.Dispose();
+            httpContent.Dispose();
+
+            return res;
         }
 
         public static async Task<HttpResponseMessage> HttpPostAsync(string url, string content, string contentType = "application/json")
         {
-            using(var stream = new MemoryStream())
-            {
-                using (StreamWriter writer = new StreamWriter(stream))
-                    writer.Write(content);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            using var httpContent = new StringContent(content);
 
-                return await HttpPostAsync(url, stream, contentType);
-            }
+            httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+
+            requestMessage.Content = httpContent;
+
+            var res = await HttpClient.SendAsync(requestMessage);
+            return res;
         }
 
         public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url, string folder)

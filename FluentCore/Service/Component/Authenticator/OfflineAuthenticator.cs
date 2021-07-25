@@ -5,6 +5,7 @@ using FluentCore.Model.Game;
 using FluentCore.Service.Local;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,7 +56,18 @@ namespace FluentCore.Service.Component.Authenticator
 
         public Task<Tuple<ResponseModel, AuthResponseTypeModel>> AuthenticateAsync() => Task.Run(Authenticate);
 
-        public void Dispose() => GC.SuppressFinalize(this);
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+
+            }
+        }
     }
 }

@@ -52,14 +52,14 @@ namespace FluentCore.Service.Local
         public static void DeleteAllFiles(DirectoryInfo directory)
         {
             foreach(FileInfo file in directory.GetFiles())
-            {
                 file.Delete();
-                directory.GetDirectories().ToList().ForEach(x =>
-                {
-                    DeleteAllFiles(x);
-                    x.Delete();
-                });
-            }
+
+            directory.GetDirectories().ToList().ForEach(x =>
+            {
+                DeleteAllFiles(x);
+                x.Delete();
+            });
+
         }
     }
 }

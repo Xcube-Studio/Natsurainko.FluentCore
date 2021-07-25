@@ -71,6 +71,7 @@ namespace FluentCore.Service.Component.DependencesResolver
             dependences = dependences.Union(new LibrariesResolver(this.GameCore).GetLostDependences());
 
             var requests = new List<HttpDownloadRequest>();
+
             foreach (IDependence dependence in dependences)
                 requests.Add(dependence.GetDownloadRequest(this.GameCore.Root));
 

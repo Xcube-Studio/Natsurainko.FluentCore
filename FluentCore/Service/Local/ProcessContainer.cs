@@ -20,19 +20,15 @@ namespace FluentCore.Service.Local
         /// 该进程容器中会强制设置进程不使用shell，并且重定向输入、输出流
         /// </summary>
         /// <param name="processStartInfo">指定启动进程时使用的一组值</param>
-        /// <param name="priorityBoostEnabled">获取或设置一个值，该值指示主窗口拥有焦点时是否应由操作系统暂时提升关联进程优先级。</param>
-        /// <param name="priorityClass">获取或设置关联进程的总体优先级类别。</param>
-        public ProcessContainer(ProcessStartInfo processStartInfo, bool priorityBoostEnabled = false, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
+        public ProcessContainer(ProcessStartInfo processStartInfo)
         {
             processStartInfo.UseShellExecute = false;
             processStartInfo.RedirectStandardOutput = processStartInfo.RedirectStandardError = processStartInfo.RedirectStandardInput = true;
 
-            this.Process = new Process()
+            this.Process = new Process
             {
-                StartInfo = processStartInfo,
                 EnableRaisingEvents = true,
-                PriorityBoostEnabled = priorityBoostEnabled,
-                PriorityClass = priorityClass,
+                StartInfo = processStartInfo
             };
 
             Process.OutputDataReceived += Process_OutputDataReceived;

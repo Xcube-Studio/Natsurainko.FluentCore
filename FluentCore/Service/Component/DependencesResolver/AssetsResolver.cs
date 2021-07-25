@@ -43,18 +43,19 @@ namespace FluentCore.Service.Component.DependencesResolver
         {
             var list = new List<IDependence>();
 
-            foreach (Asset asset in await GetDependencesAsync())
+            Parallel.ForEach(await GetDependencesAsync(), x =>
             {
+                var asset = (Asset)x;
                 var file = new FileInfo($"{PathHelper.GetAssetsFolder(GameCore.Root)}{PathHelper.X}{asset.GetRelativePath()}");
                 if (!file.Exists)
                 {
                     list.Add(asset);
-                    continue;
+                    return;
                 }
 
                 if (!FileHelper.FileVerify(file, asset.Size, asset.Hash))
                     list.Add(asset);
-            }
+            });
 
             return list;
         }

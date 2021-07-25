@@ -22,14 +22,18 @@ namespace FluentCore.Service.Component.Authenticator
 
         public string Password { get; set; }
 
-        public YggdrasilAuthenticator(string email, string password, string yggdrasilServerUrl = default)
+        public YggdrasilAuthenticator(string email, string password, string yggdrasilServerUrl = default, string clientToken = default)
         {
+            this.Email = email;
+            this.Password = password;
 
+            this.YggdrasilServerUrl = string.IsNullOrEmpty(yggdrasilServerUrl) ? this.YggdrasilServerUrl : $"{yggdrasilServerUrl}/authserver";
+            this.ClientToken = string.IsNullOrEmpty(clientToken) ? this.ClientToken : clientToken;
         }
 
         public YggdrasilAuthenticator(string yggdrasilServerUrl = default)
         {
-
+            this.YggdrasilServerUrl = string.IsNullOrEmpty(yggdrasilServerUrl) ? this.YggdrasilServerUrl : $"{yggdrasilServerUrl}/authserver";
         }
 
         public Tuple<ResponseModel, AuthResponseTypeModel> Authenticate() => AuthenticateAsync().GetAwaiter().GetResult();
@@ -45,11 +49,12 @@ namespace FluentCore.Service.Component.Authenticator
                 }
             );
 
-            using var res = await HttpHelper.HttpPostAsync($"{YggdrasilServerUrl}/authenticate", content);
+            using var res = await HttpHelper.HttpPostAsync($"{this.YggdrasilServerUrl}/authenticate", content);
 
+            string text = await res.Content.ReadAsStringAsync();
             if (res.IsSuccessStatusCode)
                 return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<StandardResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Succeeded);
+                    (JsonConvert.DeserializeObject<StandardResponseModel>(text), AuthResponseTypeModel.Succeeded);
             else return new Tuple<ResponseModel, AuthResponseTypeModel>
                     (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
         }
@@ -149,9 +154,21 @@ namespace FluentCore.Service.Component.Authenticator
             else return new Tuple<ResponseModel, AuthResponseTypeModel>
                     (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
         }
+
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.Email = null;
+                this.Password = null;
+                GC.Collect();
+            }
         }
     }
 }

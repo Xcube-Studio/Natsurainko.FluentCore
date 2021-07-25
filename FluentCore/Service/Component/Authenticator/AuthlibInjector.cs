@@ -32,12 +32,7 @@ namespace FluentCore.Service.Component.Authenticator
             values.Add(this.GetJavaAgent().ToArgument());
 
             string res = await (await HttpHelper.HttpGetAsync(this.Url)).Content.ReadAsStringAsync();
-
-            string key = JObject.Parse(res)["signaturePublickey"].ToString();
-            int begin = key.LastIndexOf("-----BEGIN PUBLIC KEY-----");
-            int end = key.LastIndexOf("-----END PUBLIC KEY-----");
-
-            values.Add($"-Dauthlibinjector.yggdrasil.prefetched={key.Substring(begin, end - begin - 1)}");
+            values.Add($"-Dauthlibinjector.yggdrasil.prefetched={Convert.ToBase64String(Encoding.UTF8.GetBytes(res))}");
 
             return values;
         }
