@@ -1,17 +1,13 @@
 ﻿using FluentCore.Model.Game;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Service.Local
 {
     public class NativesDecompressor
     {
-        public NativesDecompressor(string root, string id) 
+        public NativesDecompressor(string root, string id)
         {
             this.Root = root;
             this.Id = id;

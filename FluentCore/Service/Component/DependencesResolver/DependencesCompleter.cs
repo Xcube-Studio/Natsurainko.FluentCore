@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -25,7 +24,7 @@ namespace FluentCore.Service.Component.DependencesResolver
 
         public List<HttpDownloadResponse> ErrorDownloadResponses = new List<HttpDownloadResponse>();
 
-        public event EventHandler<HttpDownloadResponse> SingleDownloadDoneEvent; 
+        public event EventHandler<HttpDownloadResponse> SingleDownloadDoneEvent;
 
         public async Task CompleteAsync()
         {

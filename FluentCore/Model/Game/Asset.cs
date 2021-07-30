@@ -1,13 +1,7 @@
 ﻿using FluentCore.Interface;
-using FluentCore.Model.Launch;
 using FluentCore.Service.Local;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Game
 {
@@ -25,7 +19,7 @@ namespace FluentCore.Model.Game
             {
                 Sha1 = this.Hash,
                 Size = this.Size,
-                Url = $"{SystemConfiguration.Api.Assets}/{this.Hash.Substring(0,2)}/{this.Hash}",
+                Url = $"{SystemConfiguration.Api.Assets}/{this.Hash.Substring(0, 2)}/{this.Hash}",
                 Directory = new FileInfo($"{PathHelper.GetAssetsFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory
             };
         }

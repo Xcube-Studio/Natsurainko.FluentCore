@@ -1,9 +1,5 @@
 ﻿using FluentCore.Model.Game;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Launch
 {
@@ -18,7 +14,7 @@ namespace FluentCore.Model.Launch
         public string Root { get; set; }
 
         public IEnumerable<Library> Libraries { get; set; }
-        
+
         public IEnumerable<Native> Natives { get; set; }
 
         public string MainClass { get; set; }
@@ -28,7 +24,7 @@ namespace FluentCore.Model.Launch
         public string FrontArguments { get; set; }
 
         public string BehindArguments { get; set; }
-        
+
         public string Id { get; set; }
 
         public string Type { get; set; }

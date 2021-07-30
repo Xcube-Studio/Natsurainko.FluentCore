@@ -4,11 +4,7 @@ using FluentCore.Model.Launch;
 using FluentCore.Service.Component.Launch;
 using FluentCore.Service.Local;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FluentCore.Wrapper
@@ -34,8 +30,14 @@ namespace FluentCore.Wrapper
         /// </summary>
         public ProcessContainer ProcessContainer { get; private set; }
 
+        /// <summary>
+        /// 启动参数生成器
+        /// </summary>
         public IArgumentsBuilder ArgumentsBuilder { get; private set; }
 
+        /// <summary>
+        /// 游戏核心定位器
+        /// </summary>
         public ICoreLocator CoreLocator { get; set; }
 
         /// <summary>
@@ -130,7 +132,26 @@ namespace FluentCore.Wrapper
 
         public static async Task<LaunchResult> LaunchAsync(GameCore core, LaunchConfig config)
         {
-            throw new NotImplementedException();
+            var args = new ArgumentsBuilder(core, config).BulidArguments();
+            if (string.IsNullOrEmpty(config.NativesFolder))
+                config.NativesFolder = $"{PathHelper.GetVersionFolder(core.Root, core.Id)}{PathHelper.X}natives";
+
+            var process = new ProcessContainer(new ProcessStartInfo
+            {
+                WorkingDirectory = core.Root,
+                Arguments = args,
+                FileName = config.JavaPath,
+            });
+
+            process.Start();
+            await process.Process.WaitForExitAsync();
+
+            return new LaunchResult
+            {
+                Args = args,
+                Errors = process.ErrorData,
+                Logs = process.OutputData
+            };
         }
 
         public static LaunchResult Launch(GameCore core, LaunchConfig config) => LaunchAsync(core, config).GetAwaiter().GetResult();

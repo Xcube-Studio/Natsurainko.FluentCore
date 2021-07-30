@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Service.Local
 {
@@ -23,7 +19,7 @@ namespace FluentCore.Service.Local
         /// If the function fails, the return value is zero. To get extended error information, call GetLastError.
         /// </para>
         /// </returns>
-        [DllImport("User32.dll", CharSet = CharSet.Unicode )]
+        [DllImport("User32.dll", CharSet = CharSet.Unicode)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetWindowText(IntPtr hWnd, string lpString);
     }

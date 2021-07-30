@@ -1,9 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace FluentCore.Model.Game
 {
@@ -15,7 +11,7 @@ namespace FluentCore.Model.Game
         [JsonProperty("classifiers")]
         public Dictionary<string, FileModel> Classifiers { get; set; }
     }
-    
+
     //public class Extract
     //{
     //    [JsonProperty("exclude")] 
@@ -50,7 +46,7 @@ namespace FluentCore.Model.Game
         [JsonProperty("type")]
         public string Type { get; set; }
     }
-    
+
     public class Logging
     {
         [JsonProperty("client")]

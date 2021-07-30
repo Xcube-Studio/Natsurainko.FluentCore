@@ -1,12 +1,9 @@
 ﻿using FluentCore.Interface;
 using FluentCore.Model;
 using FluentCore.Service.Network;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 

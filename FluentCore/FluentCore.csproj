@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>preview</LangVersion>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Company>Xcube Studio</Company>
     <Authors>xuan2006 - Xcube Studio</Authors>
@@ -23,7 +23,6 @@ A Core Work for Minecraft Launcher , Server</Description>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Event\Handler\" />
     <Folder Include="Event\Launcher\" />
     <Folder Include="Event\Server\" />
     <Folder Include="Exceptions\Server\" />

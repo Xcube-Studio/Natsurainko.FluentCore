@@ -22,6 +22,7 @@ using FluentCore.Service.Component.Authenticator;
 using FluentCore.Model.Auth.Yggdrasil;
 using FluentCore.Interface;
 using FluentCore.Wrapper;
+using FluentCore.Service.Component.Installer;
 
 namespace FluentCore.Console
 {
@@ -29,8 +30,16 @@ namespace FluentCore.Console
     {
         static async Task Main(string[] args)
         {
+            //var install = new VanlliaInstaller(new CoreLocator(System.Console.ReadLine()));
+            //string version = System.Console.ReadLine();
+            //await install.InstallAsync(version);
+            //System.Console.WriteLine($"Install Version:{version} Successfully");
+            //System.Console.ReadLine();
+
+            //return;
+
             #region
-            
+
             HttpHelper.SetTimeout(60000);
 
             System.Console.Write("Minecraft Path:");
@@ -87,13 +96,20 @@ namespace FluentCore.Console
 
             var launcher = new MinecraftLauncher(coreLocator, launchConfig);
             launcher.Launch(id);
-            launcher.ProcessContainer.OutputDataReceived += ProcessContainer_OutputDataReceived;
-            System.Console.WriteLine("[FluentCore]Stop");
-            System.Console.WriteLine(launcher.ProcessContainer.Process.StartInfo.Arguments);
+            System.Console.WriteLine($"[FluentCore.MinecraftLauncher]Process Start [{launcher.ProcessContainer.Process.Id}]");
 
+            launcher.ProcessContainer.OutputDataReceived += ProcessContainer_OutputDataReceived;
+            launcher.ProcessContainer.Exited += ProcessContainer_Exited;
+
+            System.Console.WriteLine(launcher.ProcessContainer.Process.StartInfo.Arguments);
             System.Console.ReadLine();
 
             #endregion
+        }
+
+        private static void ProcessContainer_Exited(object sender, Event.Process.ProcessExitedEventArgs e)
+        {
+            System.Console.WriteLine($"[FluentCore.MinecraftLauncher]Process Exited [ExitCode:{e.ExitCode}][Running time:{e.RunTime}]");
         }
 
         private static void ProcessContainer_OutputDataReceived(object sender, DataReceivedEventArgs e)

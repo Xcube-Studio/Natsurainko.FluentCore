@@ -1,12 +1,8 @@
 ﻿using FluentCore.Interface;
 using FluentCore.Service.Local;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Game
 {
@@ -19,25 +15,25 @@ namespace FluentCore.Model.Game
         public string Name { get; set; }
 
         // 为旧式Forge Library提供
-        [JsonProperty("url")] 
+        [JsonProperty("url")]
         public string Url { get; set; }
 
-        [JsonProperty("natives")] 
+        [JsonProperty("natives")]
         public Dictionary<string, string> Natives { get; set; }
 
-        [JsonProperty("rules")] 
+        [JsonProperty("rules")]
         public IEnumerable<RuleModel> Rules { get; set; }
 
         // 为旧式Forge Library提供
-        [JsonProperty("checksums")] 
+        [JsonProperty("checksums")]
         public List<string> CheckSums { get; set; }
 
         // 为旧式Forge Library提供
-        [JsonProperty("serverreq")] 
+        [JsonProperty("serverreq")]
         public bool? ServerReq { get; set; }
 
         // 为旧式Forge Library提供
-        [JsonProperty("clientreq")] 
+        [JsonProperty("clientreq")]
         public bool? ClientReq { get; set; }
 
         public virtual HttpDownloadRequest GetDownloadRequest(string root)
@@ -51,7 +47,7 @@ namespace FluentCore.Model.Game
             };
         }
 
-        public virtual string GetRelativePath() 
+        public virtual string GetRelativePath()
         {
             string[] temp = Name.Split(':');
             return $"{temp[0].Replace(".", PathHelper.X)}{PathHelper.X}{temp[1]}{PathHelper.X}{temp[2]}{PathHelper.X}{temp[1]}-{temp[2]}.jar";

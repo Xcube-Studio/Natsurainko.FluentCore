@@ -1,14 +1,8 @@
 ﻿using FluentCore.Interface;
-using FluentCore.Model;
-using FluentCore.Model.Game;
 using FluentCore.Model.Launch;
 using FluentCore.Service.Local;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.DependencesResolver
 {
@@ -18,7 +12,7 @@ namespace FluentCore.Service.Component.DependencesResolver
 
         public LibrariesResolver(GameCore core) => this.GameCore = core;
 
-        public IEnumerable<IDependence> GetDependences() 
+        public IEnumerable<IDependence> GetDependences()
         {
             foreach (var lib in this.GameCore.Libraries)
                 yield return lib;

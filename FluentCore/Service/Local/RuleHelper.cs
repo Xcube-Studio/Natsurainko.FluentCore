@@ -1,10 +1,6 @@
 ﻿using FluentCore.Model.Game;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Service.Local
 {
@@ -15,7 +11,7 @@ namespace FluentCore.Service.Local
             if (rules == null)
                 return true;
 
-            foreach(RuleModel model in rules)
+            foreach (RuleModel model in rules)
             {
                 if (model.System == null)
                     continue;
@@ -29,12 +25,12 @@ namespace FluentCore.Service.Local
                             break;
                     }
                 else switch (model.System["name"])
-                {
-                    case "osx":
-                        if (SystemConfiguration.Platform == OSPlatform.OSX)
-                            return false;
-                        break;
-                }
+                    {
+                        case "osx":
+                            if (SystemConfiguration.Platform == OSPlatform.OSX)
+                                return false;
+                            break;
+                    }
             }
 
             return true;

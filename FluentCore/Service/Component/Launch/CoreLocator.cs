@@ -3,15 +3,11 @@ using FluentCore.Model.Game;
 using FluentCore.Model.Launch;
 using FluentCore.Service.Local;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 
 namespace FluentCore.Service.Component.Launch
 {
@@ -39,7 +35,7 @@ namespace FluentCore.Service.Component.Launch
 
         public IEnumerable<CoreModel> GetAllCoreModels()
         {
-            foreach(DirectoryInfo info in new DirectoryInfo(PathHelper.GetVersionsFolder(this.Root)).GetDirectories())
+            foreach (DirectoryInfo info in new DirectoryInfo(PathHelper.GetVersionsFolder(this.Root)).GetDirectories())
             {
                 CoreModel model = GetCoreModelFromId(info.Name);
                 if (model != null)

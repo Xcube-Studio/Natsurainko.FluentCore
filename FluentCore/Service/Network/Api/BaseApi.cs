@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using FluentCore.Model;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 
 namespace FluentCore.Service.Network.Api
@@ -15,5 +13,11 @@ namespace FluentCore.Service.Network.Api
         public string Assets;
 
         public string Libraries;
+
+        public virtual async Task<VersionManifestModel> GetVersionManifest()
+        {
+            using var res = await HttpHelper.HttpGetAsync(this.VersionManifest);
+            return JsonConvert.DeserializeObject<VersionManifestModel>(await res.Content.ReadAsStringAsync());
+        }
     }
 }

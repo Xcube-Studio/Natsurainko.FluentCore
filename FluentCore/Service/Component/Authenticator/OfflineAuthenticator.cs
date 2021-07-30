@@ -5,9 +5,6 @@ using FluentCore.Model.Game;
 using FluentCore.Service.Local;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.Authenticator
