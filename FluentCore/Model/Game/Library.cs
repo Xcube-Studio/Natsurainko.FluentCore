@@ -1,5 +1,6 @@
 ﻿using FluentCore.Interface;
 using FluentCore.Service.Local;
+using FluentCore.Service.Network.Api;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -42,13 +43,21 @@ namespace FluentCore.Model.Game
             {
                 Sha1 = this.Downloads?.Artifact.Sha1,
                 Size = this.Downloads?.Artifact.Size,
-                Url = $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}",
+                Url = SystemConfiguration.Api != new Mojang() ? $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}" : this.Url,
                 Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory
             };
         }
 
         public virtual string GetRelativePath()
         {
+            if (this.Name.Contains("@"))
+            {
+                string[] values = this.Name.Split("@");
+                string[] temps = values[0].Split(':');
+
+                return $"{temps[0].Replace(".", PathHelper.X)}{PathHelper.X}{temps[1]}{PathHelper.X}{temps[2]}{PathHelper.X}{temps[1]}-{temps[2]}.{values[1]}";
+            }
+
             string[] temp = Name.Split(':');
             return $"{temp[0].Replace(".", PathHelper.X)}{PathHelper.X}{temp[1]}{PathHelper.X}{temp[2]}{PathHelper.X}{temp[1]}-{temp[2]}.jar";
         }

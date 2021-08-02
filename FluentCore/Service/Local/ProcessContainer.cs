@@ -154,6 +154,9 @@ namespace FluentCore.Service.Local
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
+            if (string.IsNullOrEmpty(e.Data)) 
+                return;
+
             this.ErrorDataReceived?.Invoke(sender, e);
             this.OutputDataReceived?.Invoke(sender, e);
 
@@ -163,6 +166,9 @@ namespace FluentCore.Service.Local
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            if (string.IsNullOrEmpty(e.Data))
+                return;
+
             this.OutputDataReceived?.Invoke(sender, e);
 
             this.OutputData.Add(e.Data);
@@ -296,10 +302,6 @@ namespace FluentCore.Service.Local
                     Process.Dispose();
                     Process = null;
                 }
-
-                Process.OutputDataReceived -= Process_OutputDataReceived;
-                Process.ErrorDataReceived -= Process_ErrorDataReceived;
-                Process.Exited -= Process_Exited;
 
                 if (tokenSource != null)
                     StopObserveRespond();

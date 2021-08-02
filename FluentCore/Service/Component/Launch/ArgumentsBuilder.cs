@@ -22,6 +22,8 @@ namespace FluentCore.Service.Component.Launch
 
         public GameCore GameCore { get; set; }
 
+        public static readonly string Separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
+
         public string BulidArguments(bool withJavaPath = false)
         {
             var stringBuilder = new StringBuilder();
@@ -37,7 +39,6 @@ namespace FluentCore.Service.Component.Launch
         public string GetFrontArguments()
         {
             var stringBuilder = new StringBuilder();
-            string separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
 
             stringBuilder.Append($" -Xmx{this.LaunchConfig.MaximumMemory}M");
             stringBuilder.Append(this.LaunchConfig.MinimumMemory.HasValue ? $" -Xmn{this.LaunchConfig.MinimumMemory}M" : string.Empty);
@@ -61,7 +62,7 @@ namespace FluentCore.Service.Component.Launch
             stringBuilder.Replace("${natives_directory}", this.LaunchConfig.NativesFolder.Contains(" ") ? $"\"{LaunchConfig.NativesFolder}\"" : LaunchConfig.NativesFolder);
             stringBuilder.Replace("${launcher_name}", "Fluent.Core");
             stringBuilder.Replace("${launcher_version}", "3");
-            stringBuilder.Replace("${classpath_separator}", separator);
+            stringBuilder.Replace("${classpath_separator}", Separator);
             stringBuilder.Replace("${classpath}", GetClasspath());
 
             return stringBuilder.ToString().Replace("  ", " ");
@@ -91,7 +92,6 @@ namespace FluentCore.Service.Component.Launch
             stringBuilder.Replace("${game_assets}", assetsPath.Contains(" ") ? $"\"{assetsPath}{PathHelper.X}virtual{PathHelper.X}legacy\"" : $"{assetsPath}{PathHelper.X}virtual{PathHelper.X}legacy");
             stringBuilder.Replace("${auth_session}", this.LaunchConfig.AuthDataModel.AccessToken);
 
-
             if (!string.IsNullOrEmpty($" {this.LaunchConfig.MoreBehindArgs}"))
                 stringBuilder.Append($" {this.LaunchConfig.MoreBehindArgs}");
 
@@ -100,11 +100,11 @@ namespace FluentCore.Service.Component.Launch
 
         public string GetClasspath()
         {
-            string separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
+            string Separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
             var stringbuilder = new StringBuilder();
 
             foreach (var library in this.GameCore.Libraries)
-                stringbuilder.Append($"{PathHelper.GetLibrariesFolder(this.GameCore.Root)}{PathHelper.X}{library.GetRelativePath()}{separator}");
+                stringbuilder.Append($"{PathHelper.GetLibrariesFolder(this.GameCore.Root)}{PathHelper.X}{library.GetRelativePath()}{Separator}");
 
             if (ArgumentsBuilder.LoadMainClass(this.GameCore.MainClass))
                 stringbuilder.Append(this.GameCore.MainJar);

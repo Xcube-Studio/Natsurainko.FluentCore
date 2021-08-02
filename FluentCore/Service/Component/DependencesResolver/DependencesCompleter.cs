@@ -18,7 +18,7 @@ namespace FluentCore.Service.Component.DependencesResolver
     {
         public GameCore GameCore { get; set; }
 
-        public int MaxThread { get; set; } = 64;
+        public static int MaxThread { get; set; } = 64;
 
         public DependencesCompleter(GameCore core) => this.GameCore = core;
 
