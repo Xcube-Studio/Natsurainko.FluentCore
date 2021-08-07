@@ -33,12 +33,14 @@ namespace FluentCore.Console
         static void Main(string[] args)
         {
             #region Forge Installer
-            //var forgeInstaller = new ModernForgeInstaller
-            //(new CoreLocator(System.Console.ReadLine()), "1.17.1", "1.17.1", System.Console.ReadLine(), System.Console.ReadLine());
+            /*
+            var forgeInstaller = new ModernForgeInstaller
+            (new CoreLocator(System.Console.ReadLine()), "1.17.1", "1.17.1", System.Console.ReadLine(), System.Console.ReadLine());
 
-            //var result = forgeInstaller.InstallAsync().GetAwaiter().GetResult();
-            //System.Console.ReadLine();
-            //return;
+            var result = forgeInstaller.InstallAsync().GetAwaiter().GetResult();
+            System.Console.ReadLine();
+            return;
+            */
             #endregion
 
             #region Vanllia Installer

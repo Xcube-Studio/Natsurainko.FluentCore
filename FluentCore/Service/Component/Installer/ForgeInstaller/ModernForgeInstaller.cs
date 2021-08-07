@@ -13,9 +13,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Json;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -40,6 +37,8 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             this.JavaPath = javaPath;
             this.ForgeInstallerPackagePath = forgeInstallerPackagePath;
         }
+
+        public ForgeInstallerResult Install() => InstallAsync().GetAwaiter().GetResult();
 
         public async Task<ForgeInstallerResult> InstallAsync()
         {
@@ -239,6 +238,15 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             }
 
             #endregion
+
+            if (processErrorOutputs.Count > 0)
+                return new ForgeInstallerResult
+                {
+                    IsSuccessful = false,
+                    Message = $"Failed Install Forge-{forgeVersion}!",
+                    ProcessOutput = processOutputs,
+                    ProcessErrorOutput = processErrorOutputs
+                };
 
             return new ForgeInstallerResult
             {
