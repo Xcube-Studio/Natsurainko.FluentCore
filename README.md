@@ -19,6 +19,10 @@
 + 支持[Bmclapi](https://bmclapidoc.bangbang93.com/)下载源的调用
   + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
 
+目前的不足
++ 不支持除了原版及Forge以外的自动安装
++ 不支持Microsoft验证(我迟迟没有收到迁移的通知 所以没法进行调试)
+
 本项目依赖及运行环境:
 
 + [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0)
