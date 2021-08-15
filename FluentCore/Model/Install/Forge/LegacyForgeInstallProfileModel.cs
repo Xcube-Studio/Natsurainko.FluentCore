@@ -1,13 +1,15 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Install.Forge
 {
+    /// <summary>
+    /// Forge安装概述模型
+    /// <para>
+    /// 1.12-
+    /// </para>
+    /// </summary>
     public class LegacyForgeInstallProfileModel
     {
         [JsonProperty("install")]

@@ -7,26 +7,42 @@ using FluentCore.Service.Local;
 using FluentCore.Service.Network;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluentCore.Service.Component.Installer.ForgeInstaller
 {
+    /// <summary>
+    /// Forge安装器
+    /// <para>
+    /// 1.13+
+    /// </para>
+    /// </summary>
     public class ModernForgeInstaller : InstallerBase
     {
+        /// <summary>
+        /// 游戏id
+        /// </summary>
         public string McVersionId { get; set; }
 
+        /// <summary>
+        /// 版本号
+        /// </summary>
         public string McVersion { get; set; }
 
+        /// <summary>
+        /// Java可执行文件路径
+        /// </summary>
         public string JavaPath { get; set; }
 
+        /// <summary>
+        /// Forge安装包位置
+        /// </summary>
         public string ForgeInstallerPackagePath { get; set; }
 
         public ModernForgeInstaller(CoreLocator locator, string mcVersion, string mcVersionId, string javaPath, string forgeInstallerPackagePath)
@@ -38,9 +54,17 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             this.ForgeInstallerPackagePath = forgeInstallerPackagePath;
         }
 
-        public ForgeInstallerResult Install() => InstallAsync().GetAwaiter().GetResult();
+        /// <summary>
+        /// 安装
+        /// </summary>
+        /// <returns></returns>
+        public ForgeInstallerResultModel Install() => InstallAsync().GetAwaiter().GetResult();
 
-        public async Task<ForgeInstallerResult> InstallAsync()
+        /// <summary>
+        /// 安装(异步)
+        /// </summary>
+        /// <returns></returns
+        public async Task<ForgeInstallerResultModel> InstallAsync()
         {
             using var archive = ZipFile.OpenRead(this.ForgeInstallerPackagePath);
             var processOutputs = new List<string>();
@@ -49,7 +73,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             #region Get version.json
 
             var versionJson = await ZipFileHelper.GetStringFromJsonEntryAsync
-                (archive.Entries.First(x => x.Name.Equals("version.json",StringComparison.OrdinalIgnoreCase)));
+                (archive.Entries.First(x => x.Name.Equals("version.json", StringComparison.OrdinalIgnoreCase)));
             var versionModel = JsonConvert.DeserializeObject<CoreModel>(versionJson);
 
             var versionJsonFile = new FileInfo
@@ -124,7 +148,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 { "{LIBRARY_DIR}", PathHelper.GetLibrariesFolder(this.CoreLocator.Root) },
                 { "/",PathHelper.X }
 };
-            var replaceArgs = forgeInstallProfile.Data.Select(x => ($"{{{x.Key}}}", x.Value.Client)).ToDictionary(k => k.Item1, v => 
+            var replaceArgs = forgeInstallProfile.Data.Select(x => ($"{{{x.Key}}}", x.Value.Client)).ToDictionary(k => k.Item1, v =>
             {
                 if (v.Client.Contains("[") && v.Client.Contains("]"))
                     return GetMavenFilePath(v.Client);
@@ -143,7 +167,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 }
             }
 
-            for (int i = 0; i < forgeInstallProfile.Processors.Count; i++) 
+            for (int i = 0; i < forgeInstallProfile.Processors.Count; i++)
             {
                 var processModel = forgeInstallProfile.Processors[i];
 
@@ -161,7 +185,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 if (processModel.Outputs != default)
                     processModel.Outputs = processModel.Outputs.Select
                         (x => (StringHelper.Replace(x.Key, replaceArgs), StringHelper.Replace(x.Value, replaceArgs))).ToDictionary(k => k.Item1, v => v.Item2);
-                
+
                 forgeInstallProfile.Processors[i] = processModel;
             }
             #endregion
@@ -185,7 +209,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 //if (res.HttpStatusCode != HttpStatusCode.OK)
                 //    this.ErrorDownloadResponses.Add(res);
 
-                //SingleDownloadDoneEvent?.Invoke(this, res);
+                //SingleDownloadedEvent?.Invoke(this, res);
             }, blockOptions);
 
             var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
@@ -211,7 +235,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 string[] lines = (await ZipFileHelper.GetStringFromJsonEntryAsync(libEntry)).Split("\r\n");
                 var mainClass = lines.ToList().FirstOrDefault(x => x.Contains("Main-Class: ")).Replace("Main-Class: ", "");
 
-                var libs = new List<string>(){ process.Jar }.Concat(process.Classpath);
+                var libs = new List<string>() { process.Jar }.Concat(process.Classpath);
                 var classpath = libs.Select(x => $"{Path.Combine(PathHelper.GetLibrariesFolder(this.CoreLocator.Root), new Library { Name = x }.GetRelativePath())}");
                 var parameter = new List<string>
                 {
@@ -240,7 +264,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             #endregion
 
             if (processErrorOutputs.Count > 0)
-                return new ForgeInstallerResult
+                return new ForgeInstallerResultModel
                 {
                     IsSuccessful = false,
                     Message = $"Failed Install Forge-{forgeVersion}!",
@@ -248,7 +272,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                     ProcessErrorOutput = processErrorOutputs
                 };
 
-            return new ForgeInstallerResult
+            return new ForgeInstallerResultModel
             {
                 IsSuccessful = true,
                 Message = $"Successfully Install Forge-{forgeVersion}!",
@@ -262,10 +286,10 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             string[] values = maven.TrimStart('[').TrimEnd(']').Split(":");
 
             string path = $"{PathHelper.GetLibrariesFolder(this.CoreLocator.Root)}" +
-                $"/{values[0].Replace(".","/")}" +
+                $"/{values[0].Replace(".", "/")}" +
                 $"/{values[1]}" +
                 $"/{values[2]}" +
-                $"/{values[1]}-{values[2]}-{values[3].Replace("@",".")}";
+                $"/{values[1]}-{values[2]}-{values[3].Replace("@", ".")}";
 
             if (!maven.Contains("@"))
                 path += ".jar";

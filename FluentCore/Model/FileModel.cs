@@ -2,6 +2,9 @@
 
 namespace FluentCore.Model
 {
+    /// <summary>
+    /// 文件信息模型
+    /// </summary>
     public class FileModel
     {
         [JsonProperty("path")]

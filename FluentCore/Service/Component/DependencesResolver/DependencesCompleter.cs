@@ -14,18 +14,37 @@ using System.Threading.Tasks.Dataflow;
 
 namespace FluentCore.Service.Component.DependencesResolver
 {
+    /// <summary>
+    /// 游戏依赖补全器
+    /// </summary>
     public class DependencesCompleter
     {
+        /// <summary>
+        /// 游戏核心
+        /// </summary>
         public GameCore GameCore { get; set; }
 
+        /// <summary>
+        /// 最大线程数
+        /// </summary>
         public static int MaxThread { get; set; } = 64;
 
         public DependencesCompleter(GameCore core) => this.GameCore = core;
 
+        /// <summary>
+        /// 下载错误返回集合
+        /// </summary>
         public List<HttpDownloadResponse> ErrorDownloadResponses = new List<HttpDownloadResponse>();
 
-        public event EventHandler<HttpDownloadResponse> SingleDownloadDoneEvent;
+        /// <summary>
+        /// 单个文件下载完事件
+        /// </summary>
+        public event EventHandler<HttpDownloadResponse> SingleDownloadedEvent;
 
+        /// <summary>
+        /// 补全游戏文件(异步)
+        /// </summary>
+        /// <returns></returns>
         public async Task CompleteAsync()
         {
             var mainJarRequest = GetMainJarDownloadRequest();
@@ -51,7 +70,7 @@ namespace FluentCore.Service.Component.DependencesResolver
                 if (res.HttpStatusCode != HttpStatusCode.OK)
                     this.ErrorDownloadResponses.Add(res);
 
-                SingleDownloadDoneEvent?.Invoke(this, res);
+                SingleDownloadedEvent?.Invoke(this, res);
             }, blockOptions);
 
             var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
@@ -64,6 +83,10 @@ namespace FluentCore.Service.Component.DependencesResolver
             GC.Collect();
         }
 
+        /// <summary>
+        /// 获取所有下载(除主Jar外)请求(异步)
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<HttpDownloadRequest>> GetRequestsAsync()
         {
             var dependences = await new AssetsResolver(this.GameCore).GetLostDependencesAsync();
@@ -77,6 +100,10 @@ namespace FluentCore.Service.Component.DependencesResolver
             return requests;
         }
 
+        /// <summary>
+        /// 获取游戏主Jar下载请求(异步)
+        /// </summary>
+        /// <returns></returns>
         public HttpDownloadRequest GetMainJarDownloadRequest()
         {
             var file = new FileInfo(this.GameCore.MainJar);

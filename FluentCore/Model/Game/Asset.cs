@@ -5,11 +5,20 @@ using System.IO;
 
 namespace FluentCore.Model.Game
 {
+    /// <summary>
+    /// 游戏Asset依赖
+    /// </summary>
     public class Asset : IDependence
     {
+        /// <summary>
+        /// 哈希值
+        /// </summary>
         [JsonProperty("hash")]
         public string Hash { get; set; }
 
+        /// <summary>
+        /// 文件大小
+        /// </summary>
         [JsonProperty("size")]
         public int Size { get; set; }
 

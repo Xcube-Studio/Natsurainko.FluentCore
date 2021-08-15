@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace FluentCore.Service.Local
 {
@@ -11,7 +6,7 @@ namespace FluentCore.Service.Local
     {
         public static IEnumerable<string> Replace(List<string> values, Dictionary<string, string> replaceValues)
         {
-            for (int i = 0; i < values.Count; i++) 
+            for (int i = 0; i < values.Count; i++)
             {
                 var value = values[i];
 

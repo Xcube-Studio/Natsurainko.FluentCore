@@ -1,30 +1,15 @@
-﻿using FluentCore.Extend.Service.Local;
-using FluentCore.Model;
+﻿using FluentCore.Model;
 using FluentCore.Model.Auth;
-using FluentCore.Model.Game;
+using FluentCore.Model.Auth.Yggdrasil;
 using FluentCore.Model.Launch;
+using FluentCore.Service.Component.Authenticator;
 using FluentCore.Service.Component.DependencesResolver;
 using FluentCore.Service.Component.Launch;
 using FluentCore.Service.Local;
 using FluentCore.Service.Network;
-using Newtonsoft.Json;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using FluentCore.Service.Component.Authenticator;
-using FluentCore.Model.Auth.Yggdrasil;
-using FluentCore.Interface;
 using FluentCore.Wrapper;
-using FluentCore.Service.Component.Installer;
-using System.IO.Compression;
-using FluentCore.Service.Component.Installer.ForgeInstaller;
+using System;
+using System.Diagnostics;
 
 namespace FluentCore.Console
 {
@@ -86,10 +71,9 @@ namespace FluentCore.Console
             var res = (StandardResponseModel)(auth.AuthenticateAsync().GetAwaiter().GetResult()).Item1;
 
             System.Console.WriteLine("Loading DependencesCompleter...");
+
             var completer = new DependencesCompleter(core);
-
-            completer.SingleDownloadDoneEvent += Completer_SingleDownloadDoneEvent;
-
+            completer.SingleDownloadedEvent += Completer_SingleDownloadedEvent;
             completer.CompleteAsync().Wait();
 
             LaunchConfig launchConfig = new LaunchConfig
@@ -107,7 +91,6 @@ namespace FluentCore.Console
                 }
             };
 
-
             #region Authlib-Injector
 
             /*
@@ -116,7 +99,6 @@ namespace FluentCore.Console
             */
 
             #endregion
-
 
             var launcher = new MinecraftLauncher(coreLocator, launchConfig);
             launcher.Launch(id);
@@ -139,7 +121,7 @@ namespace FluentCore.Console
             System.Console.WriteLine($"[FluentCore.MinecraftLauncher]{e.Data}");
         }
 
-        private static void Completer_SingleDownloadDoneEvent(object sender, HttpDownloadResponse e)
+        private static void Completer_SingleDownloadedEvent(object sender, HttpDownloadResponse e)
         {
             System.Console.WriteLine($"[{e.HttpStatusCode}][{e.Message}][{e.FileInfo}]");
         }

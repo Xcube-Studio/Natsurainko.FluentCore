@@ -1,12 +1,13 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Install.Forge
 {
+    /// <summary>
+    /// Forge安装数据模型
+    /// <para>
+    /// 1.13+
+    /// </para>
+    /// </summary>
     public class ForgeInstallDataModel
     {
         [JsonProperty("client")]

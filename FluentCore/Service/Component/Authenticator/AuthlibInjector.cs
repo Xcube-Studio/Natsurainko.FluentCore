@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.Authenticator
 {
+    /// <summary>
+    /// Authlib-Injector封装类
+    /// </summary>
     public class AuthlibInjector : IAuthlibInjector
     {
         public AuthlibInjector(string url, string path)
@@ -43,6 +46,11 @@ namespace FluentCore.Service.Component.Authenticator
             };
         }
 
+        /// <summary>
+        /// 下载Authlib-Injector调用Jar(异步)
+        /// </summary>
+        /// <param name="saveFolder"></param>
+        /// <returns></returns>
         public static async Task<FileInfo> DownloadAsync(string saveFolder)
         {
             return (await HttpHelper.HttpDownloadAsync($"https://download.mcbbs.net/mirrors/authlib-injector/artifact/38/authlib-injector-1.1.38.jar", saveFolder)).FileInfo;

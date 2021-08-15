@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace FluentCore.Model.Launch
 {
+    /// <summary>
+    /// 游戏启动核心
+    /// </summary>
     public class GameCore
     {
         public AssetIndex AsstesIndex { get; set; }

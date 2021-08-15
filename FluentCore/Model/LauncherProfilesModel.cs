@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 namespace FluentCore.Model
 {
+    /// <summary>
+    /// LauncherProfiles模型
+    /// </summary>
     public class LauncherProfilesModel
     {
         [JsonProperty("AuthenticationDatabase")]

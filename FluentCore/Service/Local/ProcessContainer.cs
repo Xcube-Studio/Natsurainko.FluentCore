@@ -154,7 +154,7 @@ namespace FluentCore.Service.Local
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (string.IsNullOrEmpty(e.Data)) 
+            if (string.IsNullOrEmpty(e.Data))
                 return;
 
             this.ErrorDataReceived?.Invoke(sender, e);

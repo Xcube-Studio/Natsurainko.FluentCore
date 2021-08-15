@@ -1,13 +1,12 @@
 ﻿using FluentCore.Model.Game;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FluentCore.Model.Install.Forge
 {
+    /// <summary>
+    /// Forge安装概述模型
+    /// </summary>
     public class ForgeInstallProfileModel
     {
         [JsonProperty("_comment_")]
@@ -33,7 +32,7 @@ namespace FluentCore.Model.Install.Forge
 
         [JsonProperty("data")]
         public Dictionary<string, ForgeInstallDataModel> Data { get; set; }
-        
+
         [JsonProperty("processors")]
         public List<ForgeInstallProcessorModel> Processors { get; set; }
 

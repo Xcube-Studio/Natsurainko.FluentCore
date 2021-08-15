@@ -11,8 +11,13 @@ using System.Text;
 
 namespace FluentCore.Service.Component.Launch
 {
+    /// <summary>
+    /// 游戏核心定位器
+    /// </summary>
     public class CoreLocator : ICoreLocator
     {
+        public string Root { get; set; }
+
         public CoreLocator(string root)
         {
             if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
@@ -20,8 +25,6 @@ namespace FluentCore.Service.Component.Launch
 
             this.Root = root;
         }
-
-        public string Root { get; set; }
 
         public IEnumerable<GameCore> GetAllGameCores()
         {
@@ -85,6 +88,12 @@ namespace FluentCore.Service.Component.Launch
 
                     if (!obj.ToString().Contains("rules"))
                     {
+                        if (obj.ToString().Contains("-DignoreList"))
+                        {
+                            fArg.Append($" {obj.ToString().Replace("${version_name}", coreModel.InheritsFrom)}");
+                            continue;
+                        };
+
                         if (obj.ToString().Contains("-DlibraryDirectory"))
                         {
                             fArg.Append($" {obj.ToString().Replace("${library_directory}", this.Root.Contains(" ") ? $"\"{PathHelper.GetLibrariesFolder(this.Root)}\"" : PathHelper.GetLibrariesFolder(this.Root))}");
@@ -131,6 +140,12 @@ namespace FluentCore.Service.Component.Launch
             return null;
         }
 
+        /// <summary>
+        /// 合并源核心与继承源核心
+        /// </summary>
+        /// <param name="raw">源核心</param>
+        /// <param name="inheritsFrom">继承源核心</param>
+        /// <returns></returns>
         public static CoreModel MergeInheritsFromCoreWithRaw(CoreModel raw, CoreModel inheritsFrom)
         {
             if (raw.Arguments != null)
@@ -144,7 +159,7 @@ namespace FluentCore.Service.Component.Launch
             raw.JavaVersion = inheritsFrom.JavaVersion;
             raw.Libraries = raw.Libraries.Union(inheritsFrom.Libraries);
             raw.Type = inheritsFrom.Type;
-            raw.InheritsFrom = null;
+            //raw.InheritsFrom = null;
 
             return raw;
         }

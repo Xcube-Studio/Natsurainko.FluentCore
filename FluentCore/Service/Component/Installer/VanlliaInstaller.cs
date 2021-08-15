@@ -8,13 +8,18 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.Installer
 {
+    /// <summary>
+    /// 原版游戏安装器
+    /// </summary>
     public class VanlliaInstaller : InstallerBase
     {
-        public VanlliaInstaller(CoreLocator locator) : base(locator)
-        {
+        public VanlliaInstaller(CoreLocator locator) : base(locator) { }
 
-        }
-
+        /// <summary>
+        /// 根据版本号安装对应的游戏
+        /// </summary>
+        /// <param name="mcVersion">版本号</param>
+        /// <returns></returns>
         public async Task<bool> InstallAsync(string mcVersion)
         {
             foreach (var item in (await SystemConfiguration.Api.GetVersionManifest()).Versions)

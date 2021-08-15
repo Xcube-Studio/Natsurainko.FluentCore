@@ -7,6 +7,9 @@ using System.IO;
 
 namespace FluentCore.Model.Game
 {
+    /// <summary>
+    /// 游戏Library依赖
+    /// </summary>
     public class Library : IDependence
     {
         [JsonProperty("downloads")]

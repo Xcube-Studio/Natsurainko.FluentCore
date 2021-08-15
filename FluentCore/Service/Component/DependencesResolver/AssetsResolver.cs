@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.DependencesResolver
 {
+    /// <summary>
+    /// Asset检索器
+    /// </summary>
     public class AssetsResolver : IDependencesResolver
     {
         public GameCore GameCore { get; set; }

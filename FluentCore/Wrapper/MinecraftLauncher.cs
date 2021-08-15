@@ -130,6 +130,15 @@ namespace FluentCore.Wrapper
             }
         }
 
+        /// <summary>
+        /// 根据游戏核心来启动游戏(异步)
+        /// <para>
+        /// 静态方法
+        /// </para>
+        /// </summary>
+        /// <param name="core">游戏核心</param>
+        /// <param name="config">启动配置信息</param>
+        /// <returns></returns>
         public static async Task<LaunchResult> LaunchAsync(GameCore core, LaunchConfig config)
         {
             var args = new ArgumentsBuilder(core, config).BulidArguments();
@@ -154,6 +163,15 @@ namespace FluentCore.Wrapper
             };
         }
 
+        /// <summary>
+        /// 根据游戏核心来启动游戏
+        /// <para>
+        /// 静态方法
+        /// </para>
+        /// </summary>
+        /// <param name="core">游戏核心</param>
+        /// <param name="config">启动配置信息</param>
+        /// <returns></returns>
         public static LaunchResult Launch(GameCore core, LaunchConfig config) => LaunchAsync(core, config).GetAwaiter().GetResult();
     }
 }

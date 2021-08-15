@@ -8,14 +8,29 @@ using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.Authenticator
 {
+    /// <summary>
+    /// Yggdrasil验证器
+    /// </summary>
     public class YggdrasilAuthenticator : IAuthenticator
     {
+        /// <summary>
+        /// Yggdrasil验证服务器地址
+        /// </summary>
         public string YggdrasilServerUrl { get; set; } = "https://authserver.mojang.com";
 
+        /// <summary>
+        /// 客户端令牌
+        /// </summary>
         public string ClientToken { get; set; } = Guid.NewGuid().ToString("N");
 
+        /// <summary>
+        /// 登录邮箱
+        /// </summary>
         public string Email { get; set; }
 
+        /// <summary>
+        /// 登录密码
+        /// </summary>
         public string Password { get; set; }
 
         public YggdrasilAuthenticator(string email, string password, string yggdrasilServerUrl = default, string clientToken = default)
@@ -32,9 +47,17 @@ namespace FluentCore.Service.Component.Authenticator
             this.YggdrasilServerUrl = string.IsNullOrEmpty(yggdrasilServerUrl) ? this.YggdrasilServerUrl : $"{yggdrasilServerUrl}/authserver";
         }
 
-        public Tuple<ResponseModel, AuthResponseTypeModel> Authenticate() => AuthenticateAsync().GetAwaiter().GetResult();
+        /// <summary>
+        /// 登录Yggdrasil服务器
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<ResponseModel, AuthResponseType> Authenticate() => AuthenticateAsync().GetAwaiter().GetResult();
 
-        public async Task<Tuple<ResponseModel, AuthResponseTypeModel>> AuthenticateAsync()
+        /// <summary>
+        /// 登录Yggdrasil服务器(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Tuple<ResponseModel, AuthResponseType>> AuthenticateAsync()
         {
             string content = JsonConvert.SerializeObject(
                 new LoginRequestModel
@@ -49,15 +72,23 @@ namespace FluentCore.Service.Component.Authenticator
 
             string text = await res.Content.ReadAsStringAsync();
             if (res.IsSuccessStatusCode)
-                return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<StandardResponseModel>(text), AuthResponseTypeModel.Succeeded);
-            else return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
+                return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<StandardResponseModel>(text), AuthResponseType.Succeeded);
+            else return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Failed);
         }
 
-        public Tuple<ResponseModel, AuthResponseTypeModel> Refresh(string accessToken, ProfileModel profile = null) => RefreshAsync(accessToken, profile).GetAwaiter().GetResult();
+        /// <summary>
+        /// 刷新令牌
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<ResponseModel, AuthResponseType> Refresh(string accessToken, ProfileModel profile = null) => RefreshAsync(accessToken, profile).GetAwaiter().GetResult();
 
-        public async Task<Tuple<ResponseModel, AuthResponseTypeModel>> RefreshAsync(string accessToken, ProfileModel profile = null)
+        /// <summary>
+        /// 刷新令牌(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Tuple<ResponseModel, AuthResponseType>> RefreshAsync(string accessToken, ProfileModel profile = null)
         {
             string content = JsonConvert.SerializeObject(
                 new
@@ -82,15 +113,23 @@ namespace FluentCore.Service.Component.Authenticator
             using var res = await HttpHelper.HttpPostAsync($"{YggdrasilServerUrl}/refresh", content);
 
             if (res.IsSuccessStatusCode)
-                return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<StandardResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Succeeded);
-            else return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
+                return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<StandardResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Succeeded);
+            else return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Failed);
         }
 
-        public Tuple<ResponseModel, AuthResponseTypeModel> Validate(string accessToken) => ValidateAsync(accessToken).GetAwaiter().GetResult();
+        /// <summary>
+        /// 验证令牌
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<ResponseModel, AuthResponseType> Validate(string accessToken) => ValidateAsync(accessToken).GetAwaiter().GetResult();
 
-        public async Task<Tuple<ResponseModel, AuthResponseTypeModel>> ValidateAsync(string accessToken)
+        /// <summary>
+        /// 验证令牌(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Tuple<ResponseModel, AuthResponseType>> ValidateAsync(string accessToken)
         {
             string content = JsonConvert.SerializeObject(
                 new StandardRequestModel
@@ -103,15 +142,23 @@ namespace FluentCore.Service.Component.Authenticator
             using var res = await HttpHelper.HttpPostAsync($"{YggdrasilServerUrl}/validate", content);
 
             if (res.IsSuccessStatusCode)
-                return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (null, AuthResponseTypeModel.Succeeded);
-            else return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
+                return new Tuple<ResponseModel, AuthResponseType>
+                    (null, AuthResponseType.Succeeded);
+            else return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Failed);
         }
 
-        public Tuple<ResponseModel, AuthResponseTypeModel> Signout() => SignoutAsync().GetAwaiter().GetResult();
+        /// <summary>
+        /// 登出Yggdrasil服务器
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<ResponseModel, AuthResponseType> Signout() => SignoutAsync().GetAwaiter().GetResult();
 
-        public async Task<Tuple<ResponseModel, AuthResponseTypeModel>> SignoutAsync()
+        /// <summary>
+        /// 登出Yggdrasil服务器(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Tuple<ResponseModel, AuthResponseType>> SignoutAsync()
         {
             string content = JsonConvert.SerializeObject(
                 new
@@ -124,15 +171,23 @@ namespace FluentCore.Service.Component.Authenticator
             using var res = await HttpHelper.HttpPostAsync($"{YggdrasilServerUrl}/signout", content);
 
             if (res.IsSuccessStatusCode)
-                return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (null, AuthResponseTypeModel.Succeeded);
-            else return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
+                return new Tuple<ResponseModel, AuthResponseType>
+                    (null, AuthResponseType.Succeeded);
+            else return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Failed);
         }
 
-        public Tuple<ResponseModel, AuthResponseTypeModel> Invalidate(string accessToken) => InvalidateAsync(accessToken).GetAwaiter().GetResult();
+        /// <summary>
+        /// 使令牌失效
+        /// </summary>
+        /// <returns></returns>
+        public Tuple<ResponseModel, AuthResponseType> Invalidate(string accessToken) => InvalidateAsync(accessToken).GetAwaiter().GetResult();
 
-        public async Task<Tuple<ResponseModel, AuthResponseTypeModel>> InvalidateAsync(string accessToken)
+        /// <summary>
+        /// 使令牌失效(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Tuple<ResponseModel, AuthResponseType>> InvalidateAsync(string accessToken)
         {
             string content = JsonConvert.SerializeObject(
                 new StandardRequestModel
@@ -145,10 +200,10 @@ namespace FluentCore.Service.Component.Authenticator
             using var res = await HttpHelper.HttpPostAsync($"{YggdrasilServerUrl}/invalidate", content);
 
             if (res.IsSuccessStatusCode)
-                return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (null, AuthResponseTypeModel.Succeeded);
-            else return new Tuple<ResponseModel, AuthResponseTypeModel>
-                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseTypeModel.Failed);
+                return new Tuple<ResponseModel, AuthResponseType>
+                    (null, AuthResponseType.Succeeded);
+            else return new Tuple<ResponseModel, AuthResponseType>
+                    (JsonConvert.DeserializeObject<ErrorResponseModel>(await res.Content.ReadAsStringAsync()), AuthResponseType.Failed);
         }
 
         public void Dispose()

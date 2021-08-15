@@ -2,6 +2,9 @@
 
 namespace FluentCore.Model
 {
+    /// <summary>
+    /// 版本清单子项模型
+    /// </summary>
     public class VersionManifestItem
     {
         [JsonProperty("id")]

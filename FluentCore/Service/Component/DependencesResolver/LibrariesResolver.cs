@@ -3,9 +3,13 @@ using FluentCore.Model.Launch;
 using FluentCore.Service.Local;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace FluentCore.Service.Component.DependencesResolver
 {
+    /// <summary>
+    /// Library检索器
+    /// </summary>
     public class LibrariesResolver : IDependencesResolver
     {
         public GameCore GameCore { get; set; }
@@ -51,5 +55,9 @@ namespace FluentCore.Service.Component.DependencesResolver
                     yield return native;
             }
         }
+
+        public Task<IEnumerable<IDependence>> GetDependencesAsync() => Task.Run(GetDependences);
+
+        public Task<IEnumerable<IDependence>> GetLostDependencesAsync() => Task.Run(GetLostDependences);
     }
 }

@@ -12,15 +12,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace FluentCore.Service.Component.Installer.ForgeInstaller
 {
+    /// <summary>
+    /// Forge安装器
+    /// <para>
+    /// 1.12-
+    /// </para>
+    /// </summary>
     public class LegacyForgeInstaller : InstallerBase
     {
+        /// <summary>
+        /// Forge安装包位置
+        /// </summary>
         public string ForgeInstallerPackagePath { get; set; }
 
         public LegacyForgeInstaller(CoreLocator locator, string forgeInstallerPackagePath)
@@ -29,9 +36,17 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
             this.ForgeInstallerPackagePath = forgeInstallerPackagePath;
         }
 
-        public ForgeInstallerResult Install() => InstallAsync().GetAwaiter().GetResult();
+        /// <summary>
+        /// 安装
+        /// </summary>
+        /// <returns></returns>
+        public ForgeInstallerResultModel Install() => InstallAsync().GetAwaiter().GetResult();
 
-        public async Task<ForgeInstallerResult> InstallAsync()
+        /// <summary>
+        /// 安装(异步)
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ForgeInstallerResultModel> InstallAsync()
         {
             using var archive = ZipFile.OpenRead(this.ForgeInstallerPackagePath);
 
@@ -101,7 +116,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
 
             #endregion
 
-            return new ForgeInstallerResult
+            return new ForgeInstallerResultModel
             {
                 IsSuccessful = true,
                 Message = $"Successfully Install {forgeInstallProfile.Install.Target}!"

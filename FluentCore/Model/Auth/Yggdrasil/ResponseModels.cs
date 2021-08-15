@@ -4,8 +4,14 @@ using System.Collections.Generic;
 
 namespace FluentCore.Model.Auth.Yggdrasil
 {
+    /// <summary>
+    /// Yggdrasil基础返回模型
+    /// </summary>
     public class ResponseModel { }
 
+    /// <summary>
+    /// Yggdrasil标准返回模型
+    /// </summary>
     public class StandardResponseModel : ResponseModel
     {
         [JsonProperty("user")]
@@ -24,6 +30,9 @@ namespace FluentCore.Model.Auth.Yggdrasil
         public ProfileModel SelectedProfile { get; set; }
     }
 
+    /// <summary>
+    /// Yggdrasil错误返回模型
+    /// </summary>
     public class ErrorResponseModel : ResponseModel
     {
         [JsonProperty("error")]

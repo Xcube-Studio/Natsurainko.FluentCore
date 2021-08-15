@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace FluentCore.Model.Game
 {
+    /// <summary>
+    /// 游戏核心源数据模型
+    /// </summary>
     public class CoreModel
     {
         [JsonProperty("arguments")]

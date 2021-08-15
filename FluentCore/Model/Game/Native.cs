@@ -3,6 +3,9 @@ using System.IO;
 
 namespace FluentCore.Model.Game
 {
+    /// <summary>
+    /// 游戏Native(继承于Library)依赖
+    /// </summary>
     public class Native : Library
     {
         public Native(Library library)

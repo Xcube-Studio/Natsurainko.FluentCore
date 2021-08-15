@@ -7,6 +7,9 @@ using System.Text;
 
 namespace FluentCore.Service.Component.Launch
 {
+    /// <summary>
+    /// 参数构造器
+    /// </summary>
     public class ArgumentsBuilder : IArgumentsBuilder
     {
         public ArgumentsBuilder(GameCore core, LaunchConfig config)
@@ -18,10 +21,19 @@ namespace FluentCore.Service.Component.Launch
             this.LaunchConfig = config;
         }
 
+        /// <summary>
+        /// 启动配置信息
+        /// </summary>
         public LaunchConfig LaunchConfig { get; set; }
 
+        /// <summary>
+        /// 游戏核心
+        /// </summary>
         public GameCore GameCore { get; set; }
 
+        /// <summary>
+        /// 分隔符
+        /// </summary>
         public static readonly string Separator = SystemConfiguration.Platform == OSPlatform.Windows ? ";" : ":";
 
         public string BulidArguments(bool withJavaPath = false)
@@ -111,6 +123,10 @@ namespace FluentCore.Service.Component.Launch
             return stringbuilder.ToString().Contains(" ") ? $"\"{stringbuilder}\"" : stringbuilder.ToString();
         }
 
+        /// <summary>
+        /// 获取环境JVM参数
+        /// </summary>
+        /// <returns></returns>
         public static string GetEnvironmentJVMArguments()
         {
             var stringBuilder = new StringBuilder();
@@ -134,6 +150,11 @@ namespace FluentCore.Service.Component.Launch
             return stringBuilder.ToString();
         }
 
+        /// <summary>
+        /// 判读是否加载主Jar
+        /// </summary>
+        /// <param name="mainClass">mainClass字符串</param>
+        /// <returns></returns>
         public static bool LoadMainClass(string mainClass)
         {
             return mainClass switch
