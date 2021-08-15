@@ -28,6 +28,12 @@
 > 或是您愿意加入我们，与我们一同开发？ <br/>
 > 联系: Xcube Studio 工作室 QQ群:597704076 / a-275@qq.com (作者本人邮箱)
 
+### 安装
+
++ 在Visual Studio的Nuget包管理器中搜索 FluentLauncher.Core 并安装
++ 直接下载本仓库Release中的.nupkg文件进行安装
++ 直接下载本仓库Release中的.dll文件导入项目
+
 ### 启动核心的简单调用
 
 #### 初始化启动核心并启动游戏
@@ -65,4 +71,5 @@ var launcher = new MinecraftLauncher(coreLocator, launchConfig);//初始化启�
 launcher.Launch(id);//启动游戏，id:要启动的游戏的id
 ```
 
->具体详细功能请转到wiki翻阅
+>具体其他详细功能请转到wiki翻阅
+
