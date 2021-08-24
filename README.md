@@ -28,6 +28,10 @@
 + [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0)
 + [Newtonsoft.Json](https://www.newtonsoft.com/json)
 
+声明
++ BMCLAPI是@bangbang93开发的BMCL的一部分，用于解决国内线路对Forge和Minecraft官方使用的Amazon S3 速度缓慢的问题。BMCLAPI是对外开放的，所有需要Minecraft资源的启动器均可调用。
++ 感谢开发过程中大佬[laolarou726](https://github.com/laolarou726)给出的建议和指导 不妨也看看它的启动核心项目[Projbobcat](https://github.com/Corona-Studio/ProjBobcat)
+
 > 您发现了我们项目中的bug? 对我们的项目中有不满意的地方? <br/>
 > 或是您愿意加入我们，与我们一同开发？ <br/>
 > 联系: Xcube Studio 工作室 QQ群:597704076 / a-275@qq.com (作者本人邮箱)
