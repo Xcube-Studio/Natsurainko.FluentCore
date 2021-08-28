@@ -16,12 +16,12 @@
 + 对Offline/Yggdrasil验证的支持
 + 支持AuthlibInjector并搭配Yggdrasil验证器实现外置登录
 + 支持多线程补全Assets、Libraries、游戏主Jar
++ 支持Microsoft验证 并且在FluentCore.Extend中添加了调用浏览器进行登录的扩展
 + 支持[Bmclapi](https://bmclapidoc.bangbang93.com/)下载源的调用
   + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
 
 目前的不足
 + 不支持除了原版及Forge以外的自动安装
-+ 不支持Microsoft验证(我迟迟没有收到迁移的通知 所以没法进行调试)
 
 本项目依赖及运行环境:
 
