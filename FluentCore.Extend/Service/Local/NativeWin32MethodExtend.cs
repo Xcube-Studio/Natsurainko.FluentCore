@@ -6,7 +6,7 @@ namespace FluentCore.Extend.Service.Local
     /// <summary>
     /// Win32下的Native方法的调用
     /// <para>
-    /// [ 为什么要将这些方法写在在扩展中 因为这里的方法调用了微软不愿意开发人员使用的某些Native API ]
+    /// 警告:该类仅供Windows环境使用
     /// </para>
     /// </summary>
     public static class NativeWin32MethodExtend
@@ -144,5 +144,8 @@ namespace FluentCore.Extend.Service.Local
                     CloseHandle(hProc);
             }
         }
+
+        [DllImport("User32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 }

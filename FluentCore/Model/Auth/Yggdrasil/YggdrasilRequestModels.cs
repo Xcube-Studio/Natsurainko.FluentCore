@@ -5,7 +5,7 @@ namespace FluentCore.Model.Auth.Yggdrasil
     /// <summary>
     /// Yggdrasil登录请求模型
     /// </summary>
-    public class LoginRequestModel : RequestModel
+    public class LoginRequestModel : BaseRequestModel
     {
         [JsonProperty("agent")]
         public Agent Agent { get; set; } = new Agent();
@@ -32,22 +32,10 @@ namespace FluentCore.Model.Auth.Yggdrasil
     /// <summary>
     /// Yggdrasil标准请求模型
     /// </summary>
-    public class StandardRequestModel : RequestModel
+    public class YggdrasilRequestModel : BaseRequestModel
     {
         [JsonProperty("accessToken")]
         public string AccessToken { get; set; }
-    }
-
-    /// <summary>
-    /// Yggdrasil基础请求模型
-    /// </summary>
-    public abstract class RequestModel
-    {
-        /// <summary>
-        /// 客户端标识符
-        /// </summary>
-        [JsonProperty("clientToken")]
-        public string ClientToken { get; set; }
     }
 
     public class Agent

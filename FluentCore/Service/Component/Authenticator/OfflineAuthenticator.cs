@@ -24,11 +24,11 @@ namespace FluentCore.Service.Component.Authenticator
 
         public Guid Uuid { get; private set; }
 
-        public Tuple<ResponseModel, AuthResponseType> Authenticate()
+        public Tuple<BaseResponseModel, AuthResponseType> Authenticate()
         {
             Uuid = Uuid.Equals(null) ? UuidHelper.FromString(UserName) : Guid.NewGuid();
 
-            var model = new StandardResponseModel
+            var model = new YggdrasilResponseModel
             {
                 AccessToken = Guid.NewGuid().ToString("N"),
                 ClientToken = Guid.NewGuid().ToString("N"),
@@ -51,10 +51,10 @@ namespace FluentCore.Service.Component.Authenticator
                 }
             };
 
-            return new Tuple<ResponseModel, AuthResponseType>(model, AuthResponseType.Succeeded);
+            return new Tuple<BaseResponseModel, AuthResponseType>(model, AuthResponseType.Succeeded);
         }
 
-        public Task<Tuple<ResponseModel, AuthResponseType>> AuthenticateAsync() => Task.Run(Authenticate);
+        public Task<Tuple<BaseResponseModel, AuthResponseType>> AuthenticateAsync() => Task.Run(Authenticate);
 
         public void Dispose()
         {

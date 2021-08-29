@@ -61,7 +61,6 @@ namespace FluentCore.Service.Network
             using var httpContent = new StringContent(content);
 
             httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
             requestMessage.Content = httpContent;
 
             var res = await HttpClient.SendAsync(requestMessage);

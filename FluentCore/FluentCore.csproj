@@ -15,7 +15,8 @@ A Core Work for Minecraft Launcher</Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
-    <Version>1.1.0</Version>
+    <Version>1.1.2</Version>
+    <PackageId>FluentLauncher.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>

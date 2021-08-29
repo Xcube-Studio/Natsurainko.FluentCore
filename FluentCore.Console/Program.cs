@@ -68,7 +68,7 @@ namespace FluentCore.Console
             string password = System.Console.ReadLine();
 
             using var auth = new YggdrasilAuthenticator(email, password);
-            var res = (StandardResponseModel)(auth.AuthenticateAsync().GetAwaiter().GetResult()).Item1;
+            var res = (YggdrasilResponseModel)auth.AuthenticateAsync().GetAwaiter().GetResult().Item1;
 
             System.Console.WriteLine("Loading DependencesCompleter...");
 

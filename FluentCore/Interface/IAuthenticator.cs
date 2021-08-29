@@ -1,5 +1,4 @@
 ﻿using FluentCore.Model.Auth;
-using FluentCore.Model.Auth.Yggdrasil;
 using System;
 using System.Threading.Tasks;
 
@@ -14,12 +13,12 @@ namespace FluentCore.Interface
         /// 验证
         /// </summary>
         /// <returns></returns>
-        Tuple<ResponseModel, AuthResponseType> Authenticate();
+        Tuple<BaseResponseModel, AuthResponseType> Authenticate();
 
         /// <summary>
         /// 验证(异步)
         /// </summary>
         /// <returns></returns>
-        Task<Tuple<ResponseModel, AuthResponseType>> AuthenticateAsync();
+        Task<Tuple<BaseResponseModel, AuthResponseType>> AuthenticateAsync();
     }
 }
