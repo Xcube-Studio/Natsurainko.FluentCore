@@ -16,17 +16,21 @@
 + 对Offline/Yggdrasil验证的支持
 + 支持AuthlibInjector并搭配Yggdrasil验证器实现外置登录
 + 支持多线程补全Assets、Libraries、游戏主Jar
++ 支持Microsoft验证 并且在FluentCore.Extend中添加了调用浏览器进行登录的扩展
 + 支持[Bmclapi](https://bmclapidoc.bangbang93.com/)下载源的调用
   + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
 
 目前的不足
 + 不支持除了原版及Forge以外的自动安装
-+ 不支持Microsoft验证(我迟迟没有收到迁移的通知 所以没法进行调试)
 
 本项目依赖及运行环境:
 
 + [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0)
 + [Newtonsoft.Json](https://www.newtonsoft.com/json)
+
+声明
++ BMCLAPI是@bangbang93开发的BMCL的一部分，用于解决国内线路对Forge和Minecraft官方使用的Amazon S3 速度缓慢的问题。BMCLAPI是对外开放的，所有需要Minecraft资源的启动器均可调用。
++ 感谢开发过程中大佬[laolarou726](https://github.com/laolarou726)给出的建议和指导 不妨也看看它的启动核心项目[Projbobcat](https://github.com/Corona-Studio/ProjBobcat)
 
 > 您发现了我们项目中的bug? 对我们的项目中有不满意的地方? <br/>
 > 或是您愿意加入我们，与我们一同开发？ <br/>
