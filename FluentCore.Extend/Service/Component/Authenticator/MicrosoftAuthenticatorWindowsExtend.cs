@@ -28,10 +28,10 @@ namespace FluentCore.Extend.Service.Component.Authenticator
                 "&response_type=code" +
                 $"&redirect_uri={authenticator.RedirectUri}" +
                 "&scope=XboxLive.signin%20offline_access" +
-                "&prompt=login";
+                "&prompt=select_account";
 
             var httpListener = new HttpListener();
-            httpListener.Prefixes.Add($"{authenticator.RedirectUri.TrimEnd('/')}");
+            httpListener.Prefixes.Add($"{authenticator.RedirectUri.TrimEnd('/')}/");
             httpListener.Start();
 
             using var process = new Process()

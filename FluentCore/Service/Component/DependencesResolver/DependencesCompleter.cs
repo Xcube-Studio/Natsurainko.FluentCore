@@ -29,6 +29,8 @@ namespace FluentCore.Service.Component.DependencesResolver
         /// </summary>
         public static int MaxThread { get; set; } = 64;
 
+        public int NeedDownloadDependencesCount { get; set; }
+
         public DependencesCompleter(GameCore core) => this.GameCore = core;
 
         /// <summary>
@@ -76,7 +78,10 @@ namespace FluentCore.Service.Component.DependencesResolver
             var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
             _ = manyBlock.LinkTo(actionBlock, linkOptions);
 
-            _ = manyBlock.Post(await GetRequestsAsync());
+            var req = await GetRequestsAsync();
+            this.NeedDownloadDependencesCount = req.Count();
+
+            _ = manyBlock.Post(req);
             manyBlock.Complete();
 
             await actionBlock.Completion;

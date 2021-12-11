@@ -80,7 +80,7 @@ namespace FluentCore.Service.Network
                     {
                         FileInfo = null,
                         HttpStatusCode = responseMessage.StatusCode,
-                        Message = responseMessage.ReasonPhrase
+                        Message = $"{responseMessage.ReasonPhrase}[{url}]"
                     };
 
                 if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
@@ -112,7 +112,7 @@ namespace FluentCore.Service.Network
                 {
                     FileInfo = fileInfo,
                     HttpStatusCode = responseMessage.StatusCode,
-                    Message = responseMessage.ReasonPhrase
+                    Message = $"{responseMessage.ReasonPhrase}[{url}]"
                 };
             }
             catch (HttpRequestException e)
@@ -123,7 +123,7 @@ namespace FluentCore.Service.Network
                 {
                     FileInfo = fileInfo,
                     HttpStatusCode = e.StatusCode.Value,
-                    Message = e.Message
+                    Message = $"{e.Message}[{url}]"
                 };
             }
         }

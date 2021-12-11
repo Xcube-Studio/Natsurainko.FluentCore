@@ -1,5 +1,7 @@
-﻿using FluentCore.Model;
+﻿using FluentCore.Extend.Service.Component.Authenticator;
+using FluentCore.Model;
 using FluentCore.Model.Auth;
+using FluentCore.Model.Auth.Microsoft;
 using FluentCore.Model.Auth.Yggdrasil;
 using FluentCore.Model.Launch;
 using FluentCore.Service.Component.Authenticator;
@@ -10,11 +12,15 @@ using FluentCore.Service.Network;
 using FluentCore.Wrapper;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace FluentCore.Console
 {
     class Program
     {
+        static string client_id = "0844e754-1d2e-4861-8e2b-18059609badb";
+        static string redirect_uri = "http://localhost:5001/fluentlauncher/auth-response";
+
         static void Main(string[] args)
         {
             #region Forge Installer
@@ -60,8 +66,11 @@ namespace FluentCore.Console
 
             #endregion
 
-            System.Console.WriteLine("Loading YggdrasilAuthenticator...");
+            System.Console.WriteLine("Loading Authenticator...");
 
+            #region YggdrasilAuthenticator
+            /*
+            
             System.Console.Write("Email:");
             string email = System.Console.ReadLine();
             System.Console.Write("Password:");
@@ -69,6 +78,13 @@ namespace FluentCore.Console
 
             using var auth = new YggdrasilAuthenticator(email, password);
             var res = (YggdrasilResponseModel)auth.AuthenticateAsync().GetAwaiter().GetResult().Item1;
+
+            */
+            #endregion
+
+            var auth = new MicrosoftAuthenticator(default, client_id, redirect_uri);
+            auth.Code = auth.GetAuthorizationCodeFromBrower().GetAwaiter().GetResult();
+            var res = (MicrosoftAuthenticationResponse)auth.Authenticate().Item1;
 
             System.Console.WriteLine("Loading DependencesCompleter...");
 
@@ -86,8 +102,8 @@ namespace FluentCore.Console
                 AuthDataModel = new AuthDataModel
                 {
                     AccessToken = res.AccessToken,
-                    UserName = res.SelectedProfile.Name,
-                    Uuid = Guid.Parse(res.SelectedProfile.Id)
+                    UserName = res.Name,
+                    Uuid = Guid.Parse(res.Id)
                 }
             };
 

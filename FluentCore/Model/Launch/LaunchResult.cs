@@ -21,5 +21,10 @@ namespace FluentCore.Model.Launch
         /// 游戏启动参数
         /// </summary>
         public string Args { get; set; }
+
+        /// <summary>
+        /// 游戏是否崩溃
+        /// </summary>
+        public bool IsCrashed { get; set; }
     }
 }

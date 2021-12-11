@@ -17,6 +17,14 @@ namespace FluentCore.Model.Auth.Microsoft
 
         [JsonProperty("capes")]
         public JArray Capes { get; set; }
+
+        public string AccessToken { get; set; }
+
+        public string RefreshToken { get; set; }
+
+        public int ExpiresIn { get; set; }
+
+        public string Time { get; set; }
     }
 
     public class SkinModel

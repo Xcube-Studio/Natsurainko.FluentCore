@@ -108,7 +108,7 @@ namespace FluentCore.Service.Component.Launch
                             continue;
                         };
 
-                        fArg.Append($" {obj}");
+                        fArg.Append(obj.ToString().Contains(" ") ? $" \"{obj}\"" : $" {obj}");
                     }
                 }
 
@@ -132,7 +132,7 @@ namespace FluentCore.Service.Component.Launch
         public CoreModel GetCoreModelFromId(string id)
         {
             var info = new DirectoryInfo(PathHelper.GetVersionFolder(this.Root, id));
-            var file = new FileInfo($"{PathHelper.GetVersionFolder(this.Root, id)}{PathHelper.X}{id}.json");
+            var file = new FileInfo(Path.Combine(PathHelper.GetVersionFolder(this.Root, id), $"{id}.json"));
 
             if (info.Exists && file.Exists)
                 try { return JsonConvert.DeserializeObject<CoreModel>(File.ReadAllText(file.FullName)); } catch { Console.WriteLine("Error in GetCoreModelFromId(string id)"); }

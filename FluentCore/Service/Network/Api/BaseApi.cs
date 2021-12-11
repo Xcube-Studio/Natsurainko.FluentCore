@@ -8,11 +8,11 @@ namespace FluentCore.Service.Network.Api
     {
         public string Url { get; set; }
 
-        public string VersionManifest;
+        public string VersionManifest { get; set; }
 
-        public string Assets;
+        public string Assets { get; set; }
 
-        public string Libraries;
+        public string Libraries { get; set; }
 
         public virtual async Task<VersionManifestModel> GetVersionManifest()
         {

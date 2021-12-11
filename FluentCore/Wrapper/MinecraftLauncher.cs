@@ -89,7 +89,8 @@ namespace FluentCore.Wrapper
                 {
                     Args = this.ProcessContainer.Process.StartInfo.Arguments,
                     Errors = this.ProcessContainer.ErrorData,
-                    Logs = this.ProcessContainer.OutputData
+                    Logs = this.ProcessContainer.OutputData,
+                    IsCrashed = this.ProcessContainer.Process.ExitCode != 0
                 };
 
             if (this.ProcessContainer?.ProcessState == Model.ProcessState.Initialized)
@@ -100,7 +101,8 @@ namespace FluentCore.Wrapper
             {
                 Args = this.ProcessContainer.Process.StartInfo.Arguments,
                 Errors = this.ProcessContainer.ErrorData,
-                Logs = this.ProcessContainer.OutputData
+                Logs = this.ProcessContainer.OutputData,
+                IsCrashed = this.ProcessContainer.Process.ExitCode != 0
             };
         }
 
@@ -159,7 +161,8 @@ namespace FluentCore.Wrapper
             {
                 Args = args,
                 Errors = process.ErrorData,
-                Logs = process.OutputData
+                Logs = process.OutputData,
+                IsCrashed = process.Process.ExitCode != 0
             };
         }
 
