@@ -18,7 +18,7 @@ namespace FluentCore.Model.Game
         public string Assets { get; set; }
 
         [JsonProperty("javaVersion")]
-        public JavaVersion JavaVersion { get; set; }
+        public JavaVersion JavaVersion { get; set; } = new JavaVersion() { MajorVersion = 8 };
 
         [JsonProperty("downloads")]
         public Dictionary<string, FileModel> Downloads { get; set; }
@@ -27,7 +27,7 @@ namespace FluentCore.Model.Game
         public string Id { get; set; }
 
         [JsonProperty("libraries")]
-        public IEnumerable<Library> Libraries { get; set; }
+        public List<Library> Libraries { get; set; }
 
         [JsonProperty("logging")]
         public Logging Logging { get; set; }

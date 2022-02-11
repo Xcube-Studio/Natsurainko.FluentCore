@@ -67,7 +67,7 @@ namespace FluentCore.Service.Network
             return res;
         }
 
-        public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url, string folder)
+        public static async Task<HttpDownloadResponse> HttpDownloadAsync(string url, string folder, string filename = null)
         {
             FileInfo fileInfo = default;
 
@@ -86,6 +86,9 @@ namespace FluentCore.Service.Network
                 if (responseMessage.Content.Headers != null && responseMessage.Content.Headers.ContentDisposition != null)
                     fileInfo = new FileInfo(Path.Combine(folder, responseMessage.Content.Headers.ContentDisposition.FileName.Trim('\"')));
                 else fileInfo = new FileInfo(Path.Combine(folder, Path.GetFileName(responseMessage.RequestMessage.RequestUri.AbsoluteUri)));
+
+                if (filename != null)
+                    fileInfo = new FileInfo(fileInfo.FullName.Replace(fileInfo.Name, filename));
 
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
@@ -128,7 +131,7 @@ namespace FluentCore.Service.Network
             }
         }
 
-        public static async Task<HttpDownloadResponse> HttpDownloadAsync(HttpDownloadRequest request) => await HttpDownloadAsync(request.Url, request.Directory.FullName);
+        public static async Task<HttpDownloadResponse> HttpDownloadAsync(HttpDownloadRequest request, string filename = null) => await HttpDownloadAsync(request.Url, request.Directory.FullName, filename);
 
         public static void SetTimeout(int milliseconds) => HttpClient.Timeout = new TimeSpan(0, 0, 0, 0, milliseconds);
     }

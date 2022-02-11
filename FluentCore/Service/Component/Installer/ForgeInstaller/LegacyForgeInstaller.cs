@@ -100,7 +100,7 @@ namespace FluentCore.Service.Component.Installer.ForgeInstaller
                 if (!x.Directory.Exists)
                     x.Directory.Create();
 
-                var res = await HttpHelper.HttpDownloadAsync(x);
+                var res = await HttpHelper.HttpDownloadAsync(x, x.FileName);
             }, blockOptions);
 
             var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };

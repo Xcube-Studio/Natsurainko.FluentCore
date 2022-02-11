@@ -3,6 +3,7 @@ using FluentCore.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -297,6 +298,12 @@ namespace FluentCore.Service.Local
                     foreach (Process process in Process.GetProcesses())
                         if (process.Id.Equals(Process.Id))
                             Process.Kill();
+
+                    /*
+                    OutputDataReceived.GetInvocationList().ToList().ForEach(x =>
+                    {
+                        OutputDataReceived -= x as EventHandler<DataReceivedEventArgs>;
+                    });*/
 
                     Process.Close();
                     Process.Dispose();

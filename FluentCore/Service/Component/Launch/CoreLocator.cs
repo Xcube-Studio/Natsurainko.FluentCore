@@ -24,6 +24,9 @@ namespace FluentCore.Service.Component.Launch
                 throw new ArgumentException("无效的参数");
 
             this.Root = root;
+
+            if (!Directory.Exists(PathHelper.GetVersionsFolder(this.Root)))
+                Directory.CreateDirectory(PathHelper.GetVersionsFolder(this.Root));
         }
 
         public IEnumerable<GameCore> GetAllGameCores()
@@ -62,6 +65,9 @@ namespace FluentCore.Service.Component.Launch
 
             if (coreModel.InheritsFrom != null)
             {
+                if (GetCoreModelFromId(coreModel.InheritsFrom) == null)
+                    return null;
+
                 mainJar = $"{PathHelper.GetVersionFolder(this.Root, coreModel.InheritsFrom)}{PathHelper.X}{coreModel.InheritsFrom}.jar";
                 coreModel = MergeInheritsFromCoreWithRaw(coreModel, GetCoreModelFromId(coreModel.InheritsFrom));
             }
@@ -125,7 +131,8 @@ namespace FluentCore.Service.Component.Launch
                 MainJar = mainJar,
                 Natives = natives,
                 Root = this.Root,
-                Type = coreModel.Type
+                Type = coreModel.Type,
+                JavaVersion = coreModel.JavaVersion
             };
         }
 
@@ -157,8 +164,9 @@ namespace FluentCore.Service.Component.Launch
             raw.Assets = inheritsFrom.Assets;
             raw.Downloads = inheritsFrom.Downloads;
             raw.JavaVersion = inheritsFrom.JavaVersion;
-            raw.Libraries = raw.Libraries.Union(inheritsFrom.Libraries);
+            raw.Libraries = raw.Libraries.Union(inheritsFrom.Libraries).ToList();
             raw.Type = inheritsFrom.Type;
+            raw.JavaVersion = inheritsFrom.JavaVersion;
             //raw.InheritsFrom = null;
 
             return raw;

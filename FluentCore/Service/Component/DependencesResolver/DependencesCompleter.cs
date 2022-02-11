@@ -52,7 +52,7 @@ namespace FluentCore.Service.Component.DependencesResolver
             var mainJarRequest = GetMainJarDownloadRequest();
             if (mainJarRequest != null)
             {
-                var res = await HttpHelper.HttpDownloadAsync(mainJarRequest);
+                var res = await HttpHelper.HttpDownloadAsync(mainJarRequest, "client.jar");
                 File.Move(res.FileInfo.FullName, this.GameCore.MainJar);
             }
 
@@ -68,7 +68,7 @@ namespace FluentCore.Service.Component.DependencesResolver
                 if (!x.Directory.Exists)
                     x.Directory.Create();
 
-                var res = await HttpHelper.HttpDownloadAsync(x);
+                var res = await HttpHelper.HttpDownloadAsync(x, x.FileName);
                 if (res.HttpStatusCode != HttpStatusCode.OK)
                     this.ErrorDownloadResponses.Add(res);
 
@@ -76,7 +76,7 @@ namespace FluentCore.Service.Component.DependencesResolver
             }, blockOptions);
 
             var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
-            _ = manyBlock.LinkTo(actionBlock, linkOptions);
+            var dis = manyBlock.LinkTo(actionBlock, linkOptions);
 
             var req = await GetRequestsAsync();
             this.NeedDownloadDependencesCount = req.Count();
@@ -85,6 +85,8 @@ namespace FluentCore.Service.Component.DependencesResolver
             manyBlock.Complete();
 
             await actionBlock.Completion;
+            dis.Dispose();
+
             GC.Collect();
         }
 

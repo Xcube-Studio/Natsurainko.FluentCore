@@ -19,7 +19,7 @@ namespace FluentCore.Model.Install.Forge
         public JObject VersionInfo { get; set; }
 
         [JsonProperty("optionals")]
-        public IEnumerable<string> Optionals { get; set; }
+        public IEnumerable<object> Optionals { get; set; }
     }
 
     public class LegacyForgeInstallModel

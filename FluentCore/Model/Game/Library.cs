@@ -40,6 +40,34 @@ namespace FluentCore.Model.Game
         [JsonProperty("clientreq")]
         public bool? ClientReq { get; set; }
 
+        public virtual HttpDownloadRequest GetDownloadRequest(string root, bool useOriginalUrl)
+        {
+            string url;
+
+            if (useOriginalUrl && !string.IsNullOrEmpty(this.Downloads?.Artifact.Url))
+                url = this.Downloads?.Artifact.Url;
+            else url = SystemConfiguration.Api != new Mojang() ? $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}" : this.Url;
+
+            if (useOriginalUrl)
+                return new HttpDownloadRequest
+                {
+                    Sha1 = this.Downloads?.Artifact.Sha1,
+                    Size = this.Downloads?.Artifact.Size,
+                    Url = url,
+                    Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory,
+                    FileName = Path.GetFileName(this.GetRelativePath())
+                };
+
+            return new HttpDownloadRequest
+            {
+                Sha1 = this.Downloads?.Artifact.Sha1,
+                Size = this.Downloads?.Artifact.Size,
+                Url = SystemConfiguration.Api != new Mojang() ? $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}" : this.Url,
+                Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory,
+                FileName = Path.GetFileName(this.GetRelativePath())
+            };
+        }
+
         public virtual HttpDownloadRequest GetDownloadRequest(string root)
         {
             return new HttpDownloadRequest
@@ -47,10 +75,15 @@ namespace FluentCore.Model.Game
                 Sha1 = this.Downloads?.Artifact.Sha1,
                 Size = this.Downloads?.Artifact.Size,
                 Url = SystemConfiguration.Api != new Mojang() ? $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}" : this.Url,
-                Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory
+                Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory,
+                FileName = Path.GetFileName(this.GetRelativePath())
             };
         }
 
+        /// <summary>
+        /// 获取游戏依赖相对于.minecraft/libraries的路径
+        /// </summary>
+        /// <returns></returns>
         public virtual string GetRelativePath()
         {
             if (this.Name.Contains("@"))
@@ -62,6 +95,10 @@ namespace FluentCore.Model.Game
             }
 
             string[] temp = Name.Split(':');
+
+            if (temp.Length == 4)
+                return $"{temp[0].Replace(".", PathHelper.X)}{PathHelper.X}{temp[1]}{PathHelper.X}{temp[2]}{PathHelper.X}{temp[1]}-{temp[2]}-{temp[3]}.jar";
+
             return $"{temp[0].Replace(".", PathHelper.X)}{PathHelper.X}{temp[1]}{PathHelper.X}{temp[2]}{PathHelper.X}{temp[1]}-{temp[2]}.jar";
         }
     }

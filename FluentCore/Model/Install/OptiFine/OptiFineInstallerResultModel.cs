@@ -1,11 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace FluentCore.Model.Install.Forge
+namespace FluentCore.Model.Install.OptiFine
 {
     /// <summary>
-    /// Forge安装器结果模型
+    /// OptiFine安装器结果模型
     /// </summary>
-    public class ForgeInstallerResultModel
+    public class OptiFineInstallerResultModel
     {
         /// <summary>
         /// 是否成功

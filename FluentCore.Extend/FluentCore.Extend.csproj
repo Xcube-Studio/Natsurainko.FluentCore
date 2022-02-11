@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>FluentCore.Extend</RootNamespace>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <PackageId>FluentLauncher.Core.Extend</PackageId>
     <Authors>xuan2006 - Xcube Studio</Authors>
     <Company>Xcube Studio</Company>

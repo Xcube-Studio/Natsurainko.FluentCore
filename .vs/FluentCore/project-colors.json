@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "83cc849a-a467-4414-8b99-84ba2c094640": {
+      "ProjectGuid": "83cc849a-a467-4414-8b99-84ba2c094640",
+      "DisplayName": "FluentCore",
+      "ColorIndex": 0
+    },
+    "2981059d-ccf8-4f2c-b21e-661f8a98f06b": {
+      "ProjectGuid": "2981059d-ccf8-4f2c-b21e-661f8a98f06b",
+      "DisplayName": "FluentCore.Extend",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}

@@ -29,7 +29,8 @@ namespace FluentCore.Model.Game
                 Sha1 = file.Sha1,
                 Size = file.Size,
                 Url = $"{SystemConfiguration.Api.Libraries}/{this.GetRelativePath().Replace("\\", "/")}",
-                Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory
+                Directory = new FileInfo($"{PathHelper.GetLibrariesFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory,
+                FileName = Path.GetFileName(GetRelativePath())
             };
         }
 

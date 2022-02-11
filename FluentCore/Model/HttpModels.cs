@@ -27,6 +27,11 @@ namespace FluentCore.Model
         /// 目标文件Sha1(仅供验证文件)
         /// </summary>
         public string Sha1 { get; set; }
+
+        /// <summary>
+        /// 目标文件名(可不指定)
+        /// </summary>
+        public string FileName { get; set; }
     }
 
     /// <summary>

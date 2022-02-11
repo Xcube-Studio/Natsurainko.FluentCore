@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace FluentCore.Service.Local
 {
@@ -56,6 +57,18 @@ namespace FluentCore.Service.Local
                 x.Delete();
             });
 
+        }
+
+        public static string FindFile(DirectoryInfo directory,string filename)
+        {
+            foreach (var items in directory.GetFiles())
+                if (items.Name == filename)
+                    return items.FullName;
+
+            foreach (var items in directory.GetDirectories())
+                return FindFile(items, filename);
+
+            return null;
         }
     }
 }

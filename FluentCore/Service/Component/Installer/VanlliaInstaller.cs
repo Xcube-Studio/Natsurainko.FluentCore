@@ -22,26 +22,34 @@ namespace FluentCore.Service.Component.Installer
         /// <returns></returns>
         public async Task<bool> InstallAsync(string mcVersion)
         {
-            foreach (var item in (await SystemConfiguration.Api.GetVersionManifest()).Versions)
+            try
             {
-                if (item.Id == mcVersion)
+                foreach (var item in (await SystemConfiguration.Api.GetVersionManifest()).Versions)
                 {
-                    var directory = new DirectoryInfo(PathHelper.GetVersionFolder(this.CoreLocator.Root, mcVersion));
+                    if (item.Id == mcVersion)
+                    {
+                        var directory = new DirectoryInfo(PathHelper.GetVersionFolder(this.CoreLocator.Root, mcVersion));
 
-                    if (!directory.Exists)
-                        directory.Create();
+                        if (!directory.Exists)
+                            directory.Create();
 
-                    var res = await HttpHelper.HttpDownloadAsync(item.Url, directory.FullName);
-                    if (res.HttpStatusCode != HttpStatusCode.OK)
-                        return false;
+                        var res = await HttpHelper.HttpDownloadAsync(item.Url, directory.FullName);
+                        if (res.HttpStatusCode != HttpStatusCode.OK)
+                            return false;
 
-                    await new DependencesCompleter(this.CoreLocator.GetGameCoreFromId(mcVersion)).CompleteAsync();
+                        await new DependencesCompleter(this.CoreLocator.GetGameCoreFromId(mcVersion)).CompleteAsync();
 
-                    return true;
+                        return true;
+                    }
                 }
             }
-
+            catch 
+            { 
+                throw; 
+            }
             return false;
         }
+
+        public bool Install(string mcVersion) => InstallAsync(mcVersion).GetAwaiter().GetResult();
     }
 }

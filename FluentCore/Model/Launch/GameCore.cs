@@ -1,4 +1,5 @@
 ﻿using FluentCore.Model.Game;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace FluentCore.Model.Launch
@@ -31,5 +32,7 @@ namespace FluentCore.Model.Launch
         public string Id { get; set; }
 
         public string Type { get; set; }
+
+        public JavaVersion JavaVersion { get; set; }
     }
 }

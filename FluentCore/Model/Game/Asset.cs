@@ -29,10 +29,15 @@ namespace FluentCore.Model.Game
                 Sha1 = this.Hash,
                 Size = this.Size,
                 Url = $"{SystemConfiguration.Api.Assets}/{this.Hash.Substring(0, 2)}/{this.Hash}",
-                Directory = new FileInfo($"{PathHelper.GetAssetsFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory
+                Directory = new FileInfo($"{PathHelper.GetAssetsFolder(root)}{PathHelper.X}{this.GetRelativePath()}").Directory,
+                FileName = this.Hash
             };
         }
 
+        /// <summary>
+        /// 获取游戏依赖相对于.minecraft/assets的路径
+        /// </summary>
+        /// <returns></returns>
         public virtual string GetRelativePath() => $"objects{PathHelper.X}{this.Hash.Substring(0, 2)}{PathHelper.X}{this.Hash}";
     }
 }
