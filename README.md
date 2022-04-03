@@ -13,15 +13,13 @@
 + 支持跨平台 (Windows/Linux上的调试已通过)
 + Minecraft游戏核心的查找
 + Minecraft的参数生成、启动封装 (支持启动最近更新的Forge-1.17.1)
++ 支持Forge、OptiFine加载器的自动安装
 + 对Offline/Yggdrasil验证的支持
 + 支持AuthlibInjector并搭配Yggdrasil验证器实现外置登录
 + 支持多线程补全Assets、Libraries、游戏主Jar
 + 支持Microsoft验证 并且在FluentCore.Extend中添加了调用浏览器进行登录的扩展
 + 支持[Bmclapi](https://bmclapidoc.bangbang93.com/)下载源的调用
   + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
-
-目前的不足
-+ 不支持除了原版及Forge以外的自动安装
 
 本项目依赖及运行环境:
 
