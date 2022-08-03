@@ -24,6 +24,8 @@ namespace Natsurainko.FluentCore.Module.Authenticator
 
         public event EventHandler<(float, string)> ProgressChanged;
 
+        public MicrosoftAuthenticator() { }
+
         public MicrosoftAuthenticator(string code) => this.Code = code;
 
         public MicrosoftAuthenticator(string clientId, string redirectUri) 

@@ -5,6 +5,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <Copyright>Copyright © Natsurainko 2022</Copyright>
+    <Authors>Natsurainko</Authors>
   </PropertyGroup>
 
   <ItemGroup>

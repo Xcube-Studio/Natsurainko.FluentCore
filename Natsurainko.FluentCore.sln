@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore", "N
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore.Extension.Windows", "Natsurainko.FluentCore.Extension.Windows\Natsurainko.FluentCore.Extension.Windows.csproj", "{CE01619A-BE9A-4B0E-BEFE-F1DDA0C90961}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.Toolkits", "..\Natsurainko.Toolkits\Natsurainko.Toolkits\Natsurainko.Toolkits.csproj", "{966AF3EF-F4F8-4D96-83A8-DC4195935F0D}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore.Demo", "Natsurainko.FluentCore.Demo\Natsurainko.FluentCore.Demo.csproj", "{5064849D-DE62-48ED-BE53-1740A660813A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.Toolkits", "Natsurainko.Toolkits\Natsurainko.Toolkits\Natsurainko.Toolkits.csproj", "{5AF461DD-65CB-493C-AA27-A7DF2EF47A87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore.Test", "Natsurainko.FluentCore.Test\Natsurainko.FluentCore.Test.csproj", "{C816E856-4EAA-481E-9BB7-4B3431941EB1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +27,18 @@ Global
 		{CE01619A-BE9A-4B0E-BEFE-F1DDA0C90961}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE01619A-BE9A-4B0E-BEFE-F1DDA0C90961}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE01619A-BE9A-4B0E-BEFE-F1DDA0C90961}.Release|Any CPU.Build.0 = Release|Any CPU
+		{966AF3EF-F4F8-4D96-83A8-DC4195935F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{966AF3EF-F4F8-4D96-83A8-DC4195935F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{966AF3EF-F4F8-4D96-83A8-DC4195935F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{966AF3EF-F4F8-4D96-83A8-DC4195935F0D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5064849D-DE62-48ED-BE53-1740A660813A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5064849D-DE62-48ED-BE53-1740A660813A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5064849D-DE62-48ED-BE53-1740A660813A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5064849D-DE62-48ED-BE53-1740A660813A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5AF461DD-65CB-493C-AA27-A7DF2EF47A87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5AF461DD-65CB-493C-AA27-A7DF2EF47A87}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5AF461DD-65CB-493C-AA27-A7DF2EF47A87}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5AF461DD-65CB-493C-AA27-A7DF2EF47A87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C816E856-4EAA-481E-9BB7-4B3431941EB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C816E856-4EAA-481E-9BB7-4B3431941EB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C816E856-4EAA-481E-9BB7-4B3431941EB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C816E856-4EAA-481E-9BB7-4B3431941EB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
