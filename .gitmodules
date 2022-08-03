@@ -1,0 +1,3 @@
+[submodule "Natsurainko.Toolkits"]
+	path = Natsurainko.Toolkits
+	url = https://github.com/natsurainko/Natsurainko.Toolkits.git
