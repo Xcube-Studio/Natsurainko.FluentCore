@@ -115,7 +115,7 @@ var authenticator = new YggdrasilAuthenticator(
 string base64 = (await (await HttpWrapper.HttpGetAsync(yggdrasilServerUrl)).Content.ReadAsStringAsync()).ConvertToBase64(); // 需要 Natsurainko.Toolkits
 
 var args = DefaultSettings.DefaultAdvancedArguments.ToList();
-args.Add($"-javaagent:{authlibPath.ToPath()}={keyValuePairs["YggdrasilServerUrl"]}");
+args.Add($"-javaagent:{authlibPath.ToPath()}={yggdrasilServerUrl}");
 args.Add($"-Dauthlibinjector.yggdrasil.prefetched={base64}");
 
 // launchSetting.JvmSetting.AdvancedArguments = args; 设置高级启动参数
