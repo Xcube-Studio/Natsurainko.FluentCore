@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -78,13 +76,13 @@ namespace Natsurainko.FluentCore.Wrapper
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = this.LaunchSetting.JvmSetting.Javaw.FullName,
-                        Arguments = string.Join(' ', args),
+                        Arguments = string.Join(' '.ToString(), args),
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
-                        WorkingDirectory = core.Root.FullName,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
+                        WorkingDirectory = this.LaunchSetting.EnableIndependencyCore && (bool)this.LaunchSetting.WorkingFolder?.Exists
+                            ? this.LaunchSetting.WorkingFolder.FullName
+                            : core.Root.FullName
                     },
                     EnableRaisingEvents = true
                 };
@@ -125,7 +123,7 @@ namespace Natsurainko.FluentCore.Wrapper
                     e.CancellationToken.ThrowIfCancellationRequested();
             }
 
-            IEnumerable<string> args = new string[] {};
+            IEnumerable<string> args = new string[] { };
             Process process = null;
 
             try
@@ -167,13 +165,13 @@ namespace Natsurainko.FluentCore.Wrapper
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = this.LaunchSetting.JvmSetting.Javaw.FullName,
-                        Arguments = string.Join(' ', args),
+                        Arguments = string.Join(' '.ToString(), args),
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
-                        WorkingDirectory = core.Root.FullName,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        StandardErrorEncoding = Encoding.UTF8
+                        WorkingDirectory = this.LaunchSetting.EnableIndependencyCore && (bool)this.LaunchSetting.WorkingFolder?.Exists
+                            ? this.LaunchSetting.WorkingFolder.FullName
+                            : core.Root.FullName
                     },
                     EnableRaisingEvents = true
                 };

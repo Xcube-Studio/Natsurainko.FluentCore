@@ -1,7 +1,5 @@
 ﻿using Natsurainko.FluentCore.Interface;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Class.Model
 {

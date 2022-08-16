@@ -2,8 +2,6 @@
 using Natsurainko.FluentCore.Interface;
 using Natsurainko.Toolkits.Values;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Authenticator

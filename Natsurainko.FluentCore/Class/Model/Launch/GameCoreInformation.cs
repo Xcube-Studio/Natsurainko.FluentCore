@@ -1,15 +1,7 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Install;
-using Natsurainko.FluentCore.Class.Model.Parser;
 using Natsurainko.FluentCore.Module.Downloader;
-using Natsurainko.FluentCore.Module.Parser;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Class.Model.Launch
@@ -39,12 +31,12 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                             foreach (var lib in core.LibraryResources)
                                 if (lib.Name.StartsWith("optifine:OptiFine"))
                                 {
-                                    var id = lib.Name.Split(":")[2];
+                                    var id = lib.Name.Split(':')[2];
 
                                     info.ModLoaders.Add(new ModLoaderInformation
                                     {
-                                        LoaderType = ModLoaderInformation.ModLoaderType.OptiFine,
-                                        Version = id[(id.IndexOf('_') + 1)..]
+                                        LoaderType = ModLoaderType.OptiFine,
+                                        Version = id.Substring(id.IndexOf('_') + 1),
                                     });
 
                                     break;
@@ -57,8 +49,8 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                                 {
                                     info.ModLoaders.Add(new ModLoaderInformation
                                     {
-                                        LoaderType = ModLoaderInformation.ModLoaderType.Forge,
-                                        Version = lib.Name.Split(":")[2].Split("-")[1]
+                                        LoaderType = ModLoaderType.Forge,
+                                        Version = lib.Name.Split(':')[2].Split('-')[1]
                                     });
 
                                     break;
@@ -66,26 +58,28 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                             break;
                     }
                 });
-            } catch { }
+            }
+            catch { }
 
             try
             {
                 core.FrontArguments.ToList().ForEach(x =>
                 {
-                    if (x == "-DFabricMcEmu= net.minecraft.client.main.Main")
+                    if (x.Contains("-DFabricMcEmu= net.minecraft.client.main.Main"))
                         foreach (var lib in core.LibraryResources)
                             if (lib.Name.StartsWith("net.fabricmc:fabric-loader"))
                             {
                                 info.ModLoaders.Add(new ModLoaderInformation
                                 {
-                                    LoaderType = ModLoaderInformation.ModLoaderType.Fabric,
-                                    Version = lib.Name.Split(":")[2]
+                                    LoaderType = ModLoaderType.Fabric,
+                                    Version = lib.Name.Split(':')[2]
                                 });
 
                                 break;
                             }
                 });
-            } catch { }
+            }
+            catch { }
             #endregion
 
             #region GetFileProperty
@@ -100,7 +94,7 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                     info.TotalSize += library.ToFileInfo().Length;
             }
 
-            try 
+            try
             {
                 var assets = await new ResourceDownloader(core).GetAssetResourcesAsync();
 
@@ -113,7 +107,8 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                     else if (asset.Size == 0 && asset.ToFileInfo().Exists)
                         info.TotalSize += asset.ToFileInfo().Length;
                 }
-            } catch { }
+            }
+            catch { }
 
             #endregion
 

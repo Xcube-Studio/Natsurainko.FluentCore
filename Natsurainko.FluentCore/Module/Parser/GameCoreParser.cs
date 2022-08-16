@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Module.Parser
 {
@@ -24,7 +23,7 @@ namespace Natsurainko.FluentCore.Module.Parser
             this.JsonEntities = jsonEntities;
         }
 
-        public List<(string,Exception)> ErrorGameCores { get; private set; } = new();
+        public List<(string, Exception)> ErrorGameCores { get; private set; } = new();
 
         public IEnumerable<GameCore> GetGameCores()
         {
@@ -41,7 +40,7 @@ namespace Natsurainko.FluentCore.Module.Parser
                         MainClass = entity.MainClass,
                         InheritsFrom = entity.InheritsFrom,
                         JavaVersion = (int)(entity.JavaVersion?.MajorVersion),
-                        LibraryResources = new LibraryParser(entity, this.Root).GetLibraries().ToList(),
+                        LibraryResources = new LibraryParser(entity.Libraries, this.Root).GetLibraries().ToList(),
                         Root = this.Root
                     };
 
@@ -167,9 +166,9 @@ namespace Natsurainko.FluentCore.Module.Parser
                         return entity["clientVersion"].ToString();
                 }
             }
-            catch (Exception ex)
+            catch //(Exception ex)
             {
-                throw;
+                //throw;
             }
 
             return core.Id;
@@ -187,7 +186,7 @@ namespace Natsurainko.FluentCore.Module.Parser
                 }
 
             foreach (var arg in core.FrontArguments)
-                if (arg == "-DFabricMcEmu= net.minecraft.client.main.Main")
+                if (arg.Contains("-DFabricMcEmu= net.minecraft.client.main.Main"))
                     return true;
 
             return core.MainClass switch
@@ -197,7 +196,7 @@ namespace Natsurainko.FluentCore.Module.Parser
             };
         }
 
-        private IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  "," ").Split(' '));
+        private IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  ", " ").Split(' '));
 
         private IEnumerable<string> HandleArgumentsGame(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Game.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
 
@@ -209,7 +208,7 @@ namespace Natsurainko.FluentCore.Module.Parser
 
             foreach (var item in vs)
             {
-                if (cache.Any() && cache[0].StartsWith('-') && item.StartsWith('-'))
+                if (cache.Any() && cache[0].StartsWith("-") && item.StartsWith("-"))
                 {
                     yield return cache[0].Trim(' ');
 
@@ -221,13 +220,13 @@ namespace Natsurainko.FluentCore.Module.Parser
 
                 if (cache.Count == 2)
                 {
-                    yield return string.Join(' ', cache).Trim(' ');
+                    yield return string.Join(" ", cache).Trim(' ');
                     cache = new List<string>();
                 }
             }
         }
 
-        private GameCore Combine(GameCore raw ,GameCore inheritsFrom)
+        private GameCore Combine(GameCore raw, GameCore inheritsFrom)
         {
             raw.AssetIndexFile = inheritsFrom.AssetIndexFile;
             raw.ClientFile = inheritsFrom.ClientFile;
@@ -249,7 +248,7 @@ namespace Natsurainko.FluentCore.Module.Parser
 
             foreach (var library in libraries)
                 foreach (var sublibrary in libraries)
-                    if (library != sublibrary && library.Name.Split(':')[1] == sublibrary.Name.Split(":")[1])
+                    if (library != sublibrary && library.Name.Split(':')[1] == sublibrary.Name.Split(':')[1])
                         same.Add((library, sublibrary));
 
             var remove = new List<LibraryResource>();

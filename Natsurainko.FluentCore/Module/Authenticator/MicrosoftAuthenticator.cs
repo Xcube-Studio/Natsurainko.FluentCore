@@ -1,14 +1,12 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Interface;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Natsurainko.FluentCore.Class.Model.Auth.Microsoft;
+using Natsurainko.FluentCore.Interface;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Authenticator
 {
@@ -28,7 +26,7 @@ namespace Natsurainko.FluentCore.Module.Authenticator
 
         public MicrosoftAuthenticator(string code) => this.Code = code;
 
-        public MicrosoftAuthenticator(string clientId, string redirectUri) 
+        public MicrosoftAuthenticator(string clientId, string redirectUri)
         {
             this.ClientId = clientId;
             this.RedirectUri = redirectUri;

@@ -3,7 +3,6 @@ using Natsurainko.FluentCore.Interface;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Class.Model.Launch
@@ -118,7 +117,7 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
             if (string.IsNullOrEmpty(text))
                 return;
 
-            if (!this.EnableXmlFormat) 
+            if (!this.EnableXmlFormat)
             {
                 this.Cache = text;
 
@@ -129,7 +128,7 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
                 return;
             }
 
-            if (!(text.StartsWith("<") || text.StartsWith("]") || text.StartsWith(' ') || text.StartsWith('	')))
+            if (!(text.StartsWith("<") || text.StartsWith("]") || text.StartsWith(" ") || text.StartsWith(" ")))
             {
                 MinecraftProcessOutput?.Invoke(this, new XmlProcessOutput(text, true));
                 return;

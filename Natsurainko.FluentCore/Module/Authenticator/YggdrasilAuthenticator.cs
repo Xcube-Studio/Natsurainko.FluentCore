@@ -5,10 +5,7 @@ using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Natsurainko.FluentCore.Module.Authenticator
 {
@@ -24,7 +21,7 @@ namespace Natsurainko.FluentCore.Module.Authenticator
 
         public string ClientToken { get; private set; } = Guid.NewGuid().ToString("N");
 
-        public YggdrasilAuthenticatorMethod Method { get; private set; } 
+        public YggdrasilAuthenticatorMethod Method { get; private set; }
 
         public YggdrasilAuthenticator(string yggdrasilServerUrl = "https://authserver.mojang.com", YggdrasilAuthenticatorMethod method = YggdrasilAuthenticatorMethod.Login)
         {
@@ -87,7 +84,8 @@ namespace Natsurainko.FluentCore.Module.Authenticator
                 ClientToken = model.ClientToken,
                 AccountType = AccountType.Yggdrasil,
                 Name = model.SelectedProfile.Name,
-                Uuid = Guid.Parse(model.SelectedProfile.Id)
+                Uuid = Guid.Parse(model.SelectedProfile.Id),
+                YggdrasilServerUrl = this.YggdrasilServerUrl
             };
         }
 

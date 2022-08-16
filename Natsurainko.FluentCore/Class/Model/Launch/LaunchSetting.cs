@@ -1,10 +1,7 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Auth;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Class.Model.Launch
 {
@@ -15,6 +12,9 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
         [JsonIgnore]
         public DirectoryInfo NativesFolder { get; set; }
 
+        [JsonIgnore]
+        public DirectoryInfo WorkingFolder { get; set; }
+
         public JvmSetting JvmSetting { get; set; }
 
         public GameWindowSetting GameWindowSetting { get; set; } = new GameWindowSetting();
@@ -24,6 +24,8 @@ namespace Natsurainko.FluentCore.Class.Model.Launch
         public XmlOutputSetting XmlOutputSetting { get; set; } = new XmlOutputSetting();
 
         public bool IsDemoUser { get; set; } = false;
+
+        public bool EnableIndependencyCore { get; set; } = false;
 
         public LaunchSetting() { }
 

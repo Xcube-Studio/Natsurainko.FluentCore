@@ -1,8 +1,4 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 
 namespace Natsurainko.FluentCore.Class.Model.Launch
 {

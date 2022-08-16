@@ -1,10 +1,7 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Parser;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Class.Model.Launch
 {

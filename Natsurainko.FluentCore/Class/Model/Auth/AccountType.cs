@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Natsurainko.FluentCore.Class.Model.Auth
+﻿namespace Natsurainko.FluentCore.Class.Model.Auth
 {
     public enum AccountType
     {

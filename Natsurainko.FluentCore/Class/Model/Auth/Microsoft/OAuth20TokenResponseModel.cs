@@ -1,5 +1,4 @@
-﻿using Natsurainko.Toolkits.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Natsurainko.FluentCore.Class.Model.Auth.Microsoft
 {

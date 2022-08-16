@@ -1,18 +1,22 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Natsurainko.Toolkits.IO;
+using Natsurainko.Toolkits.Values;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Microsoft.Win32;
-using Natsurainko.Toolkits.IO;
+using System.Runtime.Versioning;
 
 namespace Natsurainko.FluentCore.Extension.Windows.Service
 {
+    [SupportedOSPlatform("windows")]
     public class JavaHelper
     {
-        public static IEnumerable<string> SearchJavaRuntime()
+        public static IEnumerable<string> SearchJavaRuntime(IEnumerable<string> others = null)
         {
+            var result = new List<string>();
+
             #region Cmd
 
             var process = new Process()
@@ -42,13 +46,10 @@ namespace Natsurainko.FluentCore.Extension.Windows.Service
             process.StandardInput.WriteLine("exit");
             process.WaitForExit();
 
-            for (int i = 0; i < output.Count; i++)
-                if (output[i].Contains('>'))
-                    output.Remove(output[i]);
+            output.Where(x => string.IsNullOrEmpty(x) || x.Contains('>')).ToList().ForEach(x => output.Remove(x));
 
-            if (output.Count > 0)
-                foreach (var item in output.Skip(2))
-                    yield return item;
+            if (output.Any())
+                result.AddNotRepeating(output.Skip(2));
 
             process.Dispose();
 
@@ -92,7 +93,7 @@ namespace Natsurainko.FluentCore.Extension.Windows.Service
 
             foreach (var item in javaHomePaths)
                 if (Directory.Exists(item))
-                    yield return new DirectoryInfo(item).Find("javaw.exe").FullName;
+                    result.AddNotRepeating(new DirectoryInfo(item).FindAll("javaw.exe").Select(x => x.FullName));
 
             #endregion
 
@@ -107,9 +108,15 @@ namespace Natsurainko.FluentCore.Extension.Windows.Service
 
             foreach (var item in folders)
                 if (Directory.Exists(item))
-                    yield return new DirectoryInfo(item).Find("javaw.exe").FullName;
+                    result.AddNotRepeating(new DirectoryInfo(item).FindAll("javaw.exe").Select(x => x.FullName));
 
+            if (others != null)
+                foreach (var item in others)
+                    if (Directory.Exists(item))
+                        result.AddNotRepeating(new DirectoryInfo(item).FindAll("javaw.exe").Select(x => x.FullName));
             #endregion
+
+            return result;
         }
     }
 }

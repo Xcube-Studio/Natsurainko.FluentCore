@@ -1,7 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Event
 {
@@ -11,6 +10,7 @@ namespace Natsurainko.FluentCore.Event
 
         public bool Crashed { get; set; }
 
+        [JsonIgnore]
         public Stopwatch RunTime { get; set; }
 
         public IEnumerable<string> Outputs { get; set; }

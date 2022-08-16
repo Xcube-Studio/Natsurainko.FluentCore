@@ -1,9 +1,7 @@
 ﻿using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Class.Model.Parser
 {
@@ -46,7 +44,7 @@ namespace Natsurainko.FluentCore.Class.Model.Parser
         public string Jar { get; set; }
 
         [JsonProperty("minimumLauncherVersion")]
-        public int MinimumLauncherVersion { get; set; }
+        public int? MinimumLauncherVersion { get; set; }
 
         [JsonProperty("releaseTime")]
         public string ReleaseTime { get; set; }

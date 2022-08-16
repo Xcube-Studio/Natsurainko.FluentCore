@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Natsurainko.FluentCore.Service
+﻿namespace Natsurainko.FluentCore.Service
 {
     public class DownloadApi
     {
@@ -17,6 +13,6 @@ namespace Natsurainko.FluentCore.Service
 
     public static class DownloadApiExtension
     {
-        
+
     }
 }

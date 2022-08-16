@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Natsurainko.FluentCore.Class.Model.Launch
+﻿namespace Natsurainko.FluentCore.Class.Model.Launch
 {
     public enum LaunchState
     {

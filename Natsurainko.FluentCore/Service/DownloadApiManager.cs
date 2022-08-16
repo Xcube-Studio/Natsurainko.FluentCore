@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Natsurainko.FluentCore.Service
 {
@@ -14,7 +12,7 @@ namespace Natsurainko.FluentCore.Service
             Libraries = "https://download.mcbbs.net/maven"
         };
 
-        public static readonly DownloadApi Mojang = new DownloadApi 
+        public static readonly DownloadApi Mojang = new DownloadApi
         {
             Host = "https://launcher.mojang.com",
             VersionManifest = "http://launchermeta.mojang.com/mc/game/version_manifest.json",
@@ -38,6 +36,16 @@ namespace Natsurainko.FluentCore.Service
             Libraries = "https://download.mcbbs.net/maven"
         };
 
-        public static readonly string ForgeLibrary = "https://files.minecraftforge.net/maven";
+        public static readonly Dictionary<string, string> ForgeLibraryUrlReplace = new()
+        {
+            { "https://maven.minecraftforge.net", $"{(Current.Host.Equals(Mojang.Host) ? "https://maven.minecraftforge.net" : Current.Libraries )}" },
+            { "https://files.minecraftforge.net/maven", $"{(Current.Host.Equals(Mojang.Host) ? "https://maven.minecraftforge.net" : Current.Libraries )}" }
+        };
+
+        public static readonly Dictionary<string, string> FabricLibraryUrlReplace = new()
+        {
+            { "https://maven.fabricmc.net", $"{(Current.Host.Equals(Mojang.Host) ? "https://maven.fabricmc.net" : Current.Libraries )}" },
+            { "https://meta.fabricmc.net", $"{(Current.Host.Equals(Mojang.Host) ? "https://meta.fabricmc.net" : $"{Current.Host}/fabric-meta" )}" }
+        };
     }
 }

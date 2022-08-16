@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Natsurainko.FluentCore.Interface
+﻿namespace Natsurainko.FluentCore.Interface
 {
     public interface IProcessOutput
     {

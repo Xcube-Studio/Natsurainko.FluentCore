@@ -2,11 +2,12 @@
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Network.Model;
+using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 
 namespace Natsurainko.FluentCore.Class.Model.Download
 {
@@ -31,12 +32,18 @@ namespace Natsurainko.FluentCore.Class.Model.Download
         {
             var root = DownloadApiManager.Current.Libraries;
 
-            foreach (var item in FormatName())
+            foreach (var item in FormatName(this.Name))
                 root = UrlExtension.Combine(root, item);
 
             if (!string.IsNullOrEmpty(this.Url))
-                root = DownloadApiManager.Current == DownloadApiManager.Mojang ? this.Url
-                    : this.Url.Replace(DownloadApiManager.ForgeLibrary, DownloadApiManager.Current.Libraries);
+            {
+                if (!DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host))
+                    root = this.Url
+                        .Replace(DownloadApiManager.Mojang.Libraries, DownloadApiManager.Current.Libraries)
+                        .Replace(DownloadApiManager.ForgeLibraryUrlReplace)
+                        .Replace(DownloadApiManager.FabricLibraryUrlReplace);
+                else root = this.Url;
+            }
 
             return new HttpDownloadRequest
             {
@@ -52,15 +59,18 @@ namespace Natsurainko.FluentCore.Class.Model.Download
         {
             var root = Path.Combine(this.Root.FullName, "libraries");
 
-            foreach (var item in FormatName())
+            foreach (var item in FormatName(this.Name))
                 root = Path.Combine(root, item);
 
             return new FileInfo(root);
         }
 
-        private IEnumerable<string> FormatName()
+        public static IEnumerable<string> FormatName(string Name)
         {
-            var subString = this.Name.Split(':');
+            var extension = Name.Contains("@") ? Name.Split('@') : Array.Empty<string>();
+            var subString = extension.Any()
+                ? Name.Replace($"@{extension[1]}", string.Empty).Split(':')
+                : Name.Split(':');
 
             foreach (string item in subString[0].Split('.'))
                 yield return item;
@@ -68,9 +78,9 @@ namespace Natsurainko.FluentCore.Class.Model.Download
             yield return subString[1];
             yield return subString[2];
 
-            if (subString.Length > 3)
-                yield return $"{subString[1]}-{subString[2]}-{subString[3]}.jar";
-            else yield return $"{subString[1]}-{subString[2]}.jar";
+            if (!extension.Any())
+                yield return $"{subString[1]}-{subString[2]}{(subString.Length > 3 ? $"-{subString[3]}" : string.Empty)}.jar";
+            else yield return $"{subString[1]}-{subString[2]}{(subString.Length > 3 ? $"-{subString[3]}" : string.Empty)}.jar".Replace("jar", extension[1]);
         }
     }
 }

@@ -7,9 +7,11 @@
     <Nullable>disable</Nullable>
     <Copyright>Copyright © Natsurainko 2022</Copyright>
     <Authors>Natsurainko</Authors>
+    <SignAssembly>True</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Natsurainko.FluentCore.Extension.Windows\Natsurainko.FluentCore.Extension.Windows.csproj" />
     <ProjectReference Include="..\Natsurainko.FluentCore\Natsurainko.FluentCore.csproj" />
   </ItemGroup>
 

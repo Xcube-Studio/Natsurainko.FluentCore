@@ -6,7 +6,6 @@ using Natsurainko.Toolkits.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Module.Launcher
 {
@@ -38,7 +37,7 @@ namespace Natsurainko.FluentCore.Module.Launcher
             if (!versionsFolder.Exists)
             {
                 versionsFolder.Create();
-                return null;
+                return Array.Empty<GameCore>();
             }
 
             foreach (var item in versionsFolder.GetDirectories())
@@ -59,7 +58,7 @@ namespace Natsurainko.FluentCore.Module.Launcher
 
             this.ErrorGameCores = parser.ErrorGameCores;
 
-            return result; 
+            return result;
         }
     }
 }

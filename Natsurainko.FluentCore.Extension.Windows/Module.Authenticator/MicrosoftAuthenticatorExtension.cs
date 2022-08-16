@@ -1,14 +1,14 @@
 ﻿using Natsurainko.FluentCore.Module.Authenticator;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Extension.Windows.Module.Authenticator
 {
+    [SupportedOSPlatform("windows")]
     public static class MicrosoftAuthenticatorExtension
     {
         public static async Task<bool> GetAccessCode(this MicrosoftAuthenticator authenticator, bool selectAccount = false)

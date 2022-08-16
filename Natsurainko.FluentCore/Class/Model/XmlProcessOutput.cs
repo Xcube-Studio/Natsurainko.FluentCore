@@ -1,12 +1,10 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Parser;
 using Natsurainko.FluentCore.Interface;
+using Natsurainko.Toolkits.Values;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime;
 using System.Text;
 using System.Xml;
-using Natsurainko.Toolkits.Values;
 
 namespace Natsurainko.FluentCore.Class.Model
 {

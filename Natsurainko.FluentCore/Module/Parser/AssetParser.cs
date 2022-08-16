@@ -1,9 +1,7 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Download;
 using Natsurainko.FluentCore.Class.Model.Parser;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Module.Parser
 {
@@ -21,12 +19,12 @@ namespace Natsurainko.FluentCore.Module.Parser
 
         public IEnumerable<AssetResource> GetAssets()
         {
-            foreach (var (name, entity) in Entity.Objects)
+            foreach (var kvp in Entity.Objects)
                 yield return new AssetResource
                 {
-                    Name = name,
-                    CheckSum = entity.Hash,
-                    Size = entity.Size,
+                    Name = kvp.Key,
+                    CheckSum = kvp.Value.Hash,
+                    Size = kvp.Value.Size,
                     Root = this.Root
                 };
         }

@@ -1,5 +1,4 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Launch;
+﻿using Natsurainko.FluentCore.Class.Model.Launch;
 using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
@@ -8,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Module.Launcher
 {
@@ -41,17 +39,17 @@ namespace Natsurainko.FluentCore.Module.Launcher
             {
                 { "${launcher_name}", "Natsurainko.FluentCore" },
                 { "${launcher_version}", "3" },
-                { "${classpath_separator}", DefaultSettings.Delimiter },
+                { "${classpath_separator}", Path.PathSeparator.ToString() },
                 { "${classpath}", this.GetClasspath().ToPath() },
                 { "${client}", this.GameCore.ClientFile.FileInfo.FullName.ToPath() },
                 { "${min_memory}", this.LaunchSetting.JvmSetting.MinMemory.ToString() },
                 { "${max_memory}", this.LaunchSetting.JvmSetting.MaxMemory.ToString() },
                 { "${library_directory}", Path.Combine(this.GameCore.Root.FullName, "libraries").ToPath() },
-                { 
-                    "${version_name}", 
-                    string.IsNullOrEmpty(this.GameCore.InheritsFrom) 
-                    ? this.GameCore.Id 
-                    : this.GameCore.InheritsFrom 
+                {
+                    "${version_name}",
+                    string.IsNullOrEmpty(this.GameCore.InheritsFrom)
+                    ? this.GameCore.Id
+                    : this.GameCore.InheritsFrom
                 },
                 {
                     "${natives_directory}",
@@ -103,7 +101,6 @@ namespace Natsurainko.FluentCore.Module.Launcher
             {
                 { "${auth_player_name}" , this.LaunchSetting.Account.Name },
                 { "${version_name}" , this.GameCore.Id },
-                { "${game_directory}" , this.GameCore.Root.FullName.ToPath() },
                 { "${assets_root}" , Path.Combine(this.GameCore.Root.FullName, "assets").ToPath() },
                 { "${assets_index_name}" , Path.GetFileNameWithoutExtension(this.GameCore.AssetIndexFile.FileInfo.FullName) },
                 { "${auth_uuid}" , this.LaunchSetting.Account.Uuid.ToString("N") },
@@ -112,7 +109,13 @@ namespace Natsurainko.FluentCore.Module.Launcher
                 { "${version_type}" , this.GameCore.Type },
                 { "${user_properties}" , "{}" },
                 { "${game_assets}" , Path.Combine(this.GameCore.Root.FullName, "assets").ToPath() },
-                { "${auth_session}" , this.LaunchSetting.Account.AccessToken }
+                { "${auth_session}" , this.LaunchSetting.Account.AccessToken },
+                {
+                    "${game_directory}" ,
+                        (this.LaunchSetting.EnableIndependencyCore && (bool)this.LaunchSetting.WorkingFolder?.Exists
+                            ? this.LaunchSetting.WorkingFolder.FullName
+                            : GameCore.Root.FullName).ToPath()
+                },
             };
 
             var args = this.GameCore.BehindArguments.ToList();
@@ -151,7 +154,7 @@ namespace Natsurainko.FluentCore.Module.Launcher
 
             loads.Add(this.GameCore.ClientFile);
 
-            return string.Join(DefaultSettings.Delimiter, loads.Select(x => x.ToFileInfo().FullName));
+            return string.Join(Path.PathSeparator.ToString(), loads.Select(x => x.ToFileInfo().FullName));
         }
 
         /*

@@ -1,16 +1,10 @@
-﻿using Natsurainko.Toolkits.Values;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Natsurainko.FluentCore.Service
 {
     public static class DefaultSettings
     {
         public static int DownloadMaxThreadNumber { get; set; } = 512;
-
-        public static readonly string Delimiter = EnvironmentInfo.GetPlatformName() == "windows" ? ";" : ":";
 
         public static readonly IEnumerable<string> DefaultAdvancedArguments = new string[]
         {

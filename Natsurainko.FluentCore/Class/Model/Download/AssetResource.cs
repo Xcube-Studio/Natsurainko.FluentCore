@@ -2,12 +2,7 @@
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Network.Model;
-using Natsurainko.Toolkits.Text;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Class.Model.Download
 {
@@ -30,7 +25,7 @@ namespace Natsurainko.FluentCore.Class.Model.Download
                 Size = this.Size,
                 Url = UrlExtension.Combine(
                     DownloadApiManager.Current.Assets,
-                    this.CheckSum[..2],
+                    this.CheckSum.Substring(0, 2),
                     this.CheckSum)
             };
 
@@ -39,7 +34,7 @@ namespace Natsurainko.FluentCore.Class.Model.Download
                 this.Root.FullName,
                 "assets",
                 "objects",
-                this.CheckSum[..2],
+                this.CheckSum.Substring(0, 2),
                 this.CheckSum));
     }
 }

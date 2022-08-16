@@ -3,7 +3,6 @@ using Natsurainko.FluentCore.Class.Model.Launch;
 using Natsurainko.FluentCore.Class.Model.Parser;
 using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Module.Parser;
-using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.IO;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Network.Model;
@@ -13,8 +12,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -24,7 +21,7 @@ namespace Natsurainko.FluentCore.Module.Downloader
     {
         public GameCore GameCore { get; set; }
 
-        public Action<float> DownloadProgressChangedAction { get; set; }
+        public Action<string, float> DownloadProgressChangedAction { get; set; }
 
         public List<IResource> FailedResources { get; set; } = new List<IResource>();
 
@@ -39,11 +36,11 @@ namespace Natsurainko.FluentCore.Module.Downloader
 
         public event EventHandler<HttpDownloadResponse> ItemDownloaded;
 
-        public async Task<ResourceDownloadResponse> DownloadAsync(Action<float> func)
+        public async Task<ResourceDownloadResponse> DownloadAsync(Action<string, float> func)
         {
-            var progress = new Progress<float>();
+            var progress = new Progress<(string, float)>();
 
-            void Progress_ProgressChanged(object _, float e) => func(e);
+            void Progress_ProgressChanged(object _, (string, float) e) => func(e.Item1, e.Item2);
 
             progress.ProgressChanged += Progress_ProgressChanged;
 
@@ -84,11 +81,11 @@ namespace Natsurainko.FluentCore.Module.Downloader
 
                 output++;
 
-                ((IProgress<float>)progress).Report(output / (float)post);
+                ((IProgress<(string, float)>)progress).Report(($"{output}/{post}", output / (float)post));
             }, new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = MaxDownloadThreads,
-                MaxDegreeOfParallelism = 512
+                MaxDegreeOfParallelism = MaxDownloadThreads
             });
             var disposable = manyBlock.LinkTo(actionBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
@@ -118,7 +115,7 @@ namespace Natsurainko.FluentCore.Module.Downloader
             if (this.DownloadProgressChangedAction != null)
                 return this.DownloadAsync(this.DownloadProgressChangedAction);
 
-            return this.DownloadAsync(_ => { });
+            return this.DownloadAsync((_, _) => { });
         }
 
         public IEnumerable<IResource> GetFileResources()

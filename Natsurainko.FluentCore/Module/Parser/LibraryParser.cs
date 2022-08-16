@@ -1,30 +1,26 @@
 ﻿using Natsurainko.FluentCore.Class.Model.Download;
 using Natsurainko.FluentCore.Class.Model.Parser;
-using Natsurainko.Toolkits.Text;
 using Natsurainko.Toolkits.Values;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Natsurainko.FluentCore.Module.Parser
 {
     public class LibraryParser
     {
-        public VersionJsonEntity Entity { get; set; }
+        public List<LibraryJsonEntity> Entities { get; set; }
 
         public DirectoryInfo Root { get; set; }
 
-        public LibraryParser(VersionJsonEntity entity, DirectoryInfo root)
+        public LibraryParser(List<LibraryJsonEntity> entities, DirectoryInfo root)
         {
-            this.Entity = entity;
+            this.Entities = entities;
             this.Root = root;
         }
 
         public IEnumerable<LibraryResource> GetLibraries()
         {
-            foreach (var libraryJsonEntity in this.Entity.Libraries)
+            foreach (var libraryJsonEntity in Entities)
             {
                 var libraryResource = new LibraryResource
                 {
@@ -66,9 +62,8 @@ namespace Natsurainko.FluentCore.Module.Parser
 
         private bool GetAblility(LibraryJsonEntity libraryJsonEntity, string platform)
         {
-            bool windows = false;
-            bool linux = false;
-            bool osx = false;
+            bool windows, linux, osx;
+            windows = linux = osx = false;
 
             foreach (var item in libraryJsonEntity.Rules)
             {
@@ -80,10 +75,10 @@ namespace Natsurainko.FluentCore.Module.Parser
                         continue;
                     }
 
-                    foreach (var (_, os) in item.System)
-                        switch (os)
+                    foreach (var os in item.System)
+                        switch (os.Value)
                         {
-                            case "windows": 
+                            case "windows":
                                 windows = true;
                                 break;
                             case "linux":
@@ -102,8 +97,8 @@ namespace Natsurainko.FluentCore.Module.Parser
                         continue;
                     }
 
-                    foreach (var (_, os) in item.System)
-                        switch (os)
+                    foreach (var os in item.System)
+                        switch (os.Value)
                         {
                             case "windows":
                                 windows = false;
@@ -118,17 +113,13 @@ namespace Natsurainko.FluentCore.Module.Parser
                 }
             }
 
-            switch (platform)
+            return platform switch
             {
-                case "windows":
-                    return windows;
-                case "linux":
-                    return linux;
-                case "osx":
-                    return osx;
-            }
-
-            return false;
+                "windows" => windows,
+                "linux" => linux,
+                "osx" => osx,
+                _ => false,
+            };
         }
     }
 }

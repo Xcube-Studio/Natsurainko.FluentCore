@@ -2,8 +2,6 @@
 using Natsurainko.FluentCore.Class.Model.Launch;
 using Natsurainko.Toolkits.Network.Model;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Interface
@@ -12,12 +10,12 @@ namespace Natsurainko.FluentCore.Interface
     {
         GameCore GameCore { get; set; }
 
-        Action<float> DownloadProgressChangedAction { get; }
+        Action<string, float> DownloadProgressChangedAction { get; }
 
 
         event EventHandler<HttpDownloadResponse> ItemDownloaded;
 
-        Task<ResourceDownloadResponse> DownloadAsync(Action<float> func);
+        Task<ResourceDownloadResponse> DownloadAsync(Action<string, float> func);
 
         Task<ResourceDownloadResponse> DownloadAsync();
     }
