@@ -10,15 +10,17 @@
 ### 简介
 一个由C#编写的跨平台模块化 Minecraft 启动核心
 
-+ 支持桌面平台的跨平台调用 (Windows/Linux/Mac上的调试已通过)
++ 支持桌面平台的跨平台调用 (Windows/Linux/Mac上的调试均已通过)
 + Minecraft游戏核心的查找
 + Minecraft的参数生成、启动封装
-+ 对离线/微软/Yggdrasil验证的支持
++ 对离线、微软、外置登录验证的支持
 + 支持多线程高速补全Assets、Libraries等游戏资源
++ 支持自动安装Forge、Fabric、OptiFine加载器
++ 支持对CurseForge的api的封装
 + 支持从[Bmclapi、Mcbbs](https://bmclapidoc.bangbang93.com/)下载源进行文件补全
   + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
 
-本项目依赖框架: .NET Standard 2.1
+本项目依赖框架: .NET Standard 2.0 / .NET 6
 
 声明
 + BMCLAPI是@bangbang93开发的BMCL的一部分，用于解决国内线路对Forge和Minecraft官方使用的Amazon S3 速度缓慢的问题。BMCLAPI是对外开放的，所有需要Minecraft资源的启动器均可调用。
@@ -30,7 +32,7 @@
 
 ### 安装
 
-+ 在Visual Studio的Nuget包管理器中搜索 FluentLauncher.Core 并安装
++ 在Visual Studio的Nuget包管理器中搜索 Natsurainko.FluentCore 并安装
 + 直接下载本仓库Release中的.nupkg文件进行安装
 + 直接下载本仓库Release中的.dll文件导入项目
 

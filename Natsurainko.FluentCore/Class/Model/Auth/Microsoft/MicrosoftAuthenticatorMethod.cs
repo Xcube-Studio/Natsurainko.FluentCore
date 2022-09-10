@@ -1,8 +1,7 @@
-﻿namespace Natsurainko.FluentCore.Class.Model.Auth.Microsoft
+﻿namespace Natsurainko.FluentCore.Class.Model.Auth.Microsoft;
+
+public enum MicrosoftAuthenticatorMethod
 {
-    public enum MicrosoftAuthenticatorMethod
-    {
-        Login,
-        Refresh
-    }
+    Login,
+    Refresh
 }

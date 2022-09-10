@@ -4,19 +4,18 @@ using Natsurainko.Toolkits.Network.Model;
 using System;
 using System.Threading.Tasks;
 
-namespace Natsurainko.FluentCore.Interface
+namespace Natsurainko.FluentCore.Interface;
+
+public interface IResourceDownloader
 {
-    public interface IResourceDownloader
-    {
-        GameCore GameCore { get; set; }
+    GameCore GameCore { get; set; }
 
-        Action<string, float> DownloadProgressChangedAction { get; }
+    Action<string, float> DownloadProgressChangedAction { get; }
 
 
-        event EventHandler<HttpDownloadResponse> ItemDownloaded;
+    event EventHandler<HttpDownloadResponse> ItemDownloaded;
 
-        Task<ResourceDownloadResponse> DownloadAsync(Action<string, float> func);
+    Task<ResourceDownloadResponse> DownloadAsync(Action<string, float> func);
 
-        Task<ResourceDownloadResponse> DownloadAsync();
-    }
+    Task<ResourceDownloadResponse> DownloadAsync();
 }

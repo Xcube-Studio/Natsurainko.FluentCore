@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>disable</Nullable>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心
 Natsurainko.FluentCore 的 Windows 扩展</Description>
@@ -17,17 +17,15 @@ Natsurainko.FluentCore 的 Windows 扩展</Description>
 
   <ItemGroup>
     <None Remove="LICENSE" />
+    <None Remove="README.md" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="LICENSE" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\..\Git\FluentCore\README.md">
+    <EmbeddedResource Include="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
-    </None>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

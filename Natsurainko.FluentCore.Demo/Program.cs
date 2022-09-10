@@ -3,15 +3,24 @@ using Natsurainko.FluentCore.Class.Model.Launch;
 using Natsurainko.FluentCore.Event;
 using Natsurainko.FluentCore.Extension.Windows.Class.Model.Launch;
 using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Module.Authenticator;
 using Natsurainko.FluentCore.Module.Downloader;
 using Natsurainko.FluentCore.Module.Installer;
 using Natsurainko.FluentCore.Module.Launcher;
 using Natsurainko.FluentCore.Module.Mod;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.FluentCore.Wrapper;
+using Natsurainko.Toolkits.Network.Downloader;
+using Natsurainko.Toolkits.Network.Downloader.Model;
 using Natsurainko.Toolkits.Values;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace Natsurainko.FluentCore.Demo;
 
@@ -136,14 +145,7 @@ public class Program
         //完整的启动配置
         var launchSetting = new LaunchSetting()
         {
-            Account = new Account
-            {
-                Name = "Steve",
-                AccessToken = Guid.NewGuid().ToString(),
-                ClientToken = Guid.NewGuid().ToString(),
-                AccountType = AccountType.Offline,
-                Uuid = GuidHelper.FromString("Steve")
-            },
+            Account = Account.Default,
             GameWindowSetting = new GameWindowSetting
             {
                 Width = 854,
@@ -169,6 +171,9 @@ public class Program
                 Enable = false
             }
         };
+
+        var authenticator = new MicrosoftAuthenticator();
+        MinecraftLauncher minecraftLauncher = new MinecraftLauncher(launchSetting, authenticator, gameLocator);
 
         var launcher = new MinecraftLauncher(launchSetting, gameLocator);
 

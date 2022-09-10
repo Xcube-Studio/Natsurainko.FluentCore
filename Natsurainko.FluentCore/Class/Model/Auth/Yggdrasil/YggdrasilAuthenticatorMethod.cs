@@ -1,8 +1,7 @@
-﻿namespace Natsurainko.FluentCore.Class.Model.Auth.Yggdrasil
+﻿namespace Natsurainko.FluentCore.Class.Model.Auth.Yggdrasil;
+
+public enum YggdrasilAuthenticatorMethod
 {
-    public enum YggdrasilAuthenticatorMethod
-    {
-        Login,
-        Refresh
-    }
+    Login,
+    Refresh
 }

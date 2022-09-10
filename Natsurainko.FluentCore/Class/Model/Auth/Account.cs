@@ -1,49 +1,99 @@
 ﻿using Natsurainko.Toolkits.Values;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 
-namespace Natsurainko.FluentCore.Class.Model.Auth
+namespace Natsurainko.FluentCore.Class.Model.Auth;
+
+[JsonConverter(typeof(AccountJsonConverter))]
+public abstract class Account
 {
-    public class Account
+    public string Name { get; set; }
+
+    public Guid Uuid { get; set; }
+
+    public string AccessToken { get; set; }
+
+    public string ClientToken { get; set; }
+
+    public virtual AccountType Type { get; set; } = AccountType.Offline;
+
+    public static OfflineAccount Default { get; private set; } = new()
     {
-        public string YggdrasilServerUrl { get; set; }
+        Name = "Steve",
+        Uuid = GuidHelper.FromString("Steve"),
+        AccessToken = Guid.NewGuid().ToString("N"),
+        ClientToken = Guid.NewGuid().ToString("N")
+    };
+}
 
-        public string Name { get; set; }
+public class YggdrasilAccount : Account
+{
+    public override AccountType Type => AccountType.Yggdrasil;
 
-        public Guid Uuid { get; set; }
+    public string YggdrasilServerUrl { get; set; }
+}
 
-        public string AccessToken { get; set; }
+public class MicrosoftAccount : Account
+{
+    public override AccountType Type => AccountType.Microsoft;
 
-        public string ClientToken { get; set; }
+    public string RefreshToken { get; set; }
 
-        public AccountType AccountType { get; set; } = AccountType.Offline;
+    public DateTime DateTime { get; set; }
+}
 
-        public static Account Default => new()
+public class OfflineAccount : Account
+{
+    public override AccountType Type => AccountType.Offline;
+}
+
+public class AccountJsonConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType) => objectType == typeof(Account);
+
+    public override bool CanRead => true;
+
+    public override bool CanWrite => false;
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        var jobject = serializer.Deserialize<JObject>(reader);
+
+        if (jobject == null)
+            return null;
+
+        var accountType = (AccountType)jobject["Type"].Value<int>();
+
+        return accountType switch
         {
-            Name = "Steve",
-            Uuid = Guid.Parse("5627dd98e6be3c21b8a8e92344183641"),
-            AccessToken = Guid.NewGuid().ToString("N"),
-            ClientToken = string.Empty,
-            AccountType = 0
+            AccountType.Offline => new OfflineAccount
+            {
+                AccessToken = jobject["AccessToken"].ToObject<string>(),
+                ClientToken = jobject["ClientToken"].ToObject<string>(),
+                Name = jobject["Name"].ToObject<string>(),
+                Uuid = jobject["Uuid"].ToObject<Guid>()
+            },
+            AccountType.Microsoft => new MicrosoftAccount
+            {
+                AccessToken = jobject["AccessToken"].ToObject<string>(),
+                ClientToken = jobject["ClientToken"].ToObject<string>(),
+                Name = jobject["Name"].ToObject<string>(),
+                Uuid = jobject["Uuid"].ToObject<Guid>(),
+                DateTime = jobject["DateTime"].ToObject<DateTime>(),
+                RefreshToken = jobject["RefreshToken"].ToObject<string>()
+            },
+            AccountType.Yggdrasil => new YggdrasilAccount
+            {
+                AccessToken = jobject["AccessToken"].ToObject<string>(),
+                ClientToken = jobject["ClientToken"].ToObject<string>(),
+                Name = jobject["Name"].ToObject<string>(),
+                Uuid = jobject["Uuid"].ToObject<Guid>(),
+                YggdrasilServerUrl = jobject["YggdrasilServerUrl"].ToObject<string>()
+            },
+            _ => null
         };
-
-        public override int GetHashCode()
-            => this.Name.GetHashCode() ^ this.Uuid.GetHashCode()
-            ^ this.AccessToken.GetHashCode() ^ this.ClientToken.GetHashCode()
-            ^ this.AccountType.GetHashCode() ^ this.YggdrasilServerUrl.GetHashCode();
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null)
-                return false;
-
-            var item = (Account)obj;
-
-            return this.Name == item.Name
-                && this.Uuid == item.Uuid
-                && this.AccessToken == item.AccessToken
-                && this.ClientToken == item.ClientToken
-                && this.AccountType == item.AccountType
-                && this.YggdrasilServerUrl == item.YggdrasilServerUrl;
-        }
     }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) => throw new NotImplementedException();
 }

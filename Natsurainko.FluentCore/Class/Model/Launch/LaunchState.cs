@@ -1,9 +1,8 @@
-﻿namespace Natsurainko.FluentCore.Class.Model.Launch
+﻿namespace Natsurainko.FluentCore.Class.Model.Launch;
+
+public enum LaunchState
 {
-    public enum LaunchState
-    {
-        Succeess = 0,
-        Failed = 1,
-        Cancelled = 2
-    }
+    Succeess = 0,
+    Failed = 1,
+    Cancelled = 2
 }

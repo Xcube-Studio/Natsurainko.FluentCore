@@ -1,20 +1,19 @@
 ﻿using Natsurainko.Toolkits.Network.Model;
 using System.IO;
 
-namespace Natsurainko.FluentCore.Interface
+namespace Natsurainko.FluentCore.Interface;
+
+public interface IResource
 {
-    public interface IResource
-    {
-        DirectoryInfo Root { get; set; }
+    DirectoryInfo Root { get; set; }
 
-        string Name { get; }
+    string Name { get; }
 
-        int Size { get; }
+    int Size { get; }
 
-        string CheckSum { get; }
+    string CheckSum { get; }
 
-        FileInfo ToFileInfo();
+    FileInfo ToFileInfo();
 
-        HttpDownloadRequest ToDownloadRequest();
-    }
+    HttpDownloadRequest ToDownloadRequest();
 }

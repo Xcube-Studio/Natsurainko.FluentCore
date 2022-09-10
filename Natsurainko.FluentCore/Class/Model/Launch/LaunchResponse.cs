@@ -5,144 +5,140 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Natsurainko.FluentCore.Class.Model.Launch
+namespace Natsurainko.FluentCore.Class.Model.Launch;
+
+public class LaunchResponse : IDisposable
 {
-    public class LaunchResponse : IDisposable
+    public LaunchState State { get; private set; }
+
+    public IEnumerable<string> Arguemnts { get; private set; }
+
+    public Process Process { get; private set; }
+
+    public Stopwatch RunTime { get; set; }
+
+    public Exception Exception { get; private set; }
+
+    public bool EnableXmlFormat { get; set; }
+
+    public event EventHandler<MinecraftExitedArgs> MinecraftExited;
+
+    public event EventHandler<IProcessOutput> MinecraftProcessOutput;
+
+    private bool disposedValue;
+
+    private List<string> Output = new();
+
+    private string Cache = string.Empty;
+
+    public LaunchResponse(Process process, LaunchState state, IEnumerable<string> args)
     {
-        public LaunchState State { get; private set; }
+        this.Process = process;
+        this.State = state;
+        this.Arguemnts = args;
 
-        public IEnumerable<string> Arguemnts { get; private set; }
-
-        public Process Process { get; private set; }
-
-        public Stopwatch RunTime { get; set; }
-
-        public Exception Exception { get; private set; }
-
-        public bool EnableXmlFormat { get; set; }
-
-        public event EventHandler<MinecraftExitedArgs> MinecraftExited;
-
-        public event EventHandler<IProcessOutput> MinecraftProcessOutput;
-
-        private bool disposedValue;
-
-        private List<string> Output = new();
-
-        private string Cache = string.Empty;
-
-        public LaunchResponse(Process process, LaunchState state, IEnumerable<string> args)
+        if (state == LaunchState.Succeess)
         {
-            this.Process = process;
-            this.State = state;
-            this.Arguemnts = args;
+            this.Process.OutputDataReceived += (_, e) => AddOutput(e.Data);
+            this.Process.ErrorDataReceived += (_, e) => AddOutput(e.Data);
 
-            if (state == LaunchState.Succeess)
+            this.Process.Exited += (_, _) =>
             {
-                this.Process.OutputDataReceived += (_, e) => AddOutput(e.Data);
-                this.Process.ErrorDataReceived += (_, e) => AddOutput(e.Data);
+                this.RunTime.Stop();
 
-                this.Process.Exited += (_, _) =>
+                MinecraftExited?.Invoke(this, new MinecraftExitedArgs
                 {
-                    this.RunTime.Stop();
+                    Crashed = this.Process.ExitCode != 0,
+                    ExitCode = this.Process.ExitCode,
+                    RunTime = this.RunTime,
+                    Outputs = this.Output
+                });
+            };
 
-                    MinecraftExited?.Invoke(this, new MinecraftExitedArgs
-                    {
-                        Crashed = this.Process.ExitCode != 0,
-                        ExitCode = this.Process.ExitCode,
-                        RunTime = this.RunTime,
-                        Outputs = this.Output
-                    });
-                };
+            Process.Start();
 
-                Process.Start();
-
-                this.Process.BeginOutputReadLine();
-                this.Process.BeginErrorReadLine();
-            }
+            this.Process.BeginOutputReadLine();
+            this.Process.BeginErrorReadLine();
         }
+    }
 
-        public LaunchResponse(Process process, LaunchState state, IEnumerable<string> args, Exception exception)
+    public LaunchResponse(Process process, LaunchState state, IEnumerable<string> args, Exception exception)
+    {
+        this.Process = process;
+        this.State = state;
+        this.Arguemnts = args;
+        this.Exception = exception;
+    }
+
+    public void WaitForExit() => Process?.WaitForExit();
+
+    public async Task WaitForExitAsync() => await Task.Run(() => Process?.WaitForExit());
+
+    public void Stop() => Process?.Kill();
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
         {
-            this.Process = process;
-            this.State = state;
-            this.Arguemnts = args;
-            this.Exception = exception;
+            if (disposing)
+            {
+
+            }
+
+            this.Process?.Dispose();
+            this.Arguemnts = null;
+            this.Output = null;
+            this.Exception = null;
+
+            if (this.MinecraftExited != null)
+                foreach (var i in this.MinecraftExited.GetInvocationList())
+                    this.MinecraftExited -= (EventHandler<MinecraftExitedArgs>)i;
+
+            if (this.MinecraftProcessOutput != null)
+                foreach (var i in this.MinecraftProcessOutput.GetInvocationList())
+                    this.MinecraftProcessOutput -= (EventHandler<IProcessOutput>)i;
+
+
+            disposedValue = true;
         }
+    }
 
-        public void WaitForExit() => Process?.WaitForExit();
+    private void AddOutput(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
 
-        public async Task WaitForExitAsync() => await Task.Run(() => Process?.WaitForExit());
-
-        public void Stop() => Process?.Kill();
-
-        public void Dispose()
+        if (!this.EnableXmlFormat)
         {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            this.Cache = text;
+
+            Output.Add(text);
+            MinecraftProcessOutput?.Invoke(this, new BaseProcessOutput(this.Cache));
+
+            this.Cache = string.Empty;
+            return;
         }
 
-        protected virtual void Dispose(bool disposing)
+        if (!(text.StartsWith("<") || text.StartsWith("]") || text.StartsWith(" ") || text.StartsWith(" ")))
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: 释放托管状态(托管对象)
-                }
-
-                // TODO: 释放未托管的资源(未托管的对象)并重写终结器
-                // TODO: 将大型字段设置为 null
-                this.Process?.Dispose();
-                this.Arguemnts = null;
-                this.Output = null;
-                this.Exception = null;
-
-                if (this.MinecraftExited != null)
-                    foreach (var i in this.MinecraftExited.GetInvocationList())
-                        this.MinecraftExited -= (EventHandler<MinecraftExitedArgs>)i;
-
-                if (this.MinecraftProcessOutput != null)
-                    foreach (var i in this.MinecraftProcessOutput.GetInvocationList())
-                        this.MinecraftProcessOutput -= (EventHandler<IProcessOutput>)i;
-
-
-                disposedValue = true;
-            }
+            MinecraftProcessOutput?.Invoke(this, new XmlProcessOutput(text, true));
+            return;
         }
 
-        private void AddOutput(string text)
+        if (text.Contains("</log4j:Event>"))
         {
-            if (string.IsNullOrEmpty(text))
-                return;
+            this.Cache += text;
 
-            if (!this.EnableXmlFormat)
-            {
-                this.Cache = text;
-
-                Output.Add(text);
-                MinecraftProcessOutput?.Invoke(this, new BaseProcessOutput(this.Cache));
-
-                this.Cache = string.Empty;
-                return;
-            }
-
-            if (!(text.StartsWith("<") || text.StartsWith("]") || text.StartsWith(" ") || text.StartsWith(" ")))
-            {
-                MinecraftProcessOutput?.Invoke(this, new XmlProcessOutput(text, true));
-                return;
-            }
-
-            if (text.Contains("</log4j:Event>"))
-            {
-                this.Cache += text;
-
-                Output.Add(this.Cache);
-                MinecraftProcessOutput?.Invoke(this, new XmlProcessOutput(this.Cache));
-                this.Cache = string.Empty;
-            }
-            else this.Cache += $"{text}\r\n";
+            Output.Add(this.Cache);
+            MinecraftProcessOutput?.Invoke(this, new XmlProcessOutput(this.Cache));
+            this.Cache = string.Empty;
         }
+        else this.Cache += $"{text}\r\n";
     }
 }

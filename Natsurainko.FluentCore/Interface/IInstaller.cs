@@ -2,16 +2,15 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Natsurainko.FluentCore.Interface
+namespace Natsurainko.FluentCore.Interface;
+
+public interface IInstaller
 {
-    public interface IInstaller
-    {
-        event EventHandler<(string, float)> ProgressChanged;
+    event EventHandler<(string, float)> ProgressChanged;
 
-        IGameCoreLocator GameCoreLocator { get; }
+    IGameCoreLocator GameCoreLocator { get; }
 
-        Task<InstallerResponse> InstallAsync();
+    Task<InstallerResponse> InstallAsync();
 
-        InstallerResponse Install();
-    }
+    InstallerResponse Install();
 }

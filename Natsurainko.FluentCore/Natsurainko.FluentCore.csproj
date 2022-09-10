@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 	<LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心</Description>
     <Copyright>Copyright © Natsurainko 2022</Copyright>
@@ -13,21 +13,21 @@
     <RepositoryUrl>https://github.com/Xcube-Studio/Natsurainko.FluentCore</RepositoryUrl>
     <NeutralLanguage>zh-CN</NeutralLanguage>
     <PackageTags>FluentCore</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="LICENSE" />
+    <None Remove="README.md" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="LICENSE" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\..\Git\FluentCore\README.md">
+    <EmbeddedResource Include="README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
-    </None>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -38,5 +38,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Natsurainko.Toolkits\Natsurainko.Toolkits\Natsurainko.Toolkits.csproj" />
   </ItemGroup>
-
 </Project>

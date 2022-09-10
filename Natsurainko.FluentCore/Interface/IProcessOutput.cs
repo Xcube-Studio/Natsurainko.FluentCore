@@ -1,11 +1,10 @@
-﻿namespace Natsurainko.FluentCore.Interface
+﻿namespace Natsurainko.FluentCore.Interface;
+
+public interface IProcessOutput
 {
-    public interface IProcessOutput
-    {
-        string Raw { get; }
+    string Raw { get; }
 
-        string GetPrintValue();
+    string GetPrintValue();
 
-        void Print();
-    }
+    void Print();
 }

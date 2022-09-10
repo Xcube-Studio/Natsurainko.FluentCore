@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Natsurainko.FluentCore.Interface
+namespace Natsurainko.FluentCore.Interface;
+
+public interface IGameCoreLocator
 {
-    public interface IGameCoreLocator
-    {
-        DirectoryInfo Root { get; }
+    DirectoryInfo Root { get; }
 
-        IEnumerable<GameCore> GetGameCores();
+    IEnumerable<GameCore> GetGameCores();
 
-        GameCore GetGameCore(string id);
-    }
+    GameCore GetGameCore(string id);
 }
