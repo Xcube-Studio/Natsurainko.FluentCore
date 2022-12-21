@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
+﻿using Natsurainko.FluentCore.Model.Download;
 using Natsurainko.Toolkits.IO;
 using System.Collections.Generic;
 using System.IO;

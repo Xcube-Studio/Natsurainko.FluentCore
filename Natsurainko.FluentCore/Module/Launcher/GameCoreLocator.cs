@@ -1,9 +1,9 @@
-﻿using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Class.Model.Parser;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Launch;
+using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.FluentCore.Module.Parser;
 using Natsurainko.Toolkits.IO;
-using Natsurainko.Toolkits.Text;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,13 +16,13 @@ public class GameCoreLocator : IGameCoreLocator
 
     public List<(string, Exception)> ErrorGameCores { get; private set; }
 
-    public GameCoreLocator(string path) => this.Root = new DirectoryInfo(path);
+    public GameCoreLocator(string path) => Root = new DirectoryInfo(path);
 
-    public GameCoreLocator(DirectoryInfo root) => this.Root = root;
+    public GameCoreLocator(DirectoryInfo root) => Root = root;
 
     public GameCore GetGameCore(string id)
     {
-        foreach (var core in this.GetGameCores())
+        foreach (var core in GetGameCores())
             if (core.Id == id)
                 return core;
 
@@ -31,7 +31,7 @@ public class GameCoreLocator : IGameCoreLocator
 
     public void DeleteGameCore(string id)
     {
-        var directory = new DirectoryInfo(Path.Combine(this.Root.FullName, "versions", id));
+        var directory = new DirectoryInfo(Path.Combine(Root.FullName, "versions", id));
 
         if (directory.Exists)
             directory.DeleteAllFiles();
@@ -43,31 +43,20 @@ public class GameCoreLocator : IGameCoreLocator
     {
         var entities = new List<VersionJsonEntity>();
 
-        var versionsFolder = new DirectoryInfo(Path.Combine(this.Root.FullName, "versions"));
+        var versionsFolder = new DirectoryInfo(Path.Combine(Root.FullName, "versions"));
 
         if (!versionsFolder.Exists)
-        {
-            versionsFolder.Create();
             return Array.Empty<GameCore>();
-        }
 
-        foreach (var item in versionsFolder.GetDirectories())
-            foreach (var files in item.GetFiles())
+        foreach (var item in versionsFolder.EnumerateDirectories())
+            foreach (var files in item.EnumerateFiles())
                 if (files.Name == $"{item.Name}.json")
-                {
-                    var entity = new VersionJsonEntity();
-                    try
-                    {
-                        entity = entity.FromJson(File.ReadAllText(files.FullName));
-                        entities.Add(entity);
-                    }
-                    catch { }
-                }
+                    try { entities.Add(JsonConvert.DeserializeObject<VersionJsonEntity>(File.ReadAllText(files.FullName))); } catch { }
 
-        var parser = new GameCoreParser(this.Root, entities);
+        var parser = new GameCoreParser(Root, entities);
         var result = parser.GetGameCores();
 
-        this.ErrorGameCores = parser.ErrorGameCores;
+        ErrorGameCores = parser.ErrorGameCores;
 
         return result;
     }

@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Auth;
 using Natsurainko.Toolkits.Values;
 using System;
 using System.Threading.Tasks;
@@ -14,11 +14,11 @@ public class OfflineAuthenticator : IAuthenticator
 
     public OfflineAuthenticator(string name, Guid uuid = default)
     {
-        this.Name = name;
-        this.Uuid = uuid;
+        Name = name;
+        Uuid = uuid;
 
-        if (this.Uuid == default)
-            this.Uuid = GuidHelper.FromString(this.Name);
+        if (Uuid == default)
+            Uuid = GuidHelper.FromString(Name);
     }
 
     public Account Authenticate()
@@ -26,8 +26,8 @@ public class OfflineAuthenticator : IAuthenticator
         {
             AccessToken = Guid.NewGuid().ToString("N"),
             ClientToken = Guid.NewGuid().ToString("N"),
-            Name = this.Name,
-            Uuid = this.Uuid
+            Name = Name,
+            Uuid = Uuid
         };
 
     public Task<Account> AuthenticateAsync()

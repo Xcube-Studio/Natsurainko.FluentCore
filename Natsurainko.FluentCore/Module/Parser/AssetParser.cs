@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Parser;
+﻿using Natsurainko.FluentCore.Model.Download;
+using Natsurainko.FluentCore.Model.Parser;
 using System.Collections.Generic;
 using System.IO;
 
@@ -13,8 +13,8 @@ public class AssetParser
 
     public AssetParser(AssetManifestJsonEntity jsonEntity, DirectoryInfo directoryInfo)
     {
-        this.Entity = jsonEntity;
-        this.Root = directoryInfo;
+        Entity = jsonEntity;
+        Root = directoryInfo;
     }
 
     public IEnumerable<AssetResource> GetAssets()
@@ -25,7 +25,7 @@ public class AssetParser
                 Name = kvp.Key,
                 CheckSum = kvp.Value.Hash,
                 Size = kvp.Value.Size,
-                Root = this.Root
+                Root = Root
             };
     }
 }

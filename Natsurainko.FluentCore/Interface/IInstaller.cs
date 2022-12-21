@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Class.Model.Install;
+﻿using Natsurainko.FluentCore.Model.Install;
 using System;
 using System.Threading.Tasks;
 

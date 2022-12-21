@@ -1,6 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Class.Model.Auth.Yggdrasil;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Auth;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
@@ -21,50 +20,50 @@ public class YggdrasilAuthenticator : IAuthenticator
 
     public string ClientToken { get; private set; } = Guid.NewGuid().ToString("N");
 
-    public YggdrasilAuthenticatorMethod Method { get; private set; }
+    public AuthenticatorMethod Method { get; private set; }
 
-    public YggdrasilAuthenticator(string yggdrasilServerUrl = "https://authserver.mojang.com", YggdrasilAuthenticatorMethod method = YggdrasilAuthenticatorMethod.Login)
+    public YggdrasilAuthenticator(string yggdrasilServerUrl = "https://authserver.mojang.com", AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
-        this.YggdrasilServerUrl = yggdrasilServerUrl;
-        this.Method = method;
+        YggdrasilServerUrl = yggdrasilServerUrl;
+        Method = method;
     }
 
-    public YggdrasilAuthenticator(YggdrasilAuthenticatorMethod method, string accessToken = default, string clientToken = default, string email = default, string password = default, string yggdrasilServerUrl = "https://authserver.mojang.com")
+    public YggdrasilAuthenticator(AuthenticatorMethod method, string accessToken = default, string clientToken = default, string email = default, string password = default, string yggdrasilServerUrl = "https://authserver.mojang.com")
     {
-        this.Email = email;
-        this.Password = password;
-        this.AccessToken = accessToken;
-        this.ClientToken = clientToken;
+        Email = email;
+        Password = password;
+        AccessToken = accessToken;
+        ClientToken = clientToken;
 
-        this.YggdrasilServerUrl = yggdrasilServerUrl;
-        this.Method = method;
+        YggdrasilServerUrl = yggdrasilServerUrl;
+        Method = method;
     }
 
     public Account Authenticate()
-        => this.AuthenticateAsync().GetAwaiter().GetResult();
+        => AuthenticateAsync().GetAwaiter().GetResult();
 
     public async Task<Account> AuthenticateAsync()
     {
-        string url = this.YggdrasilServerUrl;
+        string url = YggdrasilServerUrl;
         string content = string.Empty;
 
-        switch (this.Method)
+        switch (Method)
         {
-            case YggdrasilAuthenticatorMethod.Login:
+            case AuthenticatorMethod.Login:
                 url += "/authenticate";
                 content = new LoginRequestModel
                 {
-                    ClientToken = this.ClientToken,
-                    UserName = this.Email,
-                    Password = this.Password
+                    ClientToken = ClientToken,
+                    UserName = Email,
+                    Password = Password
                 }.ToJson();
                 break;
-            case YggdrasilAuthenticatorMethod.Refresh:
+            case AuthenticatorMethod.Refresh:
                 url += "/refresh";
                 content = new
                 {
-                    clientToken = this.ClientToken,
-                    accessToken = this.AccessToken,
+                    clientToken = ClientToken,
+                    accessToken = AccessToken,
                     requestUser = true
                 }.ToJson();
                 break;
@@ -84,7 +83,7 @@ public class YggdrasilAuthenticator : IAuthenticator
             ClientToken = model.ClientToken,
             Name = model.SelectedProfile.Name,
             Uuid = Guid.Parse(model.SelectedProfile.Id),
-            YggdrasilServerUrl = this.YggdrasilServerUrl
+            YggdrasilServerUrl = YggdrasilServerUrl
         };
     }
 
@@ -93,7 +92,7 @@ public class YggdrasilAuthenticator : IAuthenticator
         string content = JsonConvert.SerializeObject(
             new YggdrasilRequestModel
             {
-                ClientToken = this.ClientToken,
+                ClientToken = ClientToken,
                 AccessToken = accessToken
             }
         );
@@ -108,8 +107,8 @@ public class YggdrasilAuthenticator : IAuthenticator
         string content = JsonConvert.SerializeObject(
             new
             {
-                username = this.Email,
-                password = this.Password
+                username = Email,
+                password = Password
             }
         );
 
@@ -123,7 +122,7 @@ public class YggdrasilAuthenticator : IAuthenticator
         string content = JsonConvert.SerializeObject(
             new YggdrasilRequestModel
             {
-                ClientToken = this.ClientToken,
+                ClientToken = ClientToken,
                 AccessToken = accessToken
             }
         );

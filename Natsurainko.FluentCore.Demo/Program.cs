@@ -1,26 +1,15 @@
-﻿using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Event;
-using Natsurainko.FluentCore.Extension.Windows.Class.Model.Launch;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Event;
+using Natsurainko.FluentCore.Extension.Windows.Model.Launch;
+using Natsurainko.FluentCore.Model.Auth;
+using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Authenticator;
 using Natsurainko.FluentCore.Module.Downloader;
-using Natsurainko.FluentCore.Module.Installer;
 using Natsurainko.FluentCore.Module.Launcher;
-using Natsurainko.FluentCore.Module.Mod;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.FluentCore.Wrapper;
 using Natsurainko.Toolkits.Network.Downloader;
-using Natsurainko.Toolkits.Network.Downloader.Model;
-using Natsurainko.Toolkits.Values;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
 
 namespace Natsurainko.FluentCore.Demo;
 
@@ -103,6 +92,20 @@ public class Program
         // return;
         #endregion
 
+        #region Vanllia Installer
+        //DownloadApiManager.Current = DownloadApiManager.Mcbbs;
+
+        //var installer = new MinecraftVanlliaInstaller(new GameCoreLocator(@"D:\Debug\.minecraft"), "1.18.2");
+        //installer.ProgressChanged += (object sender, (string, float) e) =>
+        //{
+        //    Console.WriteLine($"[{e.Item2 * 100:0.00}%]{e.Item1}");
+        //};        
+        //var res = installer.Install();
+
+        //Console.ReadKey();
+        //return;
+        #endregion
+
         #region CurseForge Modpack Finder
         // CurseForgeModpackFinder curseForgeModpackFinder = new CurseForgeModpackFinder("Token");
         // var modpacks = curseForgeModpackFinder.GetFeaturedModpacksAsync().GetAwaiter().GetResult();
@@ -125,6 +128,13 @@ public class Program
         // Console.ReadKey();
         //
         //return;
+        #endregion
+
+        #region UwpMinecraftLauncher
+
+        //UwpMinecraftLauncher.LaunchMinecraft();
+        //return;
+
         #endregion
 
         DownloadApiManager.Current = DownloadApiManager.Mojang;
@@ -165,10 +175,6 @@ public class Program
             {
                 IPAddress = "mc.hypixel.net",
                 Port = 25565
-            },
-            XmlOutputSetting = new XmlOutputSetting
-            {
-                Enable = false
             }
         };
 
@@ -177,13 +183,13 @@ public class Program
 
         var launcher = new MinecraftLauncher(launchSetting, gameLocator);
 
-        var resourceDownloader = new ResourceDownloader()
-        {
-            DownloadProgressChangedAction = (a, x) => { Console.WriteLine($"当前文件资源补全进度：{x * 100:0.00} %"); }
-        };
+        var resourceDownloader = new ResourceDownloader();
+        resourceDownloader.DownloadProgressChanged += (object sender, ParallelDownloaderProgressChangedEventArgs e)
+            => Console.WriteLine($"当前文件资源补全进度：{e.Progress * 100:0.00} %");
 
         launcher.ResourceDownloader = resourceDownloader; //设置资源补全模块
         using var launchResponse = launcher.LaunchMinecraft(core);
+        launchResponse.GameProcessOutput += (object sender, GameProcessOutputArgs e) => e.Print();
 
         if (launchResponse.State == LaunchState.Succeess)
         {
@@ -191,8 +197,7 @@ public class Program
             Console.WriteLine($"启动成功：{core}");
 
             launchResponse.SetMainWindowTitle("Natsurainko.FluentCore.Demo");
-            launchResponse.MinecraftProcessOutput += (object sender, IProcessOutput e) => e.Print();
-            launchResponse.MinecraftExited += (object sender, MinecraftExitedArgs e) =>
+            launchResponse.GameExited += (object sender, GameExitedArgs e) =>
             {
                 Console.WriteLine("核心启动参数：");
                 Console.WriteLine(string.Join("\r\n", launchResponse.Arguemnts));

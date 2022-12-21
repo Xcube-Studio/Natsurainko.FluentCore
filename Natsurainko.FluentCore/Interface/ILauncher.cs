@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Event;
+﻿using Natsurainko.FluentCore.Event;
+using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Launcher;
 using System;
 using System.Threading.Tasks;

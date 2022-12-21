@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Install;
-using Natsurainko.FluentCore.Class.Model.Mod;
+﻿using Natsurainko.FluentCore.Model.Install;
+using Natsurainko.FluentCore.Model.Mod;
 using Natsurainko.Toolkits.Network;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;

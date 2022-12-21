@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 	<LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>2.0.2</Version>
+    <Version>2.0.3</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心</Description>
     <Copyright>Copyright © Natsurainko 2022</Copyright>

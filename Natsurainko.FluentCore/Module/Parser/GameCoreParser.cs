@@ -1,8 +1,10 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Class.Model.Parser;
+﻿using Natsurainko.FluentCore.Model.Download;
+using Natsurainko.FluentCore.Model.Install;
+using Natsurainko.FluentCore.Model.Launch;
+using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -19,8 +21,8 @@ public class GameCoreParser
 
     public GameCoreParser(DirectoryInfo root, IEnumerable<VersionJsonEntity> jsonEntities)
     {
-        this.Root = root;
-        this.JsonEntities = jsonEntities;
+        Root = root;
+        JsonEntities = jsonEntities;
     }
 
     public List<(string, Exception)> ErrorGameCores { get; private set; } = new();
@@ -40,8 +42,8 @@ public class GameCoreParser
                     MainClass = entity.MainClass,
                     InheritsFrom = entity.InheritsFrom,
                     JavaVersion = (int)(entity.JavaVersion?.MajorVersion),
-                    LibraryResources = new LibraryParser(entity.Libraries, this.Root).GetLibraries().ToList(),
-                    Root = this.Root
+                    LibraryResources = new LibraryParser(entity.Libraries, Root).GetLibraries().ToList(),
+                    Root = Root
                 };
 
                 if (string.IsNullOrEmpty(entity.InheritsFrom) && entity.Downloads != null)
@@ -54,15 +56,15 @@ public class GameCoreParser
                     core.AssetIndexFile = GetAssetIndexFile(entity);
 
                 if (entity.MinecraftArguments != null)
-                    core.BehindArguments = HandleMinecraftArguments(entity.MinecraftArguments);
+                    core.BehindArguments = GameCoreParser.HandleMinecraftArguments(entity.MinecraftArguments);
 
                 if (entity.Arguments != null && entity.Arguments.Game != null)
                     core.BehindArguments = core.BehindArguments == null
-                        ? HandleArgumentsGame(entity.Arguments)
-                        : core.BehindArguments.Union(HandleArgumentsGame(entity.Arguments));
+                        ? GameCoreParser.HandleArgumentsGame(entity.Arguments)
+                        : core.BehindArguments.Union(GameCoreParser.HandleArgumentsGame(entity.Arguments));
 
                 if (entity.Arguments != null && entity.Arguments.Jvm != null)
-                    core.FrontArguments = HandleArgumentsJvm(entity.Arguments);
+                    core.FrontArguments = GameCoreParser.HandleArgumentsJvm(entity.Arguments);
                 else core.FrontArguments = new string[]
                 {
                     "-Djava.library.path=${natives_directory}",
@@ -73,20 +75,14 @@ public class GameCoreParser
 
                 cores.Add(core);
             }
-            catch (Exception ex)
-            {
-                ErrorGameCores.Add((entity.Id, ex));
-            }
+            catch (Exception ex) { ErrorGameCores.Add((entity.Id, ex)); }
         }
 
         foreach (var item in cores)
         {
-            item.Source = GetSource(item);
-            item.HasModLoader = GetHasModLoader(item);
+            item.Source = GameCoreParser.GetSource(item);
 
-            if (string.IsNullOrEmpty(item.InheritsFrom))
-                yield return item;
-            else
+            if (!string.IsNullOrEmpty(item.InheritsFrom))
             {
                 GameCore inheritsFrom = default;
 
@@ -94,23 +90,38 @@ public class GameCoreParser
                     if (subitem.Id == item.InheritsFrom)
                         inheritsFrom = subitem;
 
-                if (inheritsFrom == null)
-                    continue;
-                else yield return Combine(item, inheritsFrom);
+                if (inheritsFrom != null)
+                {
+                    item.AssetIndexFile = inheritsFrom.AssetIndexFile;
+                    item.ClientFile = inheritsFrom.ClientFile;
+                    item.LogConfigFile = inheritsFrom.LogConfigFile;
+                    item.JavaVersion = inheritsFrom.JavaVersion;
+                    item.Type = inheritsFrom.Type;
+                    item.LibraryResources = item.LibraryResources.Union(inheritsFrom.LibraryResources).ToList();
+                    item.BehindArguments = inheritsFrom.BehindArguments.Union(item.BehindArguments).ToList();
+                    item.FrontArguments = item.FrontArguments.Union(inheritsFrom.FrontArguments).ToList();
+                }
+                else continue;
             }
+
+            item.IsVanilla = GameCoreParser.GetIsVanilla(item);
+            item.ModLoaders = GameCoreParser.GetModLoaders(item);
+            (item.AssetsCount, item.LibrariesCount, item.TotalSize) = GetStatisticFiles(item);
+
+            yield return item;
         }
     }
 
     private FileResource GetClientFile(VersionJsonEntity entity)
     {
-        var path = Path.Combine(this.Root.FullName, "versions", entity.Id, $"{entity.Id}.jar");
+        var path = Path.Combine(Root.FullName, "versions", entity.Id, $"{entity.Id}.jar");
 
         return new FileResource
         {
             CheckSum = entity.Downloads["client"].Sha1,
             Size = entity.Downloads["client"].Size,
             Url = DownloadApiManager.Current != DownloadApiManager.Mojang ? entity.Downloads["client"].Url.Replace("https://launcher.mojang.com", DownloadApiManager.Current.Host) : entity.Downloads["client"].Url,
-            Root = this.Root,
+            Root = Root,
             FileInfo = new FileInfo(path),
             Name = Path.GetFileName(path)
         };
@@ -118,7 +129,7 @@ public class GameCoreParser
 
     private FileResource GetLogConfigFile(VersionJsonEntity entity)
     {
-        var path = Path.Combine(this.Root.FullName, "versions", entity.Id, entity.Logging.Client.File.Id);
+        var path = Path.Combine(Root.FullName, "versions", entity.Id, entity.Logging.Client.File.Id);
 
         return new FileResource
         {
@@ -127,13 +138,13 @@ public class GameCoreParser
             Url = DownloadApiManager.Current != DownloadApiManager.Mojang ? entity.Logging.Client.File.Url.Replace("https://launcher.mojang.com", DownloadApiManager.Current.Host) : entity.Logging.Client.File.Url,
             Name = entity.Logging.Client.File.Id,
             FileInfo = new FileInfo(path),
-            Root = this.Root,
+            Root = Root,
         };
     }
 
     private FileResource GetAssetIndexFile(VersionJsonEntity entity)
     {
-        var path = Path.Combine(this.Root.FullName, "assets", "indexes", $"{entity.AssetIndex.Id}.json");
+        var path = Path.Combine(Root.FullName, "assets", "indexes", $"{entity.AssetIndex.Id}.json");
 
         return new FileResource
         {
@@ -142,11 +153,11 @@ public class GameCoreParser
             Url = DownloadApiManager.Current != DownloadApiManager.Mojang ? entity.AssetIndex.Url.Replace("https://launchermeta.mojang.com", DownloadApiManager.Current.Host).Replace("https://piston-meta.mojang.com", DownloadApiManager.Current.Host) : entity.AssetIndex.Url,
             Name = $"{entity.AssetIndex.Id}.json",
             FileInfo = new FileInfo(path),
-            Root = this.Root,
+            Root = Root,
         };
     }
 
-    private string GetSource(GameCore core)
+    private static string GetSource(GameCore core)
     {
         try
         {
@@ -174,7 +185,7 @@ public class GameCoreParser
         return core.Id;
     }
 
-    private bool GetHasModLoader(GameCore core)
+    private static bool GetIsVanilla(GameCore core)
     {
         foreach (var arg in core.BehindArguments)
             switch (arg)
@@ -182,25 +193,80 @@ public class GameCoreParser
                 case "--tweakClass optifine.OptiFineTweaker":
                 case "--tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker":
                 case "--fml.forgeGroup net.minecraftforge":
-                    return true;
+                    return false;
             }
 
         foreach (var arg in core.FrontArguments)
             if (arg.Contains("-DFabricMcEmu= net.minecraft.client.main.Main"))
-                return true;
+                return false;
 
         return core.MainClass switch
         {
-            "net.minecraft.client.main.Main" or "net.minecraft.launchwrapper.Launch" or "com.mojang.rubydung.RubyDung" => false,
-            _ => true,
+            "net.minecraft.client.main.Main" or "net.minecraft.launchwrapper.Launch" or "com.mojang.rubydung.RubyDung" => true,
+            _ => false,
         };
     }
 
-    private IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  ", " ").Split(' '));
+    private static (int, int, long) GetStatisticFiles(GameCore core)
+    {
+        long length = 0;
+        int assets = 0;
 
-    private IEnumerable<string> HandleArgumentsGame(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Game.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
+        foreach (var library in core.LibraryResources)
+            length += library.Size == 0 ? (library.ToFileInfo().Exists ? library.ToFileInfo().Length : 0) : library.Size;
 
-    private IEnumerable<string> HandleArgumentsJvm(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Jvm.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
+        if (core.AssetIndexFile.ToFileInfo().Exists)
+            foreach (var asset in
+                new AssetParser(JsonConvert.DeserializeObject<AssetManifestJsonEntity>
+                    (File.ReadAllText(core.AssetIndexFile.ToFileInfo().FullName)), core.Root).GetAssets())
+            {
+                assets++;
+                length += asset.Size == 0 ? (asset.ToFileInfo().Exists ? asset.ToFileInfo().Length : 0) : asset.Size;
+            }
+
+        if (core.ClientFile.ToFileInfo().Exists)
+            length += core.ClientFile.ToFileInfo().Length;
+
+        length += new FileInfo(core.ClientFile.ToFileInfo().FullName.Replace(".jar", ".json")).Length;
+
+        return (assets, core.LibraryResources.Count, length);
+    }
+
+    private static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
+    {
+        var libFind = core.LibraryResources.Where(lib =>
+        {
+            var lowerName = lib.Name.ToLower();
+
+            return lowerName.StartsWith("optifine:optifine") ||
+            lowerName.StartsWith("net.minecraftforge:forge:") ||
+            lowerName.StartsWith("net.minecraftforge:fmlloader:") ||
+            lowerName.StartsWith("net.fabricmc:fabric-loader") ||
+            lowerName.StartsWith("com.mumfrey:liteloader:");
+        });
+
+        foreach (var lib in libFind)
+        {
+            var lowerName = lib.Name.ToLower();
+            var id = lib.Name.Split(':')[2];
+
+            if (lowerName.StartsWith("optifine:optifine"))
+                yield return new() { LoaderType = ModLoaderType.OptiFine, Version = id.Substring(id.IndexOf('_') + 1), };
+            else if (lowerName.StartsWith("net.minecraftforge:forge:") ||
+                lowerName.StartsWith("net.minecraftforge:fmlloader:"))
+                yield return new() { LoaderType = ModLoaderType.Forge, Version = id.Split('-')[1] };
+            else if (lowerName.StartsWith("net.fabricmc:fabric-loader"))
+                yield return new() { LoaderType = ModLoaderType.Fabric, Version = id };
+            else if (lowerName.StartsWith("com.mumfrey:liteloader:"))
+                yield return new() { LoaderType = ModLoaderType.LiteLoader, Version = id };
+        }
+    }
+
+    private static IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  ", " ").Split(' '));
+
+    private static IEnumerable<string> HandleArgumentsGame(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Game.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
+
+    private static IEnumerable<string> HandleArgumentsJvm(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Jvm.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
 
     private static IEnumerable<string> ArgumnetsGroup(IEnumerable<string> vs)
     {
@@ -224,20 +290,5 @@ public class GameCoreParser
                 cache = new List<string>();
             }
         }
-    }
-
-    private GameCore Combine(GameCore raw, GameCore inheritsFrom)
-    {
-        raw.AssetIndexFile = inheritsFrom.AssetIndexFile;
-        raw.ClientFile = inheritsFrom.ClientFile;
-        raw.LogConfigFile = inheritsFrom.LogConfigFile;
-        raw.JavaVersion = inheritsFrom.JavaVersion;
-        raw.Type = inheritsFrom.Type;
-        raw.LibraryResources = raw.LibraryResources.Union(inheritsFrom.LibraryResources).ToList();
-        //raw.LibraryResources = CheckRepeat(raw.LibraryResources.Union(inheritsFrom.LibraryResources)).ToList();
-        raw.BehindArguments = inheritsFrom.BehindArguments.Union(raw.BehindArguments).ToList();
-        raw.FrontArguments = raw.FrontArguments.Union(inheritsFrom.FrontArguments).ToList();
-
-        return raw;
     }
 }

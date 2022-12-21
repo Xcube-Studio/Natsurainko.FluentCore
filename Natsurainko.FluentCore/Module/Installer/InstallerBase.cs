@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Install;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Install;
 using System;
 using System.Threading.Tasks;
 
@@ -15,8 +15,8 @@ public abstract class InstallerBase : IInstaller
 
     public InstallerBase(IGameCoreLocator coreLocator, string customId = default)
     {
-        this.GameCoreLocator = coreLocator;
-        this.CustomId = customId;
+        GameCoreLocator = coreLocator;
+        CustomId = customId;
     }
 
     public InstallerResponse Install() => InstallAsync().GetAwaiter().GetResult();

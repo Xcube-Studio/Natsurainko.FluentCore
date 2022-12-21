@@ -1,6 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Class.Model.Auth.Microsoft;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Auth;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
@@ -18,29 +17,29 @@ public class MicrosoftAuthenticator : IAuthenticator
 
     public string Code { get; set; }
 
-    public MicrosoftAuthenticatorMethod Method { get; set; } = MicrosoftAuthenticatorMethod.Login;
+    public AuthenticatorMethod Method { get; set; } = AuthenticatorMethod.Login;
 
     public event EventHandler<(float, string)> ProgressChanged;
 
     public MicrosoftAuthenticator() { }
 
-    public MicrosoftAuthenticator(string code) => this.Code = code;
+    public MicrosoftAuthenticator(string code) => Code = code;
 
     public MicrosoftAuthenticator(string clientId, string redirectUri)
     {
-        this.ClientId = clientId;
-        this.RedirectUri = redirectUri;
+        ClientId = clientId;
+        RedirectUri = redirectUri;
     }
 
     public MicrosoftAuthenticator(string code, string clientId, string redirectUri)
     {
-        this.Code = code;
-        this.ClientId = clientId;
-        this.RedirectUri = redirectUri;
+        Code = code;
+        ClientId = clientId;
+        RedirectUri = redirectUri;
     }
 
     public Account Authenticate()
-        => this.AuthenticateAsync().GetAwaiter().GetResult();
+        => AuthenticateAsync().GetAwaiter().GetResult();
 
     public async Task<Account> AuthenticateAsync()
     {
@@ -49,10 +48,10 @@ public class MicrosoftAuthenticator : IAuthenticator
         ProgressChanged?.Invoke(this, (0.20f, "Getting Authorization Token"));
 
         string authCodePost =
-            $"client_id={this.ClientId}" +
-            $"&code={this.Code}" +
-            $"&grant_type={(this.Method == MicrosoftAuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
-            $"&redirect_uri={this.RedirectUri}";
+            $"client_id={ClientId}" +
+            $"&code={Code}" +
+            $"&grant_type={(Method == AuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
+            $"&redirect_uri={RedirectUri}";
 
         var authCodePostRes = await HttpWrapper.HttpPostAsync($"https://login.live.com/oauth20_token.srf", authCodePost, "application/x-www-form-urlencoded");
         var oAuth20TokenResponse = JsonConvert.DeserializeObject<OAuth20TokenResponseModel>(await authCodePostRes.Content.ReadAsStringAsync());

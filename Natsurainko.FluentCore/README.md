@@ -40,7 +40,7 @@
 #### 初始化启动核心并启动游戏
 引用
 ``` c#
-using Natsurainko.FluentCore.Class.Model.Launch;
+using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Authenticator;
 using Natsurainko.FluentCore.Module.Launcher;
 using Natsurainko.FluentCore.Wrapper;
@@ -93,8 +93,8 @@ var account = await microsoftAuthenticator.AuthenticateAsync(); // 验证账户
 #### 初始化 Yggdrasil 账户验证器 并采用外置登录
 引用
 ``` c#
-using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Class.Model.Auth.Yggdrasil;
+using Natsurainko.FluentCore.Model.Auth;
+using Natsurainko.FluentCore.Model.Auth.Yggdrasil;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
 using System.Collections.Generic;

@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
 using Natsurainko.Toolkits.Values;
@@ -18,8 +18,8 @@ public class ArgumentsBuilder : IArgumentsBuilder
 
     public ArgumentsBuilder(GameCore gameCore, LaunchSetting launchSetting)
     {
-        this.GameCore = gameCore;
-        this.LaunchSetting = launchSetting;
+        GameCore = gameCore;
+        LaunchSetting = launchSetting;
     }
 
     public IEnumerable<string> Build()
@@ -27,7 +27,7 @@ public class ArgumentsBuilder : IArgumentsBuilder
         foreach (var item in GetFrontArguments())
             yield return item;
 
-        yield return this.GameCore.MainClass;
+        yield return GameCore.MainClass;
 
         foreach (var item in GetBehindArguments())
             yield return item;
@@ -40,22 +40,22 @@ public class ArgumentsBuilder : IArgumentsBuilder
             { "${launcher_name}", "Natsurainko.FluentCore" },
             { "${launcher_version}", "3" },
             { "${classpath_separator}", Path.PathSeparator.ToString() },
-            { "${classpath}", this.GetClasspath().ToPath() },
-            { "${client}", this.GameCore.ClientFile.FileInfo.FullName.ToPath() },
-            { "${min_memory}", this.LaunchSetting.JvmSetting.MinMemory.ToString() },
-            { "${max_memory}", this.LaunchSetting.JvmSetting.MaxMemory.ToString() },
-            { "${library_directory}", Path.Combine(this.GameCore.Root.FullName, "libraries").ToPath() },
+            { "${classpath}", GetClasspath().ToPath() },
+            { "${client}", GameCore.ClientFile.FileInfo.FullName.ToPath() },
+            { "${min_memory}", LaunchSetting.JvmSetting.MinMemory.ToString() },
+            { "${max_memory}", LaunchSetting.JvmSetting.MaxMemory.ToString() },
+            { "${library_directory}", Path.Combine(GameCore.Root.FullName, "libraries").ToPath() },
             {
                 "${version_name}",
-                string.IsNullOrEmpty(this.GameCore.InheritsFrom)
-                ? this.GameCore.Id
-                : this.GameCore.InheritsFrom
+                string.IsNullOrEmpty(GameCore.InheritsFrom)
+                ? GameCore.Id
+                : GameCore.InheritsFrom
             },
             {
                 "${natives_directory}",
-                this.LaunchSetting.NativesFolder != null && this.LaunchSetting.NativesFolder.Exists
-                ? this.LaunchSetting.NativesFolder.FullName.ToString()
-                : Path.Combine(this.GameCore.Root.FullName, "versions", this.GameCore.Id, "natives").ToPath()
+                LaunchSetting.NativesFolder != null && LaunchSetting.NativesFolder.Exists
+                ? LaunchSetting.NativesFolder.FullName.ToString()
+                : Path.Combine(GameCore.Root.FullName, "versions", GameCore.Id, "natives").ToPath()
             }
         };
 
@@ -64,31 +64,25 @@ public class ArgumentsBuilder : IArgumentsBuilder
 
         var args = new string[]
         {
-            "-Xmn${min_memory}m",
-            "-Xmx${max_memory}m",
+            "-Xms${min_memory}M",
+            "-Xmx${max_memory}M",
             "-Dminecraft.client.jar=${client}",
         }.ToList();
 
         foreach (var item in GetEnvironmentJVMArguments())
             args.Add(item);
 
-        if (this.LaunchSetting.JvmSetting.GCArguments == null)
+        if (LaunchSetting.JvmSetting.GCArguments == null)
             DefaultSettings.DefaultGCArguments.ToList().ForEach(item => args.Add(item));
-        else this.LaunchSetting.JvmSetting.GCArguments.ToList().ForEach(item => args.Add(item));
+        else LaunchSetting.JvmSetting.GCArguments.ToList().ForEach(item => args.Add(item));
 
-        if (this.LaunchSetting.JvmSetting.AdvancedArguments == null)
+        if (LaunchSetting.JvmSetting.AdvancedArguments == null)
             DefaultSettings.DefaultAdvancedArguments.ToList().ForEach(item => args.Add(item));
-        else this.LaunchSetting.JvmSetting.AdvancedArguments.ToList().ForEach(item => args.Add(item));
-
-        if (this.LaunchSetting.XmlOutputSetting.Enable && this.LaunchSetting.XmlOutputSetting.LogConfigFile != null)
-        {
-            args.Add("-Dlog4j.configurationFile=${path}");
-            keyValuePairs.Add("${path}", this.LaunchSetting.XmlOutputSetting.LogConfigFile.FullName.ToPath());
-        }
+        else LaunchSetting.JvmSetting.AdvancedArguments.ToList().ForEach(item => args.Add(item));
 
         args.Add("-Dlog4j2.formatMsgNoLookups=true");
 
-        foreach (var item in this.GameCore.FrontArguments)
+        foreach (var item in GameCore.FrontArguments)
             args.Add(item);
 
         foreach (var item in args)
@@ -99,43 +93,43 @@ public class ArgumentsBuilder : IArgumentsBuilder
     {
         var keyValuePairs = new Dictionary<string, string>()
         {
-            { "${auth_player_name}" , this.LaunchSetting.Account.Name },
-            { "${version_name}" , this.GameCore.Id },
-            { "${assets_root}" , Path.Combine(this.GameCore.Root.FullName, "assets").ToPath() },
-            { "${assets_index_name}" , Path.GetFileNameWithoutExtension(this.GameCore.AssetIndexFile.FileInfo.FullName) },
-            { "${auth_uuid}" , this.LaunchSetting.Account.Uuid.ToString("N") },
-            { "${auth_access_token}" , this.LaunchSetting.Account.AccessToken },
+            { "${auth_player_name}" , LaunchSetting.Account.Name },
+            { "${version_name}" , GameCore.Id },
+            { "${assets_root}" , Path.Combine(GameCore.Root.FullName, "assets").ToPath() },
+            { "${assets_index_name}" , Path.GetFileNameWithoutExtension(GameCore.AssetIndexFile.FileInfo.FullName) },
+            { "${auth_uuid}" , LaunchSetting.Account.Uuid.ToString("N") },
+            { "${auth_access_token}" , LaunchSetting.Account.AccessToken },
             { "${user_type}" , "Mojang" },
-            { "${version_type}" , this.GameCore.Type },
+            { "${version_type}" , GameCore.Type },
             { "${user_properties}" , "{}" },
-            { "${game_assets}" , Path.Combine(this.GameCore.Root.FullName, "assets").ToPath() },
-            { "${auth_session}" , this.LaunchSetting.Account.AccessToken },
+            { "${game_assets}" , Path.Combine(GameCore.Root.FullName, "assets").ToPath() },
+            { "${auth_session}" , LaunchSetting.Account.AccessToken },
             {
                 "${game_directory}" ,
-                    (this.LaunchSetting.EnableIndependencyCore && (bool)this.LaunchSetting.WorkingFolder?.Exists
-                        ? this.LaunchSetting.WorkingFolder.FullName
+                    (LaunchSetting.EnableIndependencyCore && (bool)LaunchSetting.WorkingFolder?.Exists
+                        ? LaunchSetting.WorkingFolder.FullName
                         : GameCore.Root.FullName).ToPath()
             },
         };
 
-        var args = this.GameCore.BehindArguments.ToList();
+        var args = GameCore.BehindArguments.ToList();
 
-        if (this.LaunchSetting.GameWindowSetting != null)
+        if (LaunchSetting.GameWindowSetting != null)
         {
-            args.Add($"--width {this.LaunchSetting.GameWindowSetting.Width}");
-            args.Add($"--height {this.LaunchSetting.GameWindowSetting.Height}");
+            args.Add($"--width {LaunchSetting.GameWindowSetting.Width}");
+            args.Add($"--height {LaunchSetting.GameWindowSetting.Height}");
 
-            if (this.LaunchSetting.GameWindowSetting.IsFullscreen)
+            if (LaunchSetting.GameWindowSetting.IsFullscreen)
                 args.Add("--fullscreen");
         }
 
-        if (this.LaunchSetting.IsDemoUser)
+        if (LaunchSetting.IsDemoUser)
             args = args.Append("--demo").ToList();
 
-        if (this.LaunchSetting.ServerSetting != null && !string.IsNullOrEmpty(this.LaunchSetting.ServerSetting.IPAddress) && this.LaunchSetting.ServerSetting.Port != 0)
+        if (LaunchSetting.ServerSetting != null && !string.IsNullOrEmpty(LaunchSetting.ServerSetting.IPAddress) && LaunchSetting.ServerSetting.Port != 0)
         {
-            args.Add($"--server {this.LaunchSetting.ServerSetting.IPAddress}");
-            args.Add($"--port {this.LaunchSetting.ServerSetting.Port}");
+            args.Add($"--server {LaunchSetting.ServerSetting.IPAddress}");
+            args.Add($"--port {LaunchSetting.ServerSetting.Port}");
         }
 
         foreach (var item in args)
@@ -146,13 +140,13 @@ public class ArgumentsBuilder : IArgumentsBuilder
     {
         var loads = new List<IResource>();
 
-        this.GameCore.LibraryResources.ForEach(x =>
+        GameCore.LibraryResources.ForEach(x =>
         {
             if (x.IsEnable && !x.IsNatives)
                 loads.Add(x);
         });
 
-        loads.Add(this.GameCore.ClientFile);
+        loads.Add(GameCore.ClientFile);
 
         return string.Join(Path.PathSeparator.ToString(), loads.Select(x => x.ToFileInfo().FullName));
     }

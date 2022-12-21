@@ -1,6 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.Toolkits.Network.Model;
+﻿using Natsurainko.FluentCore.Model.Launch;
+using Natsurainko.Toolkits.Network.Downloader;
 using System;
 using System.Threading.Tasks;
 
@@ -8,14 +7,11 @@ namespace Natsurainko.FluentCore.Interface;
 
 public interface IResourceDownloader
 {
+    event EventHandler<ParallelDownloaderProgressChangedEventArgs> DownloadProgressChanged;
+
     GameCore GameCore { get; set; }
 
-    Action<string, float> DownloadProgressChangedAction { get; }
+    ParallelDownloaderResponse Download();
 
-
-    event EventHandler<HttpDownloadResponse> ItemDownloaded;
-
-    Task<ResourceDownloadResponse> DownloadAsync(Action<string, float> func);
-
-    Task<ResourceDownloadResponse> DownloadAsync();
+    Task<ParallelDownloaderResponse> DownloadAsync();
 }

@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Class.Model.Launch;
+﻿using Natsurainko.FluentCore.Model.Launch;
 using System.Collections.Generic;
 
 namespace Natsurainko.FluentCore.Interface;

@@ -1,5 +1,5 @@
-﻿using Natsurainko.FluentCore.Class.Model.Download;
-using Natsurainko.FluentCore.Class.Model.Parser;
+﻿using Natsurainko.FluentCore.Model.Download;
+using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.Toolkits.Values;
 using System.Collections.Generic;
 using System.IO;
@@ -14,8 +14,8 @@ public class LibraryParser
 
     public LibraryParser(List<LibraryJsonEntity> entities, DirectoryInfo root)
     {
-        this.Entities = entities;
-        this.Root = root;
+        Entities = entities;
+        Root = root;
     }
 
     public IEnumerable<LibraryResource> GetLibraries()
@@ -28,7 +28,7 @@ public class LibraryParser
                 Size = (libraryJsonEntity.Downloads?.Artifact?.Size == null) ? 0 : (int)libraryJsonEntity.Downloads?.Artifact?.Size,
                 Url = ((libraryJsonEntity.Downloads?.Artifact?.Url) ?? string.Empty) + libraryJsonEntity.Url,
                 Name = libraryJsonEntity.Name,
-                Root = this.Root,
+                Root = Root,
                 IsEnable = true
             };
 

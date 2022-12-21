@@ -1,4 +1,4 @@
-﻿using Natsurainko.Toolkits.Network.Model;
+﻿using Natsurainko.Toolkits.Network.Downloader;
 using System.IO;
 
 namespace Natsurainko.FluentCore.Interface;
@@ -15,5 +15,5 @@ public interface IResource
 
     FileInfo ToFileInfo();
 
-    HttpDownloadRequest ToDownloadRequest();
+    DownloadRequest ToDownloadRequest();
 }
