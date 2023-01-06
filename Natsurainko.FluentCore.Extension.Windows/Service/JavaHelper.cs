@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Natsurainko.FluentCore.Extension.Windows.Model.Java;
 using Natsurainko.Toolkits.IO;
 using Natsurainko.Toolkits.Values;
 using System;
@@ -19,7 +20,7 @@ public class JavaHelper
 
         #region Cmd
 
-        var process = new Process()
+        using var process = new Process()
         {
             StartInfo = new ProcessStartInfo()
             {
@@ -50,8 +51,6 @@ public class JavaHelper
 
         if (output.Any())
             result.AddNotRepeating(output.Skip(2));
-
-        process.Dispose();
 
         #endregion
 
@@ -117,5 +116,63 @@ public class JavaHelper
         #endregion
 
         return result;
+    }
+
+    public static JavaRuntimeInfo GetJavaRuntimeInfo(string file)
+    {
+        var fileVersionInfo = FileVersionInfo.GetVersionInfo(file);
+        var name = fileVersionInfo.ProductName.Split(" ")[0];
+
+        if (fileVersionInfo.ProductName.StartsWith("Java(TM)"))
+            name = $"Java {fileVersionInfo.ProductMajorPart}";
+        else if (fileVersionInfo.ProductName.StartsWith("OpenJDK"))
+            name = $"OpenJDK {fileVersionInfo.ProductMajorPart}";
+
+
+        var runtimeInfo = new JavaRuntimeInfo
+        {
+            Name = name,
+            ProductName = fileVersionInfo.ProductName,
+            Company = fileVersionInfo.CompanyName,
+            Version = new Version(
+                fileVersionInfo.ProductMajorPart,
+                fileVersionInfo.ProductMinorPart,
+                fileVersionInfo.ProductBuildPart,
+                fileVersionInfo.ProductPrivatePart),
+            Architecture = GetPeArchitecture(file) switch
+            {
+                523 => "x64",
+                267 => "x86",
+                _ => "unknown"
+            }
+        };
+
+        return runtimeInfo;
+    }
+
+    public static ushort GetPeArchitecture(string filePath)
+    {
+        ushort architecture = 0;
+
+        try
+        {
+            using var fStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            using var bReader = new BinaryReader(fStream);
+
+            if (bReader.ReadUInt16() == 23117)
+            {
+                fStream.Seek(0x3A, SeekOrigin.Current);
+                fStream.Seek(bReader.ReadUInt32(), SeekOrigin.Begin);
+
+                if (bReader.ReadUInt32() == 17744)
+                {
+                    fStream.Seek(20, SeekOrigin.Current);
+                    architecture = bReader.ReadUInt16();
+                }
+            }
+        }
+        catch { }
+
+        return architecture;
     }
 }

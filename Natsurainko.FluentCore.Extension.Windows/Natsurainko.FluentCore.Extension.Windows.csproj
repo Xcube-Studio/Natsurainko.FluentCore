@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>disable</Nullable>
     <Version>2.0.3</Version>
     <Authors>Natsurainko</Authors>
@@ -13,6 +13,7 @@ Natsurainko.FluentCore 的 Windows 扩展</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <NeutralLanguage>zh-CN</NeutralLanguage>
     <PackageTags>Natsurainko.FluentCore</PackageTags>
+	<UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

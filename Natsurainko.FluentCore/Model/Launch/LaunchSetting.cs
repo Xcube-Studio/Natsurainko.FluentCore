@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Model.Auth;
+﻿using Natsurainko.FluentCore.Interface;
 using System.Collections.Generic;
 using System.IO;
 
@@ -10,7 +10,7 @@ public class LaunchSetting
 
     public DirectoryInfo WorkingFolder { get; set; }
 
-    public Account Account { get; set; }
+    public IAccount Account { get; set; }
 
     public JvmSetting JvmSetting { get; set; }
 

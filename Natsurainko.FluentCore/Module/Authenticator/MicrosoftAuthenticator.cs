@@ -5,6 +5,7 @@ using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Authenticator;
@@ -17,7 +18,12 @@ public class MicrosoftAuthenticator : IAuthenticator
 
     public string Code { get; set; }
 
+    public OAuth20TokenResponseModel OAuth20TokenResponse { get; private set; }
+
     public AuthenticatorMethod Method { get; set; } = AuthenticatorMethod.Login;
+
+    public bool CreatedFromDeviceCodeFlow { get; private set; } = false;
+
 
     public event EventHandler<(float, string)> ProgressChanged;
 
@@ -38,23 +44,35 @@ public class MicrosoftAuthenticator : IAuthenticator
         RedirectUri = redirectUri;
     }
 
-    public Account Authenticate()
+    public MicrosoftAuthenticator(OAuth20TokenResponseModel oAuth20TokenResponseModel, string clientId, string redirectUri)
+    {
+        OAuth20TokenResponse = oAuth20TokenResponseModel;
+        ClientId = clientId;
+        RedirectUri = redirectUri;
+        
+        CreatedFromDeviceCodeFlow = true;
+    }
+
+    public IAccount Authenticate()
         => AuthenticateAsync().GetAwaiter().GetResult();
 
-    public async Task<Account> AuthenticateAsync()
+    public async Task<IAccount> AuthenticateAsync()
     {
         #region Get Authorization Token
 
-        ProgressChanged?.Invoke(this, (0.20f, "Getting Authorization Token"));
+        if (!CreatedFromDeviceCodeFlow)
+        {
+            ProgressChanged?.Invoke(this, (0.20f, "Getting Authorization Token"));
 
-        string authCodePost =
-            $"client_id={ClientId}" +
-            $"&code={Code}" +
-            $"&grant_type={(Method == AuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
-            $"&redirect_uri={RedirectUri}";
+            string authCodePost =
+                $"client_id={ClientId}" +
+                $"&code={Code}" +
+                $"&grant_type={(Method == AuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
+                $"&redirect_uri={RedirectUri}";
 
-        var authCodePostRes = await HttpWrapper.HttpPostAsync($"https://login.live.com/oauth20_token.srf", authCodePost, "application/x-www-form-urlencoded");
-        var oAuth20TokenResponse = JsonConvert.DeserializeObject<OAuth20TokenResponseModel>(await authCodePostRes.Content.ReadAsStringAsync());
+            var authCodePostRes = await HttpWrapper.HttpPostAsync($"https://login.live.com/oauth20_token.srf", authCodePost, "application/x-www-form-urlencoded");
+            OAuth20TokenResponse = JsonConvert.DeserializeObject<OAuth20TokenResponseModel>(await authCodePostRes.Content.ReadAsStringAsync());
+        }
 
         #endregion
 
@@ -63,7 +81,7 @@ public class MicrosoftAuthenticator : IAuthenticator
         ProgressChanged?.Invoke(this, (0.40f, "Authenticating with XBL"));
 
         var xBLReqModel = new XBLAuthenticateRequestModel();
-        xBLReqModel.Properties.RpsTicket = xBLReqModel.Properties.RpsTicket.Replace("<access token>", oAuth20TokenResponse.AccessToken);
+        xBLReqModel.Properties.RpsTicket = xBLReqModel.Properties.RpsTicket.Replace("<access token>", OAuth20TokenResponse.AccessToken);
 
         using var xBLReqModelPostRes = await HttpWrapper.HttpPostAsync($"https://user.auth.xboxlive.com/user/authenticate", xBLReqModel.ToJson());
         var xBLResModel = JsonConvert.DeserializeObject<XBLAuthenticateResponseModel>(await xBLReqModelPostRes.Content.ReadAsStringAsync());
@@ -107,14 +125,68 @@ public class MicrosoftAuthenticator : IAuthenticator
         return new MicrosoftAccount
         {
             AccessToken = access_token,
-            Type = AccountType.Microsoft,
             ClientToken = Guid.NewGuid().ToString("N"),
             Name = microsoftAuthenticationResponse.Name,
             Uuid = Guid.Parse(microsoftAuthenticationResponse.Id),
-            RefreshToken = oAuth20TokenResponse.RefreshToken,
+            RefreshToken = OAuth20TokenResponse.RefreshToken,
             DateTime = DateTime.Now
         };
 
         #endregion
+    }
+
+    public static async Task<DeviceFlowAuthResult> DeviceFlowAuthAsync
+        (string clientId, Action<DeviceAuthorizationResponse> ReceiveUserCodeAction)
+    {
+        try
+        {
+            var deviceAuthPost =
+                $"client_id={clientId}" +
+                "&scope=XboxLive.signin%20offline_access";
+
+            var deviceAuthPostRes = await HttpWrapper.HttpPostAsync
+                ($"https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode", deviceAuthPost, "application/x-www-form-urlencoded");
+            var deviceAuthResponse = JsonConvert.DeserializeObject<DeviceAuthorizationResponse>(await deviceAuthPostRes.Content.ReadAsStringAsync());
+            ReceiveUserCodeAction(deviceAuthResponse);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            while (stopwatch.Elapsed < TimeSpan.FromSeconds(deviceAuthResponse.ExpiresIn))
+            {
+                await Task.Delay(deviceAuthResponse.Interval * 1000);
+
+                var pollingPost =
+                    "grant_type=urn:ietf:params:oauth:grant-type:device_code" +
+                    $"&client_id={clientId}" +
+                    $"&device_code={deviceAuthResponse.DeviceCode}";
+
+                var pollingPostRes = await HttpWrapper.HttpPostAsync
+                    ($"https://login.microsoftonline.com/consumers/oauth2/v2.0/token", pollingPost, "application/x-www-form-urlencoded");
+                var pollingPostJson = JObject.Parse(await pollingPostRes.Content.ReadAsStringAsync());
+
+                if (pollingPostRes.IsSuccessStatusCode)
+                    return new()
+                    {
+                        Success = true,
+                        OAuth20TokenResponse = pollingPostJson.ToObject<OAuth20TokenResponseModel>()
+                    };
+                else
+                {
+                    var error = (string)pollingPostJson["error"];
+                    if (error.Equals("authorization_declined") ||
+                        error.Equals("bad_verification_code") ||
+                        error.Equals("expired_token"))
+                        break;
+                }
+            }
+
+            stopwatch.Stop();
+        }
+        catch (Exception ex) { }
+
+        return new()
+        {
+            Success = false
+        };
     }
 }

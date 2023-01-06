@@ -5,7 +5,7 @@ namespace Natsurainko.FluentCore.Interface;
 
 public interface IAuthenticator
 {
-    Account Authenticate();
+    IAccount Authenticate();
 
-    Task<Account> AuthenticateAsync();
+    Task<IAccount> AuthenticateAsync();
 }

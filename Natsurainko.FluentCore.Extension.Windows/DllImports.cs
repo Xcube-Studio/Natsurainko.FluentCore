@@ -19,7 +19,28 @@ public class DllImports
     /// If the function fails, the return value is zero. To get extended error information, call GetLastError.
     /// </para>
     /// </returns>
-    [DllImport("User32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetWindowText(IntPtr hWnd, string lpString);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll")]
+    public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool redraw);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+    [DllImport("gdi32.dll")]
+    public static extern IntPtr CreateRectRgn(int Left, int Top, int RectRightBottom_X, int RectRightBottom_Y);
+
+    [DllImport("gdi32.dll")]
+    public static extern int CombineRgn(IntPtr hrgnDst, IntPtr hrgnSrc1, IntPtr hrgnSrc2, int iMode);
+
+    [DllImport("GDI32.dll")]
+    public static extern bool DeleteObject(IntPtr objectHandle);
 }

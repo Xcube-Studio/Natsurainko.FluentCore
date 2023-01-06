@@ -83,6 +83,8 @@ public class LaunchResponse : IDisposable
     public void Stop() => Process?.Kill();
 
     #region Dispose
+    public bool Disposed => disposedValue;
+
     private bool disposedValue;
 
     public void Dispose()

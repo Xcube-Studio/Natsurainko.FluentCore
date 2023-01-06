@@ -26,11 +26,11 @@ public class GameProcessOutputArgs : EventArgs
 
         ColorText(GameProcessOutput.FullData, GameProcessOutput.Level switch
         {
-            GameProcessOutput.GameProcessOutputLevel.Info => ConsoleColor.White,
-            GameProcessOutput.GameProcessOutputLevel.Warn => ConsoleColor.Yellow,
-            GameProcessOutput.GameProcessOutputLevel.Error => ConsoleColor.Red,
-            GameProcessOutput.GameProcessOutputLevel.Fatal => ConsoleColor.DarkRed,
-            GameProcessOutput.GameProcessOutputLevel.Debug => ConsoleColor.DarkGray,
+            GameProcessOutputLevel.Info => ConsoleColor.White,
+            GameProcessOutputLevel.Warn => ConsoleColor.Yellow,
+            GameProcessOutputLevel.Error => ConsoleColor.Red,
+            GameProcessOutputLevel.Fatal => ConsoleColor.DarkRed,
+            GameProcessOutputLevel.Debug => ConsoleColor.DarkGray,
             _ => ConsoleColor.Gray
         });
     }

@@ -19,9 +19,9 @@ public class GameCore
 
     public string MainClass { get; set; }
 
-    public IEnumerable<string> FrontArguments { get; set; } = new string[] { };
+    public IEnumerable<string> FrontArguments { get; set; } = System.Array.Empty<string>();
 
-    public IEnumerable<string> BehindArguments { get; set; } = new string[] { };
+    public IEnumerable<string> BehindArguments { get; set; } = System.Array.Empty<string>();
 
     public string Id { get; set; }
 
@@ -42,4 +42,23 @@ public class GameCore
     public int AssetsCount { get; set; }
 
     public long TotalSize { get; set; }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is GameCore core)
+            return Root.FullName.Equals(core.Root.FullName) &&
+                Id.Equals(core.Id) &&
+                MainClass.Equals(core.MainClass) &&
+                IsVanilla.Equals(core.IsVanilla);
+
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+         return Root.FullName.GetHashCode() ^
+                Id.GetHashCode() ^
+                MainClass.GetHashCode() ^
+                IsVanilla.GetHashCode();
+    }
 }

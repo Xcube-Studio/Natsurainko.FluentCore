@@ -21,7 +21,7 @@ public class OfflineAuthenticator : IAuthenticator
             Uuid = GuidHelper.FromString(Name);
     }
 
-    public Account Authenticate()
+    public IAccount Authenticate()
         => new OfflineAccount
         {
             AccessToken = Guid.NewGuid().ToString("N"),
@@ -30,6 +30,14 @@ public class OfflineAuthenticator : IAuthenticator
             Uuid = Uuid
         };
 
-    public Task<Account> AuthenticateAsync()
+    public Task<IAccount> AuthenticateAsync()
         => Task.Run(Authenticate);
+
+    public static OfflineAccount Default => new()
+    {
+        Name = "Steve",
+        Uuid = GuidHelper.FromString("Steve"),
+        AccessToken = Guid.NewGuid().ToString("N"),
+        ClientToken = Guid.NewGuid().ToString("N")
+    };
 }

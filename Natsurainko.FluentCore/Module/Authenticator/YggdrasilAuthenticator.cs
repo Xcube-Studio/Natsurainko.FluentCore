@@ -39,10 +39,10 @@ public class YggdrasilAuthenticator : IAuthenticator
         Method = method;
     }
 
-    public Account Authenticate()
+    public IAccount Authenticate()
         => AuthenticateAsync().GetAwaiter().GetResult();
 
-    public async Task<Account> AuthenticateAsync()
+    public async Task<IAccount> AuthenticateAsync()
     {
         string url = YggdrasilServerUrl;
         string content = string.Empty;

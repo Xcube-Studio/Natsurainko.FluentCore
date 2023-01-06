@@ -56,15 +56,15 @@ public class GameCoreParser
                     core.AssetIndexFile = GetAssetIndexFile(entity);
 
                 if (entity.MinecraftArguments != null)
-                    core.BehindArguments = GameCoreParser.HandleMinecraftArguments(entity.MinecraftArguments);
+                    core.BehindArguments = HandleMinecraftArguments(entity.MinecraftArguments);
 
                 if (entity.Arguments != null && entity.Arguments.Game != null)
                     core.BehindArguments = core.BehindArguments == null
-                        ? GameCoreParser.HandleArgumentsGame(entity.Arguments)
-                        : core.BehindArguments.Union(GameCoreParser.HandleArgumentsGame(entity.Arguments));
+                        ? HandleArgumentsGame(entity.Arguments)
+                        : core.BehindArguments.Union(HandleArgumentsGame(entity.Arguments));
 
                 if (entity.Arguments != null && entity.Arguments.Jvm != null)
-                    core.FrontArguments = GameCoreParser.HandleArgumentsJvm(entity.Arguments);
+                    core.FrontArguments = HandleArgumentsJvm(entity.Arguments);
                 else core.FrontArguments = new string[]
                 {
                     "-Djava.library.path=${natives_directory}",
@@ -80,7 +80,7 @@ public class GameCoreParser
 
         foreach (var item in cores)
         {
-            item.Source = GameCoreParser.GetSource(item);
+            item.Source = GetSource(item);
 
             if (!string.IsNullOrEmpty(item.InheritsFrom))
             {
@@ -104,8 +104,8 @@ public class GameCoreParser
                 else continue;
             }
 
-            item.IsVanilla = GameCoreParser.GetIsVanilla(item);
-            item.ModLoaders = GameCoreParser.GetModLoaders(item);
+            item.IsVanilla = GetIsVanilla(item);
+            item.ModLoaders = GetModLoaders(item);
             (item.AssetsCount, item.LibrariesCount, item.TotalSize) = GetStatisticFiles(item);
 
             yield return item;

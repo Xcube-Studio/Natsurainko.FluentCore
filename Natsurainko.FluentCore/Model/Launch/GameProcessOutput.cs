@@ -3,17 +3,17 @@ using System.Text.RegularExpressions;
 
 namespace Natsurainko.FluentCore.Model.Launch;
 
+public enum GameProcessOutputLevel
+{
+    Info = 0,
+    Warn = 1,
+    Error = 2,
+    Fatal = 3,
+    Debug = 4
+}
+
 public class GameProcessOutput
 {
-    public enum GameProcessOutputLevel
-    {
-        Info = 0,
-        Warn = 1,
-        Error = 2,
-        Fatal = 3,
-        Debug = 4
-    }
-
     public GameProcessOutputLevel Level { get; private set; }
 
     public string Thread { get; private set; }

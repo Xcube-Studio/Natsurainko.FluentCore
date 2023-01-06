@@ -156,3 +156,31 @@ public class SkinModel
     [JsonProperty("alias")]
     public string Alias { get; set; }
 }
+
+public class DeviceAuthorizationResponse
+{
+    [JsonProperty("user_code")]
+    public string UserCode { get; set; }
+
+    [JsonProperty("device_code")]
+    public string DeviceCode { get; set; }
+
+    [JsonProperty("verification_uri")]
+    public string VerificationUrl { get; set; }
+
+    [JsonProperty("expires_in")]
+    public int ExpiresIn { get; set; }
+
+    [JsonProperty("interval")]
+    public int Interval { get; set; }
+
+    [JsonProperty("message")]
+    public string Message { get; set; }
+}
+
+public class DeviceFlowAuthResult
+{
+    public bool Success { get; set; }
+
+    public OAuth20TokenResponseModel OAuth20TokenResponse { get; set; }
+}

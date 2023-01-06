@@ -34,11 +34,11 @@ public class ResourceDownloader : IResourceDownloader
     {
         var resources = new List<IResource>();
 
-        resources.AddRange(GameCore.LibraryResources.Where(x => x.IsEnable));
+        resources.AddRange(GameCore.LibraryResources.AsParallel().Where(x => x.IsEnable));
         resources.AddRange(GetFileResources());
         resources.AddRange(await GetAssetResourcesAsync());
 
-        resources = resources.Where(x =>
+        resources = resources.AsParallel().Where(x =>
         {
             if (string.IsNullOrEmpty(x.CheckSum) && x.Size == 0)
                 return false;

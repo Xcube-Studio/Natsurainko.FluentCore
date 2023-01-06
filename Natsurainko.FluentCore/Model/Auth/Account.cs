@@ -1,4 +1,5 @@
-﻿using Natsurainko.Toolkits.Values;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.Toolkits.Values;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,9 +13,12 @@ public enum AccountType
     Yggdrasil = 2
 }
 
-[JsonConverter(typeof(AccountJsonConverter))]
-public abstract class Account
+public struct YggdrasilAccount : IAccount
 {
+    public AccountType Type => AccountType.Yggdrasil;
+
+    public string YggdrasilServerUrl { get; set; }
+
     public string Name { get; set; }
 
     public Guid Uuid { get; set; }
@@ -22,42 +26,41 @@ public abstract class Account
     public string AccessToken { get; set; }
 
     public string ClientToken { get; set; }
-
-    public virtual AccountType Type { get; set; } = AccountType.Offline;
-
-    public static OfflineAccount Default { get; private set; } = new()
-    {
-        Name = "Steve",
-        Uuid = GuidHelper.FromString("Steve"),
-        AccessToken = Guid.NewGuid().ToString("N"),
-        ClientToken = Guid.NewGuid().ToString("N")
-    };
 }
 
-public class YggdrasilAccount : Account
+public struct MicrosoftAccount : IAccount
 {
-    public override AccountType Type => AccountType.Yggdrasil;
-
-    public string YggdrasilServerUrl { get; set; }
-}
-
-public class MicrosoftAccount : Account
-{
-    public override AccountType Type => AccountType.Microsoft;
+    public AccountType Type => AccountType.Microsoft;
 
     public string RefreshToken { get; set; }
 
     public DateTime DateTime { get; set; }
+
+    public string Name { get; set; }
+
+    public Guid Uuid { get; set; }
+
+    public string AccessToken { get; set; }
+
+    public string ClientToken { get; set; }
 }
 
-public class OfflineAccount : Account
+public struct OfflineAccount : IAccount
 {
-    public override AccountType Type => AccountType.Offline;
+    public AccountType Type => AccountType.Offline;
+
+    public string Name { get; set; }
+
+    public Guid Uuid { get; set; }
+
+    public string AccessToken { get; set; }
+
+    public string ClientToken { get; set; }
 }
 
 public class AccountJsonConverter : JsonConverter
 {
-    public override bool CanConvert(Type objectType) => objectType == typeof(Account);
+    public override bool CanConvert(Type objectType) => objectType == typeof(IAccount);
 
     public override bool CanRead => true;
 

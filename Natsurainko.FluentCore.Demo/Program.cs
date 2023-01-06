@@ -1,13 +1,17 @@
 ﻿using Natsurainko.FluentCore.Event;
 using Natsurainko.FluentCore.Extension.Windows.Model.Launch;
+using Natsurainko.FluentCore.Extension.Windows.Module.Authenticator.Dialog;
+using Natsurainko.FluentCore.Extension.Windows.Service;
 using Natsurainko.FluentCore.Model.Auth;
 using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Authenticator;
 using Natsurainko.FluentCore.Module.Downloader;
+using Natsurainko.FluentCore.Module.Installer;
 using Natsurainko.FluentCore.Module.Launcher;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.FluentCore.Wrapper;
 using Natsurainko.Toolkits.Network.Downloader;
+using Natsurainko.Toolkits.Text;
 using System;
 using System.Linq;
 
@@ -17,6 +21,44 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        #region Microsoft Device Flow
+        /*
+        var res = MicrosoftAuthenticator.DeviceFlowAuthAsync("0844e754-1d2e-4861-8e2b-18059609badb", x => Console.WriteLine(x.Message))
+            .GetAwaiter().GetResult();
+
+        if (res.Success)
+        {
+            var microsoftAuthenticator = new MicrosoftAuthenticator
+                (res.OAuth20TokenResponse, "0844e754-1d2e-4861-8e2b-18059609badb", "http://localhost:5001/fluentlauncher/auth-response");
+
+            Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+        }
+
+        Console.ReadKey();
+        return;*/
+
+        #endregion
+
+        #region Microsoft Authenticate Dialog
+        /*
+        var dialog = new MicrosoftAuthenticateDialog();
+        var result = dialog.ShowDialog();
+        
+        Console.WriteLine(result);
+
+        if (result == MicrosoftAuthenticateDialog.DialogResult.OK)
+        {
+            Console.WriteLine(dialog.AccessCode);
+
+            var microsoftAuthenticator = new MicrosoftAuthenticator(dialog.AccessCode);
+            Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+        }
+
+        Console.ReadKey();
+        return;*/
+
+        #endregion
+
         #region OptiFine Installer
         // var builds = MinecraftOptiFineInstaller.GetOptiFineBuildsFromMcVersionAsync("1.7.2").GetAwaiter().GetResult();
         //
@@ -93,17 +135,18 @@ public class Program
         #endregion
 
         #region Vanllia Installer
-        //DownloadApiManager.Current = DownloadApiManager.Mcbbs;
+        DownloadApiManager.Current = DownloadApiManager.Mcbbs;
+        ResourceDownloader.MaxDownloadThreads = 256;
 
-        //var installer = new MinecraftVanlliaInstaller(new GameCoreLocator(@"D:\Debug\.minecraft"), "1.18.2");
-        //installer.ProgressChanged += (object sender, (string, float) e) =>
-        //{
-        //    Console.WriteLine($"[{e.Item2 * 100:0.00}%]{e.Item1}");
-        //};        
-        //var res = installer.Install();
+        var installer = new MinecraftVanlliaInstaller(new GameCoreLocator(@"C:\Users\Admin\Desktop\.minecraft"), "1.18.2");
+        installer.ProgressChanged += (object sender, (string, float) e) =>
+        {
+            Console.WriteLine($"[{e.Item2 * 100:0.00}%]{e.Item1}");
+        };        
+        var res = installer.Install();
 
-        //Console.ReadKey();
-        //return;
+        Console.ReadKey();
+        return;
         #endregion
 
         #region CurseForge Modpack Finder
@@ -137,7 +180,7 @@ public class Program
 
         #endregion
 
-        DownloadApiManager.Current = DownloadApiManager.Mojang;
+        DownloadApiManager.Current = DownloadApiManager.Mcbbs;
 
         Console.Write("请输入 Java 运行时：");
         string javaPath = Console.ReadLine();
