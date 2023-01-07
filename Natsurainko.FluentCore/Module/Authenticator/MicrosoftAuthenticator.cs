@@ -20,7 +20,7 @@ public class MicrosoftAuthenticator : IAuthenticator
 
     public OAuth20TokenResponseModel OAuth20TokenResponse { get; private set; }
 
-    public AuthenticatorMethod Method { get; set; } = AuthenticatorMethod.Login;
+    public AuthenticatorMethod Method { get; private set; } = AuthenticatorMethod.Login;
 
     public bool CreatedFromDeviceCodeFlow { get; private set; } = false;
 
@@ -29,22 +29,40 @@ public class MicrosoftAuthenticator : IAuthenticator
 
     public MicrosoftAuthenticator() { }
 
-    public MicrosoftAuthenticator(string code) => Code = code;
+    public MicrosoftAuthenticator(
+        string code, 
+        AuthenticatorMethod method = AuthenticatorMethod.Login)
+    {
+        Code = code;
+        Method = method;
+    }
 
-    public MicrosoftAuthenticator(string clientId, string redirectUri)
+    public MicrosoftAuthenticator(
+        string clientId, 
+        string redirectUri, 
+        AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         ClientId = clientId;
         RedirectUri = redirectUri;
+        Method = method;
     }
 
-    public MicrosoftAuthenticator(string code, string clientId, string redirectUri)
+    public MicrosoftAuthenticator(
+        string code, 
+        string clientId, 
+        string redirectUri, 
+        AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         Code = code;
         ClientId = clientId;
         RedirectUri = redirectUri;
+        Method = method;
     }
 
-    public MicrosoftAuthenticator(OAuth20TokenResponseModel oAuth20TokenResponseModel, string clientId, string redirectUri)
+    public MicrosoftAuthenticator(
+        OAuth20TokenResponseModel oAuth20TokenResponseModel, 
+        string clientId, 
+        string redirectUri)
     {
         OAuth20TokenResponse = oAuth20TokenResponseModel;
         ClientId = clientId;
@@ -66,7 +84,7 @@ public class MicrosoftAuthenticator : IAuthenticator
 
             string authCodePost =
                 $"client_id={ClientId}" +
-                $"&code={Code}" +
+                $"&{(Method == AuthenticatorMethod.Login ? "code" : "refresh_token")}={Code}" +
                 $"&grant_type={(Method == AuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
                 $"&redirect_uri={RedirectUri}";
 

@@ -42,14 +42,25 @@ public class MinecraftLauncher : ILauncher
     public LaunchResponse LaunchMinecraft(string id)
         => LaunchMinecraftAsync(id).GetAwaiter().GetResult();
 
+    public LaunchResponse LaunchMinecraft(GameCore core)
+        => LaunchMinecraftAsync(core).GetAwaiter().GetResult();
+
+    public LaunchResponse LaunchMinecraft(GameCore core, Action<LaunchProgressChangedEventArgs> action)
+        => LaunchMinecraftAsync(core, action).GetAwaiter().GetResult();
+
+    public LaunchResponse LaunchMinecraft(string id, Action<LaunchProgressChangedEventArgs> action)
+        => LaunchMinecraftAsync(id, action).GetAwaiter().GetResult();
+
     public async Task<LaunchResponse> LaunchMinecraftAsync(string id)
+        => await LaunchMinecraftAsync(GameCoreLocator.GetGameCore(id));
+
+    public async Task<LaunchResponse> LaunchMinecraftAsync(GameCore core)
     {
         IEnumerable<string> args = Array.Empty<string>();
         Process process = null;
 
         try
         {
-            var core = GameCoreLocator.GetGameCore(id);
             if (core == null)
                 throw new Exception("GameCore Not Found!");
 
@@ -101,10 +112,7 @@ public class MinecraftLauncher : ILauncher
         }
     }
 
-    public LaunchResponse LaunchMinecraft(string id, Action<LaunchProgressChangedEventArgs> action)
-        => LaunchMinecraftAsync(id, action).GetAwaiter().GetResult();
-
-    public async Task<LaunchResponse> LaunchMinecraftAsync(string id, Action<LaunchProgressChangedEventArgs> action)
+    public async Task<LaunchResponse> LaunchMinecraftAsync(GameCore core, Action<LaunchProgressChangedEventArgs> action)
     {
         var cancellationTokenSource = new CancellationTokenSource();
         IProgress<LaunchProgressChangedEventArgs> progress = new Progress<LaunchProgressChangedEventArgs>();
@@ -123,7 +131,6 @@ public class MinecraftLauncher : ILauncher
 
         try
         {
-            var core = GameCoreLocator.GetGameCore(id);
             progress.Report(LaunchProgressChangedEventArgs.Create(0.2f, "正在查找游戏核心", cancellationTokenSource.Token));
 
             if (core == null)
@@ -184,4 +191,7 @@ public class MinecraftLauncher : ILauncher
                 ex);
         }
     }
+
+    public async Task<LaunchResponse> LaunchMinecraftAsync(string id, Action<LaunchProgressChangedEventArgs> action)
+        => await LaunchMinecraftAsync(GameCoreLocator.GetGameCore(id), action);
 }
