@@ -27,7 +27,7 @@ public class GameCoreParser
 
     public List<(string, Exception)> ErrorGameCores { get; private set; } = new();
 
-    public IEnumerable<GameCore> GetGameCores()
+    public virtual IEnumerable<GameCore> GetGameCores()
     {
         var cores = new List<GameCore>();
 
@@ -112,7 +112,7 @@ public class GameCoreParser
         }
     }
 
-    private FileResource GetClientFile(VersionJsonEntity entity)
+    protected FileResource GetClientFile(VersionJsonEntity entity)
     {
         var path = Path.Combine(Root.FullName, "versions", entity.Id, $"{entity.Id}.jar");
 
@@ -127,7 +127,7 @@ public class GameCoreParser
         };
     }
 
-    private FileResource GetLogConfigFile(VersionJsonEntity entity)
+    protected FileResource GetLogConfigFile(VersionJsonEntity entity)
     {
         var path = Path.Combine(Root.FullName, "versions", entity.Id, entity.Logging.Client.File.Id);
 
@@ -142,7 +142,7 @@ public class GameCoreParser
         };
     }
 
-    private FileResource GetAssetIndexFile(VersionJsonEntity entity)
+    protected FileResource GetAssetIndexFile(VersionJsonEntity entity)
     {
         var path = Path.Combine(Root.FullName, "assets", "indexes", $"{entity.AssetIndex.Id}.json");
 
@@ -157,7 +157,7 @@ public class GameCoreParser
         };
     }
 
-    private static string GetSource(GameCore core)
+    protected static string GetSource(GameCore core)
     {
         try
         {
@@ -185,7 +185,7 @@ public class GameCoreParser
         return core.Id;
     }
 
-    private static bool GetIsVanilla(GameCore core)
+    protected static bool GetIsVanilla(GameCore core)
     {
         foreach (var arg in core.BehindArguments)
             switch (arg)
@@ -207,7 +207,7 @@ public class GameCoreParser
         };
     }
 
-    private static (int, int, long) GetStatisticFiles(GameCore core)
+    protected static (int, int, long) GetStatisticFiles(GameCore core)
     {
         long length = 0;
         int assets = 0;
@@ -232,7 +232,7 @@ public class GameCoreParser
         return (assets, core.LibraryResources.Count, length);
     }
 
-    private static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
+    protected static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
     {
         var libFind = core.LibraryResources.Where(lib =>
         {
@@ -262,13 +262,13 @@ public class GameCoreParser
         }
     }
 
-    private static IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  ", " ").Split(' '));
+    protected static IEnumerable<string> HandleMinecraftArguments(string minecraftArguments) => ArgumnetsGroup(minecraftArguments.Replace("  ", " ").Split(' '));
 
-    private static IEnumerable<string> HandleArgumentsGame(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Game.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
+    protected static IEnumerable<string> HandleArgumentsGame(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Game.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
 
-    private static IEnumerable<string> HandleArgumentsJvm(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Jvm.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
+    protected static IEnumerable<string> HandleArgumentsJvm(ArgumentsJsonEntity entity) => ArgumnetsGroup(entity.Jvm.Where(x => x.Type == JTokenType.String).Select(x => x.ToString().ToPath()));
 
-    private static IEnumerable<string> ArgumnetsGroup(IEnumerable<string> vs)
+    protected static IEnumerable<string> ArgumnetsGroup(IEnumerable<string> vs)
     {
         var cache = new List<string>();
 

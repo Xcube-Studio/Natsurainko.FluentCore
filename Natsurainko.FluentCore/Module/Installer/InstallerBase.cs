@@ -9,11 +9,11 @@ public abstract class InstallerBase : IInstaller
 {
     public event EventHandler<(string, float)> ProgressChanged;
 
-    public IGameCoreLocator GameCoreLocator { get; private set; }
+    public IGameCoreLocator<IGameCore> GameCoreLocator { get; private set; }
 
     public string CustomId { get; private set; }
 
-    public InstallerBase(IGameCoreLocator coreLocator, string customId = default)
+    public InstallerBase(IGameCoreLocator<IGameCore> coreLocator, string customId = default)
     {
         GameCoreLocator = coreLocator;
         CustomId = customId;

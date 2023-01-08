@@ -10,7 +10,7 @@ using System.IO;
 
 namespace Natsurainko.FluentCore.Module.Launcher;
 
-public class GameCoreLocator : IGameCoreLocator
+public class GameCoreLocator : IGameCoreLocator<GameCore>
 {
     public DirectoryInfo Root { get; private set; }
 

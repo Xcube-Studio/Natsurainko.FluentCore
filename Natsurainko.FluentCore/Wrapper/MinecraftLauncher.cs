@@ -19,11 +19,11 @@ public class MinecraftLauncher : ILauncher
 
     public IAuthenticator Authenticator { get; set; }
 
-    public IGameCoreLocator GameCoreLocator { get; set; }
+    public IGameCoreLocator<IGameCore> GameCoreLocator { get; set; }
 
     public IResourceDownloader ResourceDownloader { get; set; }
 
-    public MinecraftLauncher(LaunchSetting launchSetting, IGameCoreLocator gameCoreLocator)
+    public MinecraftLauncher(LaunchSetting launchSetting, IGameCoreLocator<IGameCore> gameCoreLocator)
     {
         LaunchSetting = launchSetting;
         GameCoreLocator = gameCoreLocator;
@@ -32,7 +32,7 @@ public class MinecraftLauncher : ILauncher
             throw new ArgumentNullException("LaunchSetting.Account");
     }
 
-    public MinecraftLauncher(LaunchSetting launchSetting, IAuthenticator authenticator, IGameCoreLocator gameCoreLocator)
+    public MinecraftLauncher(LaunchSetting launchSetting, IAuthenticator authenticator, IGameCoreLocator<IGameCore> gameCoreLocator)
     {
         LaunchSetting = launchSetting;
         Authenticator = authenticator;
@@ -42,10 +42,10 @@ public class MinecraftLauncher : ILauncher
     public LaunchResponse LaunchMinecraft(string id)
         => LaunchMinecraftAsync(id).GetAwaiter().GetResult();
 
-    public LaunchResponse LaunchMinecraft(GameCore core)
+    public LaunchResponse LaunchMinecraft(IGameCore core)
         => LaunchMinecraftAsync(core).GetAwaiter().GetResult();
 
-    public LaunchResponse LaunchMinecraft(GameCore core, Action<LaunchProgressChangedEventArgs> action)
+    public LaunchResponse LaunchMinecraft(IGameCore core, Action<LaunchProgressChangedEventArgs> action)
         => LaunchMinecraftAsync(core, action).GetAwaiter().GetResult();
 
     public LaunchResponse LaunchMinecraft(string id, Action<LaunchProgressChangedEventArgs> action)
@@ -54,7 +54,7 @@ public class MinecraftLauncher : ILauncher
     public async Task<LaunchResponse> LaunchMinecraftAsync(string id)
         => await LaunchMinecraftAsync(GameCoreLocator.GetGameCore(id));
 
-    public async Task<LaunchResponse> LaunchMinecraftAsync(GameCore core)
+    public async Task<LaunchResponse> LaunchMinecraftAsync(IGameCore core)
     {
         IEnumerable<string> args = Array.Empty<string>();
         Process process = null;
@@ -112,7 +112,7 @@ public class MinecraftLauncher : ILauncher
         }
     }
 
-    public async Task<LaunchResponse> LaunchMinecraftAsync(GameCore core, Action<LaunchProgressChangedEventArgs> action)
+    public async Task<LaunchResponse> LaunchMinecraftAsync(IGameCore core, Action<LaunchProgressChangedEventArgs> action)
     {
         var cancellationTokenSource = new CancellationTokenSource();
         IProgress<LaunchProgressChangedEventArgs> progress = new Progress<LaunchProgressChangedEventArgs>();

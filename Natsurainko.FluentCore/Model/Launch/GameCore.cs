@@ -1,11 +1,12 @@
-﻿using Natsurainko.FluentCore.Model.Download;
+﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Download;
 using Natsurainko.FluentCore.Model.Install;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Natsurainko.FluentCore.Model.Launch;
 
-public class GameCore
+public class GameCore : IGameCore
 {
     public DirectoryInfo Root { get; set; }
 

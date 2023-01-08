@@ -9,7 +9,7 @@ public interface IResourceDownloader
 {
     event EventHandler<ParallelDownloaderProgressChangedEventArgs> DownloadProgressChanged;
 
-    GameCore GameCore { get; set; }
+    IGameCore GameCore { get; set; }
 
     ParallelDownloaderResponse Download();
 

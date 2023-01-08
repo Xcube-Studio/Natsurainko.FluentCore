@@ -21,7 +21,7 @@ public class MinecraftFabricInstaller : InstallerBase
     public FabricInstallBuild FabricBuild { get; private set; }
 
     public MinecraftFabricInstaller(
-        IGameCoreLocator coreLocator,
+        IGameCoreLocator<IGameCore> coreLocator,
         FabricInstallBuild fabricInstallBuild,
         string customId = null) : base(coreLocator, customId)
     {

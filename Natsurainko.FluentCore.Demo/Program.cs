@@ -2,6 +2,7 @@
 using Natsurainko.FluentCore.Extension.Windows.Model.Launch;
 using Natsurainko.FluentCore.Extension.Windows.Module.Authenticator.Dialog;
 using Natsurainko.FluentCore.Extension.Windows.Service;
+using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Model.Auth;
 using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Authenticator;
@@ -14,6 +15,7 @@ using Natsurainko.Toolkits.Network.Downloader;
 using Natsurainko.Toolkits.Text;
 using System;
 using System.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Natsurainko.FluentCore.Demo;
 
@@ -198,7 +200,7 @@ public class Program
         //完整的启动配置
         var launchSetting = new LaunchSetting()
         {
-            Account = Account.Default,
+            Account = OfflineAuthenticator.Default,
             GameWindowSetting = new GameWindowSetting
             {
                 Width = 854,

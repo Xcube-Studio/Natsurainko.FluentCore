@@ -32,7 +32,7 @@ public class MinecraftForgeInstaller : InstallerBase
     public string PackageFile { get; private set; }
 
     public MinecraftForgeInstaller(
-        IGameCoreLocator coreLocator,
+        IGameCoreLocator<IGameCore> coreLocator,
         ForgeInstallBuild build,
         string javaPath,
         string packageFile = null,

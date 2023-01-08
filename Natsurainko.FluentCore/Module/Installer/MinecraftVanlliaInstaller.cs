@@ -19,7 +19,7 @@ public class MinecraftVanlliaInstaller : InstallerBase
 {
     public CoreManifestItem CoreManifestItem { get; private set; }
 
-    public MinecraftVanlliaInstaller(IGameCoreLocator coreLocator, string id)
+    public MinecraftVanlliaInstaller(IGameCoreLocator<IGameCore> coreLocator, string id)
         : base(coreLocator)
     {
         GetCoreManifest().GetAwaiter().GetResult().Cores.ToList().ForEach(x =>
@@ -29,7 +29,7 @@ public class MinecraftVanlliaInstaller : InstallerBase
         });
     }
 
-    public MinecraftVanlliaInstaller(IGameCoreLocator coreLocator, CoreManifestItem coreManifestItem)
+    public MinecraftVanlliaInstaller(IGameCoreLocator<IGameCore> coreLocator, CoreManifestItem coreManifestItem)
         : base(coreLocator)
     {
         CoreManifestItem = coreManifestItem;

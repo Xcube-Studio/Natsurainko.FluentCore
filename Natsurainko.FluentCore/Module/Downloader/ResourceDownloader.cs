@@ -15,13 +15,13 @@ namespace Natsurainko.FluentCore.Module.Downloader;
 
 public class ResourceDownloader : IResourceDownloader
 {
-    public GameCore GameCore { get; set; }
+    public IGameCore GameCore { get; set; }
 
     public static int MaxDownloadThreads { get; set; } = 128;
 
     public ResourceDownloader() { }
 
-    public ResourceDownloader(GameCore core)
+    public ResourceDownloader(IGameCore core)
     {
         GameCore = core;
     }

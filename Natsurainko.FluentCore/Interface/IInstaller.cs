@@ -8,7 +8,7 @@ public interface IInstaller
 {
     event EventHandler<(string, float)> ProgressChanged;
 
-    IGameCoreLocator GameCoreLocator { get; }
+    IGameCoreLocator<IGameCore> GameCoreLocator { get; }
 
     Task<InstallerResponse> InstallAsync();
 

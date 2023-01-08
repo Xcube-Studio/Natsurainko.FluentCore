@@ -12,11 +12,11 @@ namespace Natsurainko.FluentCore.Module.Launcher;
 
 public class ArgumentsBuilder : IArgumentsBuilder
 {
-    public GameCore GameCore { get; private set; }
+    public IGameCore GameCore { get; private set; }
 
     public LaunchSetting LaunchSetting { get; private set; }
 
-    public ArgumentsBuilder(GameCore gameCore, LaunchSetting launchSetting)
+    public ArgumentsBuilder(IGameCore gameCore, LaunchSetting launchSetting)
     {
         GameCore = gameCore;
         LaunchSetting = launchSetting;

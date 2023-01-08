@@ -1,7 +1,5 @@
-﻿using Natsurainko.FluentCore.Event;
-using Natsurainko.FluentCore.Model.Launch;
+﻿using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Launcher;
-using System;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Interface;
@@ -14,11 +12,11 @@ public interface ILauncher
 
     IAuthenticator Authenticator { get; set; }
 
-    IGameCoreLocator GameCoreLocator { get; set; }
+    IGameCoreLocator<IGameCore> GameCoreLocator { get; set; }
 
     IResourceDownloader ResourceDownloader { get; set; }
 
-    Task<LaunchResponse> LaunchMinecraftAsync(string id, Action<LaunchProgressChangedEventArgs> action);
+    Task<LaunchResponse> LaunchMinecraftAsync(IGameCore core);
 
-    LaunchResponse LaunchMinecraft(string id, Action<LaunchProgressChangedEventArgs> action);
+    LaunchResponse LaunchMinecraft(IGameCore core);
 }

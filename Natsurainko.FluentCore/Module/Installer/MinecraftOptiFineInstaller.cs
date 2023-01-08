@@ -30,7 +30,7 @@ public class MinecraftOptiFineInstaller : InstallerBase
     public string PackageFile { get; private set; }
 
     public MinecraftOptiFineInstaller(
-        IGameCoreLocator coreLocator,
+        IGameCoreLocator<IGameCore> coreLocator,
         OptiFineInstallBuild build,
         string javaPath,
         string packageFile = null,

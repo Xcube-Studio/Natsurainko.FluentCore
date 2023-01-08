@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Model.Auth;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Interface;

@@ -5,7 +5,7 @@ namespace Natsurainko.FluentCore.Interface;
 
 public interface IArgumentsBuilder
 {
-    GameCore GameCore { get; }
+    IGameCore GameCore { get; }
 
     LaunchSetting LaunchSetting { get; }
 

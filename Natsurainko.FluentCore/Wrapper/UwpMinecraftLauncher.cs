@@ -17,7 +17,7 @@ public class UwpMinecraftLauncher : ILauncher
 
     public IAuthenticator Authenticator { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-    public IGameCoreLocator GameCoreLocator { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+    public IGameCoreLocator<IGameCore> GameCoreLocator { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
     public IResourceDownloader ResourceDownloader { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
@@ -29,7 +29,7 @@ public class UwpMinecraftLauncher : ILauncher
     /// </summary>
     /// <exception cref="NotSupportedException"></exception>
     [Obsolete]
-    public LaunchResponse LaunchMinecraft(string id, Action<LaunchProgressChangedEventArgs> action) => throw new NotSupportedException();
+    public LaunchResponse LaunchMinecraft(IGameCore gameCore) => throw new NotSupportedException();
 
     /// <summary>
     /// 应该使用对应的 <see cref="LaunchMinecraftAsync()"/> 来启动 Minecraft: Bedrock Edition
@@ -39,7 +39,7 @@ public class UwpMinecraftLauncher : ILauncher
     /// </summary>
     /// <exception cref="NotSupportedException"></exception>
     [Obsolete]
-    public Task<LaunchResponse> LaunchMinecraftAsync(string id, Action<LaunchProgressChangedEventArgs> action) => throw new NotSupportedException();
+    public Task<LaunchResponse> LaunchMinecraftAsync(IGameCore gameCore) => throw new NotSupportedException();
     #endregion
 
     public static bool LaunchMinecraft() => LaunchMinecraftAsync().GetAwaiter().GetResult();
@@ -52,5 +52,4 @@ public class UwpMinecraftLauncher : ILauncher
             FileName = "minecraft:"
         });
     }).ContinueWith(task => !task.IsFaulted);
-
 }
