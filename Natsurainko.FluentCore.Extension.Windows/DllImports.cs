@@ -5,35 +5,8 @@ namespace Natsurainko.FluentCore.Extension.Windows;
 
 public class DllImports
 {
-    /// <summary>
-    /// Changes the text of the specified window's title bar (if it has one). If the specified window is a control, the text of the control is changed. 
-    /// <para>
-    /// However, SetWindowText cannot change the text of a control in another application.
-    /// </para>
-    /// </summary>
-    /// <param name="hWnd">A handle to the window or control whose text is to be changed.</param>
-    /// <param name="lpString">The new title or control text.</param>
-    /// <returns>
-    /// If the function succeeds, the return value is nonzero.
-    /// <para>
-    /// If the function fails, the return value is zero. To get extended error information, call GetLastError.
-    /// </para>
-    /// </returns>
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetWindowText(IntPtr hWnd, string lpString);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-    [DllImport("user32.dll")]
-    public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
     [DllImport("user32.dll")]
     public static extern bool SetWindowRgn(IntPtr hWnd, IntPtr hRgn, bool redraw);
-
-    [DllImport("user32.dll")]
-    public static extern bool SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
 
     [DllImport("gdi32.dll")]
     public static extern IntPtr CreateRectRgn(int Left, int Top, int RectRightBottom_X, int RectRightBottom_Y);
@@ -41,6 +14,33 @@ public class DllImports
     [DllImport("gdi32.dll")]
     public static extern int CombineRgn(IntPtr hrgnDst, IntPtr hrgnSrc1, IntPtr hrgnSrc2, int iMode);
 
-    [DllImport("GDI32.dll")]
+    [DllImport("gdi32.dll")]
     public static extern bool DeleteObject(IntPtr objectHandle);
+
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GlobalMemoryStatusEx(ref MEMORY_INFO mEMORY_INFO);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_INFO
+    {
+        public uint dwLength; //当前结构体大小
+        public uint dwMemoryLoad; //当前内存使用率
+        public ulong ullTotalPhys; //总计物理内存大小
+        public ulong ullAvailPhys; //可用物理内存大小
+        public ulong ullTotalPageFile; //总计交换文件大小
+        public ulong ullAvailPageFile; //总计交换文件大小
+        public ulong ullTotalVirtual; //总计虚拟内存大小
+        public ulong ullAvailVirtual; //可用虚拟内存大小
+        public ulong ullAvailExtendedVirtual; //保留 这个值始终为0
+
+        public static MEMORY_INFO GetMemoryStatus()
+        {
+            var mEMORY_INFO = new MEMORY_INFO();
+            mEMORY_INFO.dwLength = (uint)Marshal.SizeOf(mEMORY_INFO);
+            GlobalMemoryStatusEx(ref mEMORY_INFO);
+            return mEMORY_INFO;
+        }
+    }
 }

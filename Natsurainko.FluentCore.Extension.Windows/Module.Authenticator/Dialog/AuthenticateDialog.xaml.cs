@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PInvoke;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -71,7 +72,7 @@ public partial class AuthenticateDialog : Window
     {
         WebBrowser.Navigate(Url + DialogPrompt.ToString().ToLower());
         var hwnd = new WindowInteropHelper(this).Handle;
-        DllImports.SetWindowLong(hwnd, -16, DllImports.GetWindowLong(hwnd, -16) & ~0x00080000);
+        User32.SetWindowLong(hwnd, User32.WindowLongIndexFlags.GWL_STYLE, (User32.SetWindowLongFlags)(User32.GetWindowLong(hwnd, User32.WindowLongIndexFlags.GWL_STYLE) & ~0x00080000));
 
         SetRect();
     }

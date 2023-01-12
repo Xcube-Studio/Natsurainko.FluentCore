@@ -1,8 +1,9 @@
 ﻿using Natsurainko.FluentCore.Model.Launch;
+using PInvoke;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
-namespace Natsurainko.FluentCore.Extension.Windows.Model.Launch;
+namespace Natsurainko.FluentCore.Extension.Windows.Extension;
 
 [SupportedOSPlatform("windows")]
 public static class LaunchResponseExtension
@@ -17,10 +18,10 @@ public static class LaunchResponseExtension
         {
             try
             {
-                while (!(launchResponse.Process?.HasExited).GetValueOrDefault())
+                while (!(launchResponse.Process?.HasExited).GetValueOrDefault(true))
                 {
                     if (launchResponse.Process != null && launchResponse.Process?.MainWindowTitle != title)
-                        DllImports.SetWindowText(launchResponse.Process.MainWindowHandle, title);
+                        User32.SetWindowText(launchResponse.Process.MainWindowHandle, title);
 
                     await Task.Delay(frequency);
                     launchResponse.Process?.Refresh();

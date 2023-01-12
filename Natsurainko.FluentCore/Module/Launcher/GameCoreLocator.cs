@@ -2,7 +2,6 @@
 using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.FluentCore.Module.Parser;
-using Natsurainko.Toolkits.IO;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -27,16 +26,6 @@ public class GameCoreLocator : IGameCoreLocator<GameCore>
                 return core;
 
         return null;
-    }
-
-    public void DeleteGameCore(string id)
-    {
-        var directory = new DirectoryInfo(Path.Combine(Root.FullName, "versions", id));
-
-        if (directory.Exists)
-            directory.DeleteAllFiles();
-
-        directory.Delete();
     }
 
     public IEnumerable<GameCore> GetGameCores()

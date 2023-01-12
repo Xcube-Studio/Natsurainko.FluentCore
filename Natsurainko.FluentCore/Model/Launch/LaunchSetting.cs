@@ -1,4 +1,5 @@
 ﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Service;
 using System.Collections.Generic;
 using System.IO;
 
@@ -38,9 +39,9 @@ public class JvmSetting
 
     public int MinMemory { get; set; } = 512;
 
-    public IEnumerable<string> AdvancedArguments { get; set; }
+    public List<string> AdvancedArguments { get; set; } = DefaultSettings.DefaultAdvancedArguments;
 
-    public IEnumerable<string> GCArguments { get; set; }
+    public List<string> GCArguments { get; set; } = DefaultSettings.DefaultGCArguments;
 
     public JvmSetting() { }
 
@@ -56,10 +57,27 @@ public class GameWindowSetting
     public int Height { get; set; } = 480;
 
     public bool IsFullscreen { get; set; } = false;
+
+    public string WindowTitle { get; set; }
 }
 
 public class ServerSetting
 {
+    public ServerSetting() { }
+
+    public ServerSetting(string iPAddress)
+    {
+        var address = iPAddress.Split(':');
+        IPAddress = address[0];
+        Port = address.Length == 2 ? int.Parse(address[1]) : 25565;
+    }
+
+    public ServerSetting(string iPAddress, int port)
+    {
+        IPAddress = iPAddress;
+        Port = port;
+    }
+
     public string IPAddress { get; set; }
 
     public int Port { get; set; }

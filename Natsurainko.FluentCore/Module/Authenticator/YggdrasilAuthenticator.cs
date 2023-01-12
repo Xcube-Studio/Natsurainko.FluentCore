@@ -58,7 +58,7 @@ public class YggdrasilAuthenticator : IAuthenticator
         switch (Method)
         {
             case AuthenticatorMethod.Login:
-                url += "/authenticate";
+                url += "/authserver/authenticate";
                 content = new LoginRequestModel
                 {
                     ClientToken = ClientToken,
@@ -67,7 +67,7 @@ public class YggdrasilAuthenticator : IAuthenticator
                 }.ToJson();
                 break;
             case AuthenticatorMethod.Refresh:
-                url += "/refresh";
+                url += "/authserver/refresh";
                 content = new
                 {
                     clientToken = ClientToken,
@@ -105,7 +105,7 @@ public class YggdrasilAuthenticator : IAuthenticator
             }
         );
 
-        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/validate", content);
+        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/authserver/validate", content);
 
         return res.IsSuccessStatusCode;
     }
@@ -120,7 +120,7 @@ public class YggdrasilAuthenticator : IAuthenticator
             }
         );
 
-        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/signout", content);
+        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/authserver/signout", content);
 
         return res.IsSuccessStatusCode;
     }
@@ -135,7 +135,7 @@ public class YggdrasilAuthenticator : IAuthenticator
             }
         );
 
-        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/invalidate", content);
+        using var res = await HttpWrapper.HttpPostAsync($"{YggdrasilServerUrl}/authserver/invalidate", content);
 
         return res.IsSuccessStatusCode;
     }

@@ -6,7 +6,7 @@ public static class DefaultSettings
 {
     public static int DownloadMaxThreadNumber { get; set; } = 512;
 
-    public static readonly IEnumerable<string> DefaultAdvancedArguments = new string[]
+    public static readonly List<string> DefaultAdvancedArguments = new()
     {
         "-XX:-OmitStackTraceInFastThrow",
         "-XX:-DontCompileHugeMethods",
@@ -18,7 +18,7 @@ public static class DefaultSettings
         "-Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false"
     };
 
-    public static readonly IEnumerable<string> DefaultGCArguments = new string[]
+    public static readonly List<string> DefaultGCArguments = new()
     {
         "-XX:+UseG1GC",
         "-XX:+UnlockExperimentalVMOptions",

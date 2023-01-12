@@ -128,7 +128,6 @@ public class JavaHelper
         else if (fileVersionInfo.ProductName.StartsWith("OpenJDK"))
             name = $"OpenJDK {fileVersionInfo.ProductMajorPart}";
 
-
         var runtimeInfo = new JavaRuntimeInfo
         {
             Name = name,

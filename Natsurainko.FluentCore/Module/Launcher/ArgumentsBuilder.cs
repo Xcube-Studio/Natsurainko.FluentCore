@@ -1,6 +1,5 @@
 ﻿using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Model.Launch;
-using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
 using Natsurainko.Toolkits.Values;
 using System;
@@ -62,23 +61,18 @@ public class ArgumentsBuilder : IArgumentsBuilder
         if (!Directory.Exists(keyValuePairs["${natives_directory}"]))
             Directory.CreateDirectory(keyValuePairs["${natives_directory}"].Trim('\"'));
 
-        var args = new string[]
+        var args = new List<string>()
         {
             "-Xms${min_memory}M",
             "-Xmx${max_memory}M",
             "-Dminecraft.client.jar=${client}",
-        }.ToList();
+        };
 
         foreach (var item in GetEnvironmentJVMArguments())
             args.Add(item);
 
-        if (LaunchSetting.JvmSetting.GCArguments == null)
-            DefaultSettings.DefaultGCArguments.ToList().ForEach(item => args.Add(item));
-        else LaunchSetting.JvmSetting.GCArguments.ToList().ForEach(item => args.Add(item));
-
-        if (LaunchSetting.JvmSetting.AdvancedArguments == null)
-            DefaultSettings.DefaultAdvancedArguments.ToList().ForEach(item => args.Add(item));
-        else LaunchSetting.JvmSetting.AdvancedArguments.ToList().ForEach(item => args.Add(item));
+        LaunchSetting.JvmSetting.GCArguments?.ForEach(item => args.Add(item));
+        LaunchSetting.JvmSetting.AdvancedArguments?.ForEach(item => args.Add(item));
 
         args.Add("-Dlog4j2.formatMsgNoLookups=true");
 
