@@ -106,7 +106,7 @@ public class GameCoreParser
 
             item.IsVanilla = GetIsVanilla(item);
             item.ModLoaders = GetModLoaders(item);
-            (item.AssetsCount, item.LibrariesCount, item.TotalSize) = GetStatisticFiles(item);
+            //(item.AssetsCount, item.LibrariesCount, item.TotalSize) = GetStatisticFiles(item);
 
             yield return item;
         }
