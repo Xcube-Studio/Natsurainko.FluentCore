@@ -8,7 +8,7 @@ namespace Natsurainko.FluentCore.Extension.Windows.Extension;
 [SupportedOSPlatform("windows")]
 public static class LaunchResponseExtension
 {
-    public static void SetMainWindowTitle(this LaunchResponse launchResponse, string title, int frequency = 500)
+    public static void SetMainWindowTitle(this LaunchResponse launchResponse, string title, int frequency = 500) => Task.Run(() =>
     {
         launchResponse.Process?.WaitForInputIdle();
 
@@ -32,5 +32,5 @@ public static class LaunchResponseExtension
                 //throw;
             }
         });
-    }
+    });
 }

@@ -1,5 +1,8 @@
 ﻿using Natsurainko.FluentCore.Interface;
+using Natsurainko.FluentCore.Model.Parser;
+using Natsurainko.FluentCore.Module.Parser;
 using Natsurainko.Toolkits.IO;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
 
@@ -46,5 +49,30 @@ public static class GameCoreExtension
         core.Id = newName;
 
         return core;
+    }
+
+    public static void LoadStatistic(this IGameCore core)
+    {
+        long length = 0;
+        int assets = 0;
+
+        foreach (var library in core.LibraryResources)
+            length += library.Size == 0 ? (library.ToFileInfo().Exists ? library.ToFileInfo().Length : 0) : library.Size;
+
+        if (core.AssetIndexFile.ToFileInfo().Exists)
+            foreach (var asset in
+                new AssetParser(JsonConvert.DeserializeObject<AssetManifestJsonEntity>
+                    (File.ReadAllText(core.AssetIndexFile.ToFileInfo().FullName)), core.Root).GetAssets())
+            {
+                assets++;
+                length += asset.Size == 0 ? (asset.ToFileInfo().Exists ? asset.ToFileInfo().Length : 0) : asset.Size;
+            }
+
+        if (core.ClientFile.ToFileInfo().Exists)
+            length += core.ClientFile.ToFileInfo().Length;
+
+        length += new FileInfo(core.ClientFile.ToFileInfo().FullName.Replace(".jar", ".json")).Length;
+
+        (core.AssetsCount, core.LibrariesCount, core.TotalSize) = (assets, core.LibraryResources.Count, length);
     }
 }

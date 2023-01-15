@@ -207,6 +207,7 @@ public class GameCoreParser
         };
     }
 
+    /*
     protected static (int, int, long) GetStatisticFiles(GameCore core)
     {
         long length = 0;
@@ -230,7 +231,7 @@ public class GameCoreParser
         length += new FileInfo(core.ClientFile.ToFileInfo().FullName.Replace(".jar", ".json")).Length;
 
         return (assets, core.LibraryResources.Count, length);
-    }
+    }*/
 
     protected static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
     {

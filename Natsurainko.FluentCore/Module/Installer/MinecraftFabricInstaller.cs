@@ -141,7 +141,7 @@ public class MinecraftFabricInstaller : InstallerBase
 
             return JArray.Parse(await responseMessage.Content.ReadAsStringAsync()).Select(x => (string)x["version"]).ToArray();
         }
-        catch
+        catch (Exception ex)
         {
             return Array.Empty<string>();
         }

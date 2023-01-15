@@ -81,4 +81,12 @@ public class ServerSetting
     public string IPAddress { get; set; }
 
     public int Port { get; set; }
+
+    public override string ToString()
+    {
+        if (Port == 25565)
+            return IPAddress;
+
+        else return IPAddress + ":" + Port.ToString();
+    }
 }
