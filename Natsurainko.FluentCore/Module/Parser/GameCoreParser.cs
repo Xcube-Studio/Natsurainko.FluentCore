@@ -104,9 +104,8 @@ public class GameCoreParser
                 else continue;
             }
 
-            item.IsVanilla = GetIsVanilla(item);
             item.ModLoaders = GetModLoaders(item);
-            //(item.AssetsCount, item.LibrariesCount, item.TotalSize) = GetStatisticFiles(item);
+            item.IsVanilla = GetIsVanilla(item);
 
             yield return item;
         }
@@ -187,6 +186,9 @@ public class GameCoreParser
 
     protected static bool GetIsVanilla(GameCore core)
     {
+        if (core.ModLoaders.Any())
+            return false;
+
         foreach (var arg in core.BehindArguments)
             switch (arg)
             {
@@ -207,59 +209,17 @@ public class GameCoreParser
         };
     }
 
-    /*
-    protected static (int, int, long) GetStatisticFiles(GameCore core)
-    {
-        long length = 0;
-        int assets = 0;
-
-        foreach (var library in core.LibraryResources)
-            length += library.Size == 0 ? (library.ToFileInfo().Exists ? library.ToFileInfo().Length : 0) : library.Size;
-
-        if (core.AssetIndexFile.ToFileInfo().Exists)
-            foreach (var asset in
-                new AssetParser(JsonConvert.DeserializeObject<AssetManifestJsonEntity>
-                    (File.ReadAllText(core.AssetIndexFile.ToFileInfo().FullName)), core.Root).GetAssets())
-            {
-                assets++;
-                length += asset.Size == 0 ? (asset.ToFileInfo().Exists ? asset.ToFileInfo().Length : 0) : asset.Size;
-            }
-
-        if (core.ClientFile.ToFileInfo().Exists)
-            length += core.ClientFile.ToFileInfo().Length;
-
-        length += new FileInfo(core.ClientFile.ToFileInfo().FullName.Replace(".jar", ".json")).Length;
-
-        return (assets, core.LibraryResources.Count, length);
-    }*/
-
     protected static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
     {
-        var libFind = core.LibraryResources.Where(lib =>
-        {
-            var lowerName = lib.Name.ToLower();
-
-            return lowerName.StartsWith("optifine:optifine") ||
-            lowerName.StartsWith("net.minecraftforge:forge:") ||
-            lowerName.StartsWith("net.minecraftforge:fmlloader:") ||
-            lowerName.StartsWith("net.fabricmc:fabric-loader") ||
-            lowerName.StartsWith("com.mumfrey:liteloader:");
-        });
+        var libFind = core.LibraryResources.Where(lib => HandleModLoaderDictionary.Where(kvp => lib.Name.ToLower().Contains(kvp.Key)).Any());
 
         foreach (var lib in libFind)
         {
             var lowerName = lib.Name.ToLower();
             var id = lib.Name.Split(':')[2];
 
-            if (lowerName.StartsWith("optifine:optifine"))
-                yield return new() { LoaderType = ModLoaderType.OptiFine, Version = id.Substring(id.IndexOf('_') + 1), };
-            else if (lowerName.StartsWith("net.minecraftforge:forge:") ||
-                lowerName.StartsWith("net.minecraftforge:fmlloader:"))
-                yield return new() { LoaderType = ModLoaderType.Forge, Version = id.Split('-')[1] };
-            else if (lowerName.StartsWith("net.fabricmc:fabric-loader"))
-                yield return new() { LoaderType = ModLoaderType.Fabric, Version = id };
-            else if (lowerName.StartsWith("com.mumfrey:liteloader:"))
-                yield return new() { LoaderType = ModLoaderType.LiteLoader, Version = id };
+            var handle = HandleModLoaderDictionary.Where(kvp => lowerName.Contains(kvp.Key)).First();
+            yield return new() { LoaderType = handle.Value.Item1, Version = handle.Value.Item2(id) };
         }
     }
 
@@ -292,4 +252,14 @@ public class GameCoreParser
             }
         }
     }
+
+    public static Dictionary<string, (ModLoaderType, Func<string, string>)> HandleModLoaderDictionary { get; } = new() 
+    {
+        { "net.minecraftforge:forge:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
+        { "net.minecraftforge:fmlloader:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
+        { "optifine:optifine", (ModLoaderType.OptiFine, libVersion => libVersion.Substring(libVersion.IndexOf('_') + 1)) },
+        { "net.fabricmc:fabric-loader", (ModLoaderType.Fabric, libVersion => libVersion) },
+        { "com.mumfrey:liteloader:", (ModLoaderType.LiteLoader, libVersion => libVersion) },
+        { "org.quiltmc:quilt-loader:", (ModLoaderType.Quilt, libVersion => libVersion) },
+    };
 }

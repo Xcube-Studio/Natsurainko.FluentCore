@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Natsurainko.FluentCore.Interface;
+using Newtonsoft.Json;
 using System;
 
 namespace Natsurainko.FluentCore.Model.Install.Forge;
 
-public class ForgeInstallBuild
+public class ForgeInstallBuild : IModLoaderInstallBuild
 {
     [JsonProperty("branch")]
     public string Branch { get; set; }
@@ -19,4 +20,6 @@ public class ForgeInstallBuild
 
     [JsonProperty("modified")]
     public DateTime ModifiedTime { get; set; }
+
+    public string DisplayVersion => $"{McVersion}-{ForgeVersion}";
 }

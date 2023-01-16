@@ -16,16 +16,26 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Installer;
 
-public class MinecraftOptiFineInstaller : InstallerBase
+public class MinecraftOptiFineInstaller : BaseGameCoreInstaller
 {
     public string JavaPath { get; private set; }
 
     public OptiFineInstallBuild OptiFineBuild { get; private set; }
+
+    protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
+    {
+        { "Download OptiFine Package", new () { StepName = "Download OptiFine Package", IsIndeterminate = false } },
+        { "Parse Installer Package", new () { StepName= "Parse Installer Package"} },
+        { "Check Inherited Core", new () { StepName = "Check Inherited Core", IsIndeterminate = false } },
+        { "Write Files", new () { StepName = "Write Files" } },
+        { "Run Processor", new() { StepName = "Run Processor" } }
+    };
 
     public string PackageFile { get; private set; }
 
@@ -34,67 +44,72 @@ public class MinecraftOptiFineInstaller : InstallerBase
         OptiFineInstallBuild build,
         string javaPath,
         string packageFile = null,
-        string customId = null) : base(coreLocator, customId)
+        string customId = null) : base(coreLocator, build.McVersion ,customId)
     {
         OptiFineBuild = build;
         JavaPath = javaPath;
         PackageFile = packageFile;
     }
 
-    public override async Task<InstallerResponse> InstallAsync()
+    public override Task<GameCoreInstallerResponse> InstallAsync()
     {
-        try
-        {
-            #region Download Package
+        string launchwrapper = default;
+        string inheritsFromFile = default;
+        ZipArchive archive = default;
+        FileInfo optiFineLibraryFile = default;
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        VersionJsonEntity jsonEntity = default;
 
-            OnProgressChanged("Downloading OptiFine Insatller Package", 0.0f);
+        var outputs = new List<string>();
+        var errorOutputs = new List<string>();
+
+        async Task DownloadPackage()
+        {
+            OnProgressChanged("Download OptiFine Package", 0);
 
             if (string.IsNullOrEmpty(PackageFile) || !File.Exists(PackageFile))
             {
-                var downloadUrl = $"{(DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host) ? DownloadApiManager.Bmcl.Host : DownloadApiManager.Current.Host)}" +
+                var downloadUrl = (DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host) ? DownloadApiManager.Bmcl.Host : DownloadApiManager.Current.Host) +
                     $"/optifine/{OptiFineBuild.McVersion}/{OptiFineBuild.Type}/{OptiFineBuild.Patch}";
-                using var downloader = new SimpleDownloader(new DownloadRequest()
+
+                using var packageDownloader = new SimpleDownloader(new DownloadRequest()
                 {
                     Url = downloadUrl,
                     Directory = GameCoreLocator.Root
                 });
 
-                downloader.DownloadProgressChanged += (object sender, SimpleDownloaderProgressChangedEventArgs e) =>
-                    OnProgressChanged("Downloading OptiFine Insatller Package", (float)(0.15f * e.Progress));
+                packageDownloader.DownloadProgressChanged += (sender, e) =>
+                    OnProgressChanged("Download OptiFine Package", e.Progress);
 
-                var downloadResponse = await downloader.CompleteAsync();
+                packageDownloader.BeginDownload();
+                var downloadResponse = await packageDownloader.CompleteAsync();
 
-                if (downloadResponse.HttpStatusCode != System.Net.HttpStatusCode.OK)
+                if (downloadResponse.HttpStatusCode != HttpStatusCode.OK)
                     throw new HttpRequestException(downloadResponse.HttpStatusCode.ToString());
 
                 PackageFile = downloadResponse.Result.FullName;
             }
 
-            #endregion
+            OnProgressChanged("Download OptiFine Package", 1);
+        }
 
-            #region Parse Package
+        void ParsePackage() 
+        {
+            OnProgressChanged("Parse Installer Package", 0);
 
-            OnProgressChanged("Parsing Installer Package", 0.45f);
+            archive = ZipFile.OpenRead(PackageFile);
+            launchwrapper = archive.GetEntry("launchwrapper-of.txt") != null
+                ? archive.GetEntry("launchwrapper-of.txt").GetString()
+                : "1.12";
 
-            using var archive = ZipFile.OpenRead(PackageFile);
-            string launchwrapper = "1.12";
+            OnProgressChanged("Parse Installer Package", 1);
+        }
 
-            if (archive.GetEntry("launchwrapper-of.txt") != null)
-                launchwrapper = archive.GetEntry("launchwrapper-of.txt").GetString();
+        async Task WriteFiles()
+        {
+            OnProgressChanged("Write Files", 0);
 
-            #endregion
-
-            #region Check Inherited Core
-
-            await CheckInheritedCore(0.45f, 0.60f, OptiFineBuild.McVersion);
-
-            #endregion
-
-            #region Write Files
-
-            OnProgressChanged("Writing Files", 0.70f);
-
-            var entity = new VersionJsonEntity
+            jsonEntity = new VersionJsonEntity
             {
                 Id = string.IsNullOrEmpty(CustomId) ? $"{OptiFineBuild.McVersion}-OptiFine-{OptiFineBuild.Type}_{OptiFineBuild.Patch}" : CustomId,
                 InheritsFrom = OptiFineBuild.McVersion,
@@ -102,30 +117,30 @@ public class MinecraftOptiFineInstaller : InstallerBase
                 ReleaseTime = DateTime.Now.ToString("O"),
                 Type = "release",
                 Libraries = new()
-            {
-                new LibraryJsonEntity { Name = $"optifine:Optifine:{OptiFineBuild.McVersion}_{OptiFineBuild.Type}_{OptiFineBuild.Patch}" },
-                new LibraryJsonEntity { Name = launchwrapper.Equals("1.12") ? "net.minecraft:launchwrapper:1.12" : $"optifine:launchwrapper-of:{launchwrapper}" }
-            },
+                {
+                    new () { Name = $"optifine:Optifine:{OptiFineBuild.DisplayVersion}" },
+                    new () { Name = launchwrapper.Equals("1.12") ? "net.minecraft:launchwrapper:1.12" : $"optifine:launchwrapper-of:{launchwrapper}" }
+                },
                 MainClass = "net.minecraft.launchwrapper.Launch",
                 Arguments = new()
                 {
                     Game = new()
-                {
-                    "--tweakClass",
-                      "optifine.OptiFineTweaker"
+                    {
+                        "--tweakClass",
+                        "optifine.OptiFineTweaker"
+                    }
                 }
-                },
-                JavaVersion = null
             };
 
-            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", entity.Id, $"{entity.Id}.json"));
+            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", jsonEntity.Id, $"{jsonEntity.Id}.json"));
 
             if (!versionJsonFile.Directory.Exists)
                 versionJsonFile.Directory.Create();
 
-            File.WriteAllText(versionJsonFile.FullName, entity.ToJson());
+            File.WriteAllText(versionJsonFile.FullName, jsonEntity.ToJson());
 
-            var launchwrapperFile = new LibraryResource() { Name = entity.Libraries[1].Name, Root = GameCoreLocator.Root }.ToFileInfo();
+            var launchwrapperLibrary = new LibraryResource() { Name = jsonEntity.Libraries[1].Name, Root = GameCoreLocator.Root };
+            var launchwrapperFile = launchwrapperLibrary.ToFileInfo();
 
             if (!launchwrapper.Equals("1.12"))
             {
@@ -135,21 +150,22 @@ public class MinecraftOptiFineInstaller : InstallerBase
                 archive.GetEntry($"launchwrapper-of-{launchwrapper}.jar").ExtractToFile(launchwrapperFile.FullName, true);
             }
             else if (!launchwrapperFile.Exists)
-                await SimpleDownloader.StartNewDownloadAsync(new LibraryResource() { Name = entity.Libraries[1].Name, Root = GameCoreLocator.Root }.ToDownloadRequest());
+                await SimpleDownloader.StartNewDownloadAsync(launchwrapperLibrary.ToDownloadRequest());
 
-            string inheritsFromFile = Path.Combine(GameCoreLocator.Root.FullName, "versions", OptiFineBuild.McVersion, $"{OptiFineBuild.McVersion}.jar");
-            File.Copy(inheritsFromFile, Path.Combine(versionJsonFile.Directory.FullName, $"{entity.Id}.jar"), true);
+            inheritsFromFile = Path.Combine(GameCoreLocator.Root.FullName, "versions", OptiFineBuild.McVersion, $"{OptiFineBuild.McVersion}.jar");
+            File.Copy(inheritsFromFile, Path.Combine(versionJsonFile.Directory.FullName, $"{jsonEntity.Id}.jar"), true);
 
-            var optiFineLibraryFile = new LibraryResource { Name = entity.Libraries[0].Name, Root = GameCoreLocator.Root }.ToFileInfo();
+            optiFineLibraryFile = new LibraryResource { Name = jsonEntity.Libraries[0].Name, Root = GameCoreLocator.Root }.ToFileInfo();
 
             if (!optiFineLibraryFile.Directory.Exists)
                 optiFineLibraryFile.Directory.Create();
 
-            #endregion
+            OnProgressChanged("Write Files", 1);
+        }
 
-            #region Run Processor
-
-            OnProgressChanged("Running Installer Processor", 0.85f);
+        void RunProcessor()
+        {
+            OnProgressChanged("Run Processor", 0);
 
             using var process = Process.Start(new ProcessStartInfo(JavaPath)
             {
@@ -159,74 +175,67 @@ public class MinecraftOptiFineInstaller : InstallerBase
                 RedirectStandardOutput = true,
                 Arguments = string.Join(" ", new string[]
                 {
-                "-cp",
-                PackageFile,
-                "optifine.Patcher",
-                inheritsFromFile,
-                PackageFile,
-                optiFineLibraryFile.FullName
+                    "-cp",
+                    PackageFile,
+                    "optifine.Patcher",
+                    inheritsFromFile,
+                    PackageFile,
+                    optiFineLibraryFile.FullName
                 })
             });
 
-            var outputs = new List<string>();
-            var errorOutputs = new List<string>();
-
-            process.OutputDataReceived += (_, args) =>
+            void AddOutput(string data, bool error = false)
             {
-                if (!string.IsNullOrEmpty(args.Data))
-                    outputs.Add(args.Data);
-            };
-            process.ErrorDataReceived += (_, args) =>
-            {
-                if (!string.IsNullOrEmpty(args.Data))
+                if (!string.IsNullOrEmpty(data))
                 {
-                    outputs.Add(args.Data);
-                    errorOutputs.Add(args.Data);
+                    outputs.Add(data);
+
+                    if (error)
+                        errorOutputs.Add(data);
                 }
-            };
+            }
+
+            process.OutputDataReceived += (_, args) => AddOutput(args.Data);
+            process.ErrorDataReceived += (_, args) => AddOutput(args.Data, true);
 
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
             process.WaitForExit();
 
-            if (errorOutputs.Count > 0)
-            {
-                OnProgressChanged("Finished", 1.0f);
+            OnProgressChanged("Run Processor", 1);
+        }
 
-                return new()
-                {
-                    Success = false,
-                    GameCore = null,
-                    Exception = null
-                };
-            }
-            #endregion
+        return Task.Run(async () =>
+        {
+            await DownloadPackage();
+            ParsePackage();
+            await CheckInheritedCore();
+            await WriteFiles();
+            RunProcessor();
 
-            #region Clean
-
+            stopwatch.Stop();
+            archive.Dispose();
             File.Delete(PackageFile);
 
-            #endregion
-
-            OnProgressChanged("Finished", 1.0f);
-
-            return new()
+            return new GameCoreInstallerResponse
             {
-                Success = true,
-                GameCore = GameCoreLocator.GetGameCore(entity.Id),
-                Exception = null
+                Success = errorOutputs.Count <= 0,
+                Stopwatch = stopwatch,
+                GameCore = GameCoreLocator.GetGameCore(jsonEntity.Id)
             };
-        }
-        catch (Exception ex)
+        }).ContinueWith(task =>
         {
-            return new()
+            if (stopwatch.IsRunning)
+                stopwatch.Stop();
+
+            return task.IsFaulted ? new()
             {
                 Success = false,
-                GameCore = null,
-                Exception = ex
-            };
-        }
+                Stopwatch = stopwatch,
+                Exception = task.Exception
+            } : task.Result;
+        });
     }
 
     public static async Task<string[]> GetSupportedMcVersionsAsync()

@@ -14,5 +14,6 @@ public enum ModLoaderType
     LiteLoader = 3,
     Fabric = 4,
     OptiFine = 6,
-    Unknown = 7,
+    Quilt = 7,
+    Unknown = 114514,
 }

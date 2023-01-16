@@ -8,94 +8,120 @@ using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Network.Downloader;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
-using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Installer;
 
-public class MinecraftVanlliaInstaller : InstallerBase
+public class MinecraftVanlliaInstaller : BaseGameCoreInstaller
 {
     public CoreManifestItem CoreManifestItem { get; private set; }
 
-    public MinecraftVanlliaInstaller(IGameCoreLocator<IGameCore> coreLocator, string id)
-        : base(coreLocator)
+    protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
     {
-        GetCoreManifest().GetAwaiter().GetResult().Cores.ToList().ForEach(x =>
-        {
-            if (x.Id == id)
-                CoreManifestItem = x;
-        });
+        { "Get Core Json", new () { StepName = "Get Core Json" } },
+        { "Download Resources", new () { StepName= "Get Core Json", IsIndeterminate = false } }
+    };
+
+    public MinecraftVanlliaInstaller(
+        IGameCoreLocator<IGameCore> coreLocator,
+        string mcVersion,
+        string customId = default)
+        : base(coreLocator, mcVersion, customId)
+    {
+        CoreManifestItem = GetCoreManifest().Cores
+            .Where(x => x.Id.Equals(mcVersion))
+            .First();
     }
 
-    public MinecraftVanlliaInstaller(IGameCoreLocator<IGameCore> coreLocator, CoreManifestItem coreManifestItem)
-        : base(coreLocator)
+    public MinecraftVanlliaInstaller(
+        IGameCoreLocator<IGameCore> coreLocator,
+        CoreManifestItem coreManifestItem,
+        string customId = default)
+        : base(coreLocator, coreManifestItem.Id, customId)
     {
         CoreManifestItem = coreManifestItem;
     }
 
-    public override async Task<InstallerResponse> InstallAsync()
+    public override Task<GameCoreInstallerResponse> InstallAsync()
     {
-        try
-        {
-            #region Write Core JSON
+        VersionJsonEntity jsonEntity = default;
+        FileInfo jsonFile = default;
+        IGameCore gameCore = default;
+        ParallelDownloaderResponse parallelDownloaderResponse = default;
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
-            OnProgressChanged("Getting Core Json", 0.1f);
+        async Task GetCoreJson()
+        {
+            OnProgressChanged("Get Core Json", 0);
 
             using var responseMessage = await HttpWrapper.HttpGetAsync(CoreManifestItem.Url);
             responseMessage.EnsureSuccessStatusCode();
 
-            var entity = JsonConvert.DeserializeObject<VersionJsonEntity>(await responseMessage.Content.ReadAsStringAsync());
+            jsonEntity = JsonConvert.DeserializeObject<VersionJsonEntity>(await responseMessage.Content.ReadAsStringAsync());
 
             if (!string.IsNullOrEmpty(CustomId))
-                entity.Id = CustomId;
+                jsonEntity.Id = CustomId;
 
-            OnProgressChanged("Writing Core Json", 0.15f);
+            jsonFile = new(Path.Combine(GameCoreLocator.Root.FullName, "versions", jsonEntity.Id, $"{jsonEntity.Id}.json")); ;
 
-            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", entity.Id, $"{entity.Id}.json"));
+            if (!jsonFile.Directory.Exists)
+                jsonFile.Directory.Create();
 
-            if (!versionJsonFile.Directory.Exists)
-                versionJsonFile.Directory.Create();
+            File.WriteAllText(jsonFile.FullName, jsonEntity.ToJson());
+            gameCore = GameCoreLocator.GetGameCore(jsonEntity.Id);
 
-            File.WriteAllText(versionJsonFile.FullName, entity.ToJson());
+            OnProgressChanged("Get Core Json", 1);
+        }
 
-            #endregion
+        async Task DownloadResources()
+        {
+            OnProgressChanged("Download Resources", 0);
 
-            #region Download Resources
+            var resourceDownloader = new ResourceDownloader(gameCore);
 
-            OnProgressChanged("Downloading Resources", 0.2f);
+            resourceDownloader.DownloadProgressChanged += (sender, e)
+                => OnProgressChanged($"Download Resources", e.Progress, e.TotleTasks, e.CompletedTasks);
 
-            var resourceDownloader = new ResourceDownloader(GameCoreLocator.GetGameCore(entity.Id));
-            resourceDownloader.DownloadProgressChanged += (object sender, ParallelDownloaderProgressChangedEventArgs e)
-                => OnProgressChanged($"Downloading Resources {e.CompletedTasks}/{e.TotleTasks}", (float)(0.2f + e.Progress * 0.8f));
+            parallelDownloaderResponse = await resourceDownloader.DownloadAsync();
 
-            var downloaderResponse = await resourceDownloader.DownloadAsync();
+            OnProgressChanged("Download Resources", 1);
+        }
 
-            OnProgressChanged("Finished", 1.0f);
+        return Task.Run<GameCoreInstallerResponse>(async () =>
+        {
+            await GetCoreJson();
+            await DownloadResources();
 
-            #endregion
+            stopwatch.Stop();
 
             return new()
             {
                 Success = true,
-                GameCore = GameCoreLocator.GetGameCore(entity.Id),
-                Exception = null,
-                DownloaderResponse = downloaderResponse
+                GameCore = gameCore,
+                Stopwatch = stopwatch,
+                DownloaderResponse = parallelDownloaderResponse
             };
-        }
-        catch (Exception ex)
+        }).ContinueWith(task =>
         {
-            return new()
+            if (stopwatch.IsRunning)
+                stopwatch.Stop();
+
+            return task.IsFaulted ? new()
             {
                 Success = false,
-                GameCore = null,
-                Exception = ex
-            };
-        }
+                Stopwatch = stopwatch,
+                Exception = task.Exception
+            } : task.Result;
+        });
     }
 
-    public static async Task<CoreManifest> GetCoreManifest()
+    public static CoreManifest GetCoreManifest() => GetCoreManifestAsync().GetAwaiter().GetResult();
+
+    public static async Task<CoreManifest> GetCoreManifestAsync()
     {
         using var res = await HttpWrapper.HttpGetAsync(DownloadApiManager.Current.VersionManifest);
         var entity = JsonConvert.DeserializeObject<CoreManifest>(await res.Content.ReadAsStringAsync());

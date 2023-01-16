@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Natsurainko.FluentCore.Interface;
+using Newtonsoft.Json;
 
 namespace Natsurainko.FluentCore.Model.Install.OptiFine;
 
-public class OptiFineInstallBuild
+public class OptiFineInstallBuild : IModLoaderInstallBuild
 {
     [JsonProperty("patch")]
     public string Patch { get; set; }
@@ -15,4 +16,6 @@ public class OptiFineInstallBuild
 
     [JsonProperty("filename")]
     public string FileName { get; set; }
+
+    public string DisplayVersion => $"{McVersion}_{Type}_{Patch}";
 }

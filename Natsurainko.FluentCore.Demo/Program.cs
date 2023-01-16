@@ -1,5 +1,5 @@
 ﻿using Natsurainko.FluentCore.Event;
-using Natsurainko.FluentCore.Extension.Windows.Model.Launch;
+using Natsurainko.FluentCore.Extension.Windows.Extension;
 using Natsurainko.FluentCore.Extension.Windows.Module.Authenticator.Dialog;
 using Natsurainko.FluentCore.Extension.Windows.Service;
 using Natsurainko.FluentCore.Interface;
@@ -140,11 +140,11 @@ public class Program
         DownloadApiManager.Current = DownloadApiManager.Mcbbs;
         ResourceDownloader.MaxDownloadThreads = 256;
 
-        var installer = new MinecraftVanlliaInstaller(new GameCoreLocator(@"C:\Users\Admin\Desktop\.minecraft"), "1.18.2");
-        installer.ProgressChanged += (object sender, (string, float) e) =>
+        var installer = new MinecraftVanlliaInstaller(new GameCoreLocator(@"C:\Users\Natsuraniko\Desktop\.minecraft"), "1.18.2");
+        installer.ProgressChanged += (sender, e) =>
         {
-            Console.WriteLine($"[{e.Item2 * 100:0.00}%]{e.Item1}");
-        };        
+            Console.WriteLine($"[{e.TotleProgress * 100:0.00}%]");
+        };
         var res = installer.Install();
 
         Console.ReadKey();

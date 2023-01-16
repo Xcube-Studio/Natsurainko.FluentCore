@@ -17,18 +17,27 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Installer;
 
-public class MinecraftForgeInstaller : InstallerBase
+public class MinecraftForgeInstaller : BaseGameCoreInstaller
 {
     public string JavaPath { get; private set; }
 
     public ForgeInstallBuild ForgeBuild { get; private set; }
 
+    protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
+    {
+        { "Download Forge Package", new () { StepName = "Download Forge Package", IsIndeterminate = false } },
+        { "Parse Installer Package", new () { StepName= "Parse Installer Package"} },
+        { "Download Libraries", new () { StepName = "Download Libraries", IsIndeterminate = false } },
+        { "Write Files", new () { StepName = "Write Files" } },
+        { "Check Inherited Core", new () { StepName = "Check Inherited Core", IsIndeterminate = false } },
+    };
+    
     public string PackageFile { get; private set; }
 
     public MinecraftForgeInstaller(
@@ -36,157 +45,157 @@ public class MinecraftForgeInstaller : InstallerBase
         ForgeInstallBuild build,
         string javaPath,
         string packageFile = null,
-        string customId = null) : base(coreLocator, customId)
+        string customId = null) : base(coreLocator, build.McVersion, customId)
     {
         ForgeBuild = build;
         JavaPath = javaPath;
         PackageFile = packageFile;
     }
 
-    public override async Task<InstallerResponse> InstallAsync()
+    public override Task<GameCoreInstallerResponse> InstallAsync()
     {
-        try
-        {
-            #region Download Package
+        VersionJsonEntity jsonEntity = default;
+        FileInfo jsonFile = default;
+        Stopwatch stopwatch = Stopwatch.StartNew();
 
-            OnProgressChanged("Downloading Forge Insatller Package", 0.0f);
+        ParallelDownloaderResponse parallelDownloaderResponse = default;
+        IEnumerable<ForgeInstallProcessorModel> processors = default;
+        IEnumerable<LibraryResource> libraryResources = default;
+        Dictionary<string, JObject> dataDictionary = default;
+        JObject installProfile = default;
+        ZipArchive archive = default;
+
+        async Task DownloadPackage()
+        {
+            OnProgressChanged("Download Forge Package", 0);
 
             if (string.IsNullOrEmpty(PackageFile) || !File.Exists(PackageFile))
             {
-                var downloadUrl = $"{(DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host) ? DownloadApiManager.Bmcl.Host : DownloadApiManager.Current.Host)}" +
+                var downloadUrl = (DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host) ? DownloadApiManager.Bmcl.Host : DownloadApiManager.Current.Host) +
                     $"/forge/download/{ForgeBuild.Build}";
+
                 using var packageDownloader = new SimpleDownloader(new DownloadRequest()
                 {
                     Url = downloadUrl,
                     Directory = GameCoreLocator.Root
                 });
 
-                packageDownloader.DownloadProgressChanged += (object sender, SimpleDownloaderProgressChangedEventArgs e) =>
-                    OnProgressChanged("Downloading Forge Insatller Package", (float)(0.1f * e.Progress));
+                packageDownloader.DownloadProgressChanged += (sender, e) =>
+                    OnProgressChanged("Download Forge Package", e.Progress);
 
+                packageDownloader.BeginDownload();
                 var downloadResponse = await packageDownloader.CompleteAsync();
 
-                if (downloadResponse.HttpStatusCode != System.Net.HttpStatusCode.OK)
+                if (downloadResponse.HttpStatusCode != HttpStatusCode.OK)
                     throw new HttpRequestException(downloadResponse.HttpStatusCode.ToString());
 
                 PackageFile = downloadResponse.Result.FullName;
             }
 
-            #endregion
+            OnProgressChanged("Download Forge Package", 1);
+        }
 
-            #region Parse Package
+        void ParsePackage()
+        {
+            OnProgressChanged("Parse Installer Package", 0);
 
-            OnProgressChanged("Parsing Installer Package", 0.15f);
+            archive = ZipFile.OpenRead(PackageFile);
 
-            using var archive = ZipFile.OpenRead(PackageFile);
+            installProfile = JObject.Parse(archive.GetEntry("install_profile.json").GetString());
+            jsonEntity = GetVersionJsonEntity(archive, installProfile);
 
-            var installProfile = JObject.Parse(archive.GetEntry("install_profile.json").GetString());
-            var entity = MinecraftForgeInstaller.GetVersionJsonEntity(archive, installProfile);
-
-            var entityLibraries = new LibraryParser(entity.Libraries, GameCoreLocator.Root).GetLibraries();
-            var installerLibraries = installProfile.ContainsKey("libraries")
-                ? new LibraryParser(installProfile["libraries"].ToObject<IEnumerable<LibraryJsonEntity>>().ToList(), GameCoreLocator.Root).GetLibraries()
-                : Array.Empty<LibraryResource>().AsEnumerable();
-
-            var dataDictionary = installProfile.ContainsKey("data")
+            dataDictionary = installProfile.ContainsKey("data")
                 ? installProfile["data"].ToObject<Dictionary<string, JObject>>()
-                : new Dictionary<string, JObject>();
+                : new();
 
-            var downloadLibraries = entityLibraries.Union(installerLibraries);
+            var installerLibraries = installProfile.ContainsKey("libraries")
+                ? new LibraryParser(installProfile["libraries"].ToObject<IEnumerable<LibraryJsonEntity>>(), GameCoreLocator.Root).GetLibraries()
+                : Array.Empty<LibraryResource>();
+
+            libraryResources = new LibraryParser(jsonEntity.Libraries, GameCoreLocator.Root)
+                .GetLibraries()
+                .Union(installerLibraries);
 
             if (!string.IsNullOrEmpty(CustomId))
-                entity.Id = CustomId;
+                jsonEntity.Id = CustomId;
 
-            #endregion
+            OnProgressChanged("Parse Installer Package", 1);
 
-            #region Download Libraries
+            if (!installProfile.ContainsKey("versionInfo"))
+            {
+                StepsProgress.Add("Parse Processor", new() { StepName = "Parse Processor" });
+                StepsProgress.Add("Run Processor", new() { StepName = "Run Processor" });
+            }
+        }
 
-            OnProgressChanged("Downloading Libraries", 0.15f);
+        async Task DownloadLibraries()
+        {
+            OnProgressChanged("Download Libraries", 0);
 
-            using var downloader = new ParallelDownloader<LibraryResource>(downloadLibraries, x => x.ToDownloadRequest());
-            downloader.DownloadProgressChanged += (object sender, ParallelDownloaderProgressChangedEventArgs e) =>
-                OnProgressChanged($"Downloading Libraries {e.CompletedTasks}/{e.TotleTasks}", (float)(0.15f + 0.45f * e.Progress));
+            using var downloader = new ParallelDownloader<LibraryResource>(libraryResources, x => x.ToDownloadRequest());
+            downloader.DownloadProgressChanged += (sender, e) =>
+                OnProgressChanged($"Download Libraries", e.Progress, e.TotleTasks, e.CompletedTasks);
 
             if (DownloadApiManager.Current.Host.Equals(DownloadApiManager.Mojang.Host))
             {
                 DownloadApiManager.Current = DownloadApiManager.Bmcl;
-                downloader.DownloadCompleted += delegate { DownloadApiManager.Current = DownloadApiManager.Mojang; };
+                downloader.DownloadCompleted += (_, args) => DownloadApiManager.Current = DownloadApiManager.Mojang;
             }
 
             downloader.BeginDownload();
-            var downloaderResponse = await downloader.CompleteAsync();
+            parallelDownloaderResponse = await downloader.CompleteAsync();
 
-            #endregion
+            OnProgressChanged("Download Libraries", 1);
+        }
 
-            #region Write Files
+        void WriteFiles()
+        {
+            OnProgressChanged("Write Files", 0);
 
-            OnProgressChanged("Writing Files", 0.70f);
-
-            string forgeFolderId = $"{ForgeBuild.McVersion}-{ForgeBuild.ForgeVersion}";
-            string forgeLibrariesFolder = Path.Combine(GameCoreLocator.Root.FullName, "libraries", "net", "minecraftforge", "forge", forgeFolderId);
+            string forgeLibrariesFolder = Path.Combine(GameCoreLocator.Root.FullName, "libraries", "net", "minecraftforge", "forge", ForgeBuild.DisplayVersion);
 
             if (installProfile.ContainsKey("install"))
             {
-                var lib = new LibraryResource
+                var libraryPath = new LibraryResource
                 {
                     Root = GameCoreLocator.Root,
                     Name = installProfile["install"]["path"].ToString()
-                };
+                }.ToFileInfo().FullName;
 
-                archive.GetEntry(installProfile["install"]["filePath"].ToString()).ExtractTo(lib.ToFileInfo().FullName);
+                archive.GetEntry(installProfile["install"]["filePath"].ToString())
+                    .ExtractTo(libraryPath);
             }
 
             if (archive.GetEntry("maven/") != null)
             {
-                archive.GetEntry($"maven/net/minecraftforge/forge/{forgeFolderId}/forge-{forgeFolderId}.jar")?
-                    .ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{forgeFolderId}.jar"));
-                archive.GetEntry($"maven/net/minecraftforge/forge/{forgeFolderId}/forge-{forgeFolderId}-universal.jar")?
-                    .ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{forgeFolderId}-universal.jar"));
+                archive.GetEntry($"maven/net/minecraftforge/forge/{ForgeBuild.DisplayVersion}/forge-{ForgeBuild.DisplayVersion}.jar")?
+                    .ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{ForgeBuild.DisplayVersion}.jar"));
+                archive.GetEntry($"maven/net/minecraftforge/forge/{ForgeBuild.DisplayVersion}/forge-{ForgeBuild.DisplayVersion}-universal.jar")?
+                    .ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{ForgeBuild.DisplayVersion}-universal.jar"));
             }
 
             if (dataDictionary.Any())
             {
-                archive.GetEntry("data/client.lzma").ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{forgeFolderId}-clientdata.lzma"));
-                archive.GetEntry("data/server.lzma").ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{forgeFolderId}-serverdata.lzma"));
+                archive.GetEntry("data/client.lzma").ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{ForgeBuild.DisplayVersion}-clientdata.lzma"));
+                archive.GetEntry("data/server.lzma").ExtractTo(Path.Combine(forgeLibrariesFolder, $"forge-{ForgeBuild.DisplayVersion}-serverdata.lzma"));
             }
 
-            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", entity.Id, $"{entity.Id}.json"));
+            jsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", jsonEntity.Id, $"{jsonEntity.Id}.json"));
 
-            if (!versionJsonFile.Directory.Exists)
-                versionJsonFile.Directory.Create();
+            if (!jsonFile.Directory.Exists)
+                jsonFile.Directory.Create();
 
-            File.WriteAllText(versionJsonFile.FullName, entity.ToJson());
+            File.WriteAllText(jsonFile.FullName, jsonEntity.ToJson());
 
-            #endregion
+            OnProgressChanged("Write Files", 1);
+        }
 
-            #region Check Inherited Core
+        void ParseProcessor()
+        {
+            OnProgressChanged("Parse Processor", 0);
 
-            await CheckInheritedCore(0.7f, 0.85f, ForgeBuild.McVersion);
-
-            #endregion
-
-            #region LegacyForgeInstaller Exit
-
-            if (installProfile.ContainsKey("versionInfo"))
-            {
-                OnProgressChanged("Install Finished", 1.0f);
-
-                return new InstallerResponse
-                {
-                    Success = true,
-                    Exception = null,
-                    GameCore = GameCoreLocator.GetGameCore(entity.Id)
-                };
-            }
-
-            #endregion
-
-            #region Parser Processor
-
-            OnProgressChanged("Parsering Installer Processor", 0.85f);
-
-            dataDictionary["BINPATCH"]["client"] = $"[net.minecraftforge:forge:{forgeFolderId}:clientdata@lzma]";
-            dataDictionary["BINPATCH"]["server"] = $"[net.minecraftforge:forge:{forgeFolderId}:serverdata@lzma]";
+            dataDictionary["BINPATCH"]["client"] = $"[net.minecraftforge:forge:{ForgeBuild.DisplayVersion}:clientdata@lzma]";
+            dataDictionary["BINPATCH"]["server"] = $"[net.minecraftforge:forge:{ForgeBuild.DisplayVersion}:serverdata@lzma]";
 
             var replaceValues = new Dictionary<string, string>
             {
@@ -198,50 +207,49 @@ public class MinecraftForgeInstaller : InstallerBase
                 { "{LIBRARY_DIR}", Path.Combine(GameCoreLocator.Root.FullName, "libraries") }
             };
 
-            var replaceProcessorArgs = dataDictionary.ToDictionary(x => $"{{{x.Key}}}", x =>
+            var replaceProcessorArgs = dataDictionary.ToDictionary(
+                x => $"{{{x.Key}}}",
+                x => x.Value["client"].ToString().StartsWith("[")
+                    ? CombineLibraryName(x.Value["client"].ToString())
+                    : x.Value["client"].ToString());
+
+            processors = installProfile["processors"].ToObject<IEnumerable<ForgeInstallProcessorModel>>()
+                .Where(x => !x.Sides.Any() || x.Sides.Contains("client"));
+
+            foreach (var processor in processors)
             {
-                string value = x.Value["client"].ToString();
+                processor.Args = processor.Args.Select(x => x.StartsWith("[")
+                    ? CombineLibraryName(x)
+                    : x.Replace(replaceProcessorArgs).Replace(replaceValues));
 
-                if (value.StartsWith("[") && value.EndsWith("]"))
-                    return CombineLibraryName(value);
+                processor.Outputs = processor.Outputs.ToDictionary(
+                    kvp => kvp.Key.Replace(replaceProcessorArgs),
+                    kvp => kvp.Value.Replace(replaceProcessorArgs));
+            }
 
-                return value;
-            });
+            OnProgressChanged("Parse Processor", 1);
+        }
 
-            var processors = installProfile["processors"].ToObject<IEnumerable<ForgeInstallProcessorModel>>()
-                .Where(x =>
-                {
-                    if (!x.Sides.Any())
-                        return true;
-
-                    return x.Sides.Contains("client");
-                }).Select(x =>
-                {
-                    x.Args = x.Args.Select(y =>
-                    {
-                        if (y.StartsWith("[") && y.EndsWith("]"))
-                            return CombineLibraryName(y);
-
-                        return y.Replace(replaceProcessorArgs).Replace(replaceValues);
-                    }).ToList();
-
-                    x.Outputs = x.Outputs.Select(kvp => (kvp.Key.Replace(replaceProcessorArgs), kvp.Value.Replace(replaceProcessorArgs))).ToDictionary(z => z.Item1, z => z.Item2);
-
-                    return x;
-                }).ToList();
-
-            #endregion
-
-            #region Run Processor
+        void RunProcessor()
+        {
+            OnProgressChanged("Run Processor", 0);
 
             var processes = new Dictionary<List<string>, List<string>>();
+
+            var total = processors.Count();
+            var completed = 0;
 
             foreach (var forgeInstallProcessor in processors)
             {
                 var fileName = CombineLibraryName(forgeInstallProcessor.Jar);
                 using var fileArchive = ZipFile.OpenRead(fileName);
 
-                string mainClass = fileArchive.GetEntry("META-INF/MANIFEST.MF").GetString().Split("\r\n".ToCharArray()).First(x => x.Contains("Main-Class: ")).Replace("Main-Class: ", string.Empty);
+                string mainClass = fileArchive.GetEntry("META-INF/MANIFEST.MF")
+                    .GetString()
+                    .Split("\r\n".ToCharArray())
+                    .First(x => x.Contains("Main-Class: "))
+                    .Replace("Main-Class: ", string.Empty);
+
                 string classPath = string.Join(Path.PathSeparator.ToString(), new List<string> { forgeInstallProcessor.Jar }
                     .Concat(forgeInstallProcessor.Classpath)
                     .Select(x => new LibraryResource { Name = x, Root = GameCoreLocator.Root })
@@ -258,7 +266,7 @@ public class MinecraftForgeInstaller : InstallerBase
 
                 using var process = Process.Start(new ProcessStartInfo(JavaPath)
                 {
-                    Arguments = string.Join(' '.ToString(), args),
+                    Arguments = string.Join(" ", args),
                     UseShellExecute = false,
                     WorkingDirectory = GameCoreLocator.Root.FullName,
                     RedirectStandardError = true,
@@ -268,19 +276,19 @@ public class MinecraftForgeInstaller : InstallerBase
                 var outputs = new List<string>();
                 var errorOutputs = new List<string>();
 
-                process.OutputDataReceived += (_, args) =>
+                void AddOutput(string data, bool error = false)
                 {
-                    if (!string.IsNullOrEmpty(args.Data))
-                        outputs.Add(args.Data);
-                };
-                process.ErrorDataReceived += (_, args) =>
-                {
-                    if (!string.IsNullOrEmpty(args.Data))
+                    if (!string.IsNullOrEmpty(data))
                     {
-                        outputs.Add(args.Data);
-                        errorOutputs.Add(args.Data);
+                        outputs.Add(data);
+
+                        if (error)
+                            errorOutputs.Add(data);
                     }
-                };
+                }
+
+                process.OutputDataReceived += (_, args) => AddOutput(args.Data);
+                process.ErrorDataReceived += (_, args) => AddOutput(args.Data, true);
 
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
@@ -288,36 +296,62 @@ public class MinecraftForgeInstaller : InstallerBase
                 process.WaitForExit();
                 processes.Add(outputs, errorOutputs);
 
-                OnProgressChanged($"Running Installer Processor {processors.IndexOf(forgeInstallProcessor)}/{processors.Count}", 0.85f + 0.15f * (processors.IndexOf(forgeInstallProcessor) / (float)processors.Count));
+                completed++;
+
+                OnProgressChanged($"Run Processor", (double)completed / total, total, completed);
             }
 
-            #endregion
+            OnProgressChanged("Run Processor", 1);
+        }
 
-            #region Clean
+        return Task.Run(async () =>
+        {
+            await DownloadPackage();
+            ParsePackage();
+            await DownloadLibraries();
+            WriteFiles();
+            await CheckInheritedCore();
 
+            if (installProfile.ContainsKey("versionInfo"))
+            {
+                stopwatch.Stop();
+
+                return new()
+                {
+                    Success = true,
+                    Stopwatch = stopwatch,
+                    GameCore = GameCoreLocator.GetGameCore(jsonEntity.Id),
+                    DownloaderResponse = parallelDownloaderResponse
+                };
+            }
+
+            ParseProcessor();
+            RunProcessor();
+
+
+            stopwatch.Stop();
+            archive.Dispose();
             File.Delete(PackageFile);
 
-            #endregion
-
-            OnProgressChanged("Install Finished", 1.0f);
-
-            return new()
+            return new GameCoreInstallerResponse
             {
                 Success = true,
-                Exception = null,
-                GameCore = GameCoreLocator.GetGameCore(entity.Id),
-                DownloaderResponse = downloaderResponse
+                Stopwatch = stopwatch,
+                GameCore = GameCoreLocator.GetGameCore(jsonEntity.Id),
+                DownloaderResponse = parallelDownloaderResponse
             };
-        }
-        catch (Exception ex)
+        }).ContinueWith(task =>
         {
-            return new()
+            if (stopwatch.IsRunning)
+                stopwatch.Stop();
+
+            return task.IsFaulted ? new()
             {
                 Success = false,
-                GameCore = null,
-                Exception = ex
-            };
-        }
+                Stopwatch = stopwatch,
+                Exception = task.Exception
+            } : task.Result;
+        });
     }
 
     private static VersionJsonEntity GetVersionJsonEntity(ZipArchive archive, JObject installProfile)

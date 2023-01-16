@@ -8,11 +8,11 @@ namespace Natsurainko.FluentCore.Module.Parser;
 
 public class LibraryParser
 {
-    public List<LibraryJsonEntity> Entities { get; set; }
+    public IEnumerable<LibraryJsonEntity> Entities { get; set; }
 
     public DirectoryInfo Root { get; set; }
 
-    public LibraryParser(List<LibraryJsonEntity> entities, DirectoryInfo root)
+    public LibraryParser(IEnumerable<LibraryJsonEntity> entities, DirectoryInfo root)
     {
         Entities = entities;
         Root = root;

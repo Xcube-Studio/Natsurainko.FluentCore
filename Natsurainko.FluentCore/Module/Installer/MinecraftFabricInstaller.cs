@@ -10,33 +10,47 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Installer;
 
-public class MinecraftFabricInstaller : InstallerBase
+public class MinecraftFabricInstaller : BaseGameCoreInstaller
 {
     public FabricInstallBuild FabricBuild { get; private set; }
+
+    protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
+    {
+        { "Parse Install Build", new () { StepName= "Parse Install Build"} },
+        { "Download Libraries", new () { StepName = "Download Libraries", IsIndeterminate = false } },
+        { "Check Inherited Core", new () { StepName = "Check Inherited Core", IsIndeterminate = false } },
+        { "Write Files", new () { StepName = "Write Files" } }
+    };
 
     public MinecraftFabricInstaller(
         IGameCoreLocator<IGameCore> coreLocator,
         FabricInstallBuild fabricInstallBuild,
-        string customId = null) : base(coreLocator, customId)
+        string customId = null) : base(coreLocator, fabricInstallBuild.McVersion ,customId)
     {
         FabricBuild = fabricInstallBuild;
     }
 
-    public override async Task<InstallerResponse> InstallAsync()
+    public override Task<GameCoreInstallerResponse> InstallAsync()
     {
-        try
+        ParallelDownloaderResponse parallelDownloaderResponse = default;
+        List<LibraryJsonEntity> libraries = default;
+        VersionJsonEntity jsonEntity = default;
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        string mainClass = default;
+
+        void ParseBuild()
         {
-            #region Parse Build
+            OnProgressChanged("Parse Install Build", 0);
 
-            OnProgressChanged("Parse Build", 0.25f);
-
-            var libraries = FabricBuild.LauncherMeta.Libraries["common"];
+            libraries = FabricBuild.LauncherMeta.Libraries["common"];
 
             if (FabricBuild.LauncherMeta.Libraries["common"] != null)
                 libraries.AddRange(FabricBuild.LauncherMeta.Libraries["client"]);
@@ -44,55 +58,44 @@ public class MinecraftFabricInstaller : InstallerBase
             libraries.Insert(0, new() { Name = FabricBuild.Intermediary.Maven });
             libraries.Insert(0, new() { Name = FabricBuild.Loader.Maven });
 
-            string mainClass = FabricBuild.LauncherMeta.MainClass.Type == JTokenType.Object
+            mainClass = FabricBuild.LauncherMeta.MainClass.Type == JTokenType.Object
                 ? FabricBuild.LauncherMeta.MainClass.ToObject<Dictionary<string, string>>()["client"]
                 : string.IsNullOrEmpty(FabricBuild.LauncherMeta.MainClass.ToString())
                     ? "net.minecraft.client.main.Main"
                     : FabricBuild.LauncherMeta.MainClass.ToString();
 
-            string inheritsFrom = FabricBuild.Intermediary.Version;
-
             if (mainClass == "net.minecraft.client.main.Main")
-                return new()
-                {
-                    Success = false,
-                    GameCore = null,
-                    Exception = new ArgumentNullException("MainClass")
-                };
+                throw new ArgumentNullException("MainClass");
 
-            #endregion
+            OnProgressChanged("Parse Install Build", 1);
+        }
 
-            #region Download Libraries
-
-            OnProgressChanged("Downloading Libraries", 0.45f);
+        async Task DownloadLibraries()
+        {
+            OnProgressChanged("Download Libraries", 0);
 
             libraries.ForEach(x => x.Url = UrlExtension.Combine("https://maven.fabricmc.net", UrlExtension.Combine(LibraryResource.FormatName(x.Name).ToArray())));
 
             using var downloader = new ParallelDownloader<LibraryResource>(
                 libraries.Select(x => new LibraryResource { Root = GameCoreLocator.Root, Name = x.Name, Url = x.Url }),
-                x => x.ToDownloadRequest());
-            downloader.DownloadProgressChanged += (object sender, ParallelDownloaderProgressChangedEventArgs e) =>
-                OnProgressChanged($"Downloading Libraries {e.CompletedTasks}/{e.TotleTasks}", (float)(0.45f + 0.25f * e.Progress));
+                x => x.ToDownloadRequest()); 
+            downloader.DownloadProgressChanged += (sender, e) =>
+                OnProgressChanged($"Download Libraries", e.Progress, e.TotleTasks, e.CompletedTasks);
 
             downloader.BeginDownload();
-            var downloaderResponse = await downloader.CompleteAsync();
+            parallelDownloaderResponse = await downloader.CompleteAsync();
 
-            #endregion
+            OnProgressChanged("Download Libraries", 1);
+        }
 
-            #region Check Inherited Core
+        void WriteFiles()
+        {
+            OnProgressChanged("Write Files", 0);
 
-            await CheckInheritedCore(0.7f, 0.85f, FabricBuild.Intermediary.Version);
-
-            #endregion
-
-            #region Write Files
-
-            OnProgressChanged("Writing Files", 0.85f);
-
-            var entity = new VersionJsonEntity
+            jsonEntity = new VersionJsonEntity
             {
                 Id = string.IsNullOrEmpty(CustomId) ? $"fabric-loader-{FabricBuild.Loader.Version}-{FabricBuild.Intermediary.Version}" : CustomId,
-                InheritsFrom = inheritsFrom,
+                InheritsFrom = FabricBuild.McVersion,
                 ReleaseTime = DateTime.Now.ToString("O"),
                 Time = DateTime.Now.ToString("O"),
                 Type = "release",
@@ -102,34 +105,46 @@ public class MinecraftFabricInstaller : InstallerBase
                 Libraries = libraries
             };
 
-            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", entity.Id, $"{entity.Id}.json"));
+            if (!string.IsNullOrEmpty(CustomId))
+                jsonEntity.Id = CustomId;
+
+            var versionJsonFile = new FileInfo(Path.Combine(GameCoreLocator.Root.FullName, "versions", jsonEntity.Id, $"{jsonEntity.Id}.json"));
 
             if (!versionJsonFile.Directory.Exists)
                 versionJsonFile.Directory.Create();
 
-            File.WriteAllText(versionJsonFile.FullName, entity.ToJson());
+            File.WriteAllText(versionJsonFile.FullName, jsonEntity.ToJson());
 
-            #endregion
+            OnProgressChanged("Write Files", 1);
+        }
 
-            OnProgressChanged("Finished", 1.0f);
+        return Task.Run(async () =>
+        {
+            ParseBuild();
+            await DownloadLibraries();
+            await CheckInheritedCore();
+            WriteFiles();
 
-            return new()
+            stopwatch.Stop();
+
+            return new GameCoreInstallerResponse
             {
                 Success = true,
-                GameCore = GameCoreLocator.GetGameCore(entity.Id),
-                Exception = null,
-                DownloaderResponse = downloaderResponse
+                Stopwatch = stopwatch,
+                GameCore = GameCoreLocator.GetGameCore(jsonEntity.Id)
             };
-        }
-        catch (Exception ex)
+        }).ContinueWith(task =>
         {
-            return new()
+            if (stopwatch.IsRunning)
+                stopwatch.Stop();
+
+            return task.IsFaulted ? new()
             {
                 Success = false,
-                GameCore = null,
-                Exception = ex
-            };
-        }
+                Stopwatch = stopwatch,
+                Exception = task.Exception
+            } : task.Result;
+        });
     }
 
     public static async Task<string[]> GetSupportedMcVersionsAsync()
