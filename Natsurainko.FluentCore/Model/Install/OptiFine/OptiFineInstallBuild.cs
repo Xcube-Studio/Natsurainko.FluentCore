@@ -18,4 +18,8 @@ public class OptiFineInstallBuild : IModLoaderInstallBuild
     public string FileName { get; set; }
 
     public string DisplayVersion => $"{McVersion}_{Type}_{Patch}";
+
+    public string BuildVersion => $"{Type}_{Patch}";
+
+    public ModLoaderType ModLoaderType => ModLoaderType.OptiFine;
 }

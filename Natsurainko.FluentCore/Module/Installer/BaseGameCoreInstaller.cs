@@ -57,7 +57,8 @@ public abstract class BaseGameCoreInstaller : IGameCoreInstaller
 
     protected virtual void OnProgressChanged(string stepName, double progress, int totol = default, int completed = default) 
     {
-        double sumProgres = 0;
+        int sumProcesses = 0;
+        int completedProcesses = 0;
 
         StepsProgress[stepName].Progress = progress;
 
@@ -74,14 +75,17 @@ public abstract class BaseGameCoreInstaller : IGameCoreInstaller
         }
 
         foreach (var kvp in StepsProgress)
-            sumProgres += kvp.Value.Progress;
+        {
+            sumProcesses += kvp.Value.TotleTask;
+            completedProcesses += kvp.Value.CompletedTask;
+        }
 
         StepsProgress[stepName].Report();
 
         ProgressChanged?.Invoke(this, new()
         {
             StepsProgress = StepsProgress,
-            TotleProgress = sumProgres / StepsProgress.Count
+            TotleProgress = (double)completedProcesses / sumProcesses
         });
     }
 }

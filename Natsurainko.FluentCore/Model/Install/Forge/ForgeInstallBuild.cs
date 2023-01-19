@@ -22,4 +22,8 @@ public class ForgeInstallBuild : IModLoaderInstallBuild
     public DateTime ModifiedTime { get; set; }
 
     public string DisplayVersion => $"{McVersion}-{ForgeVersion}";
+
+    public string BuildVersion => ForgeVersion;
+
+    public ModLoaderType ModLoaderType => ModLoaderType.Forge;
 }

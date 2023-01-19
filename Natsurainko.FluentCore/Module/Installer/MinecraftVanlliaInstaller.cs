@@ -23,7 +23,7 @@ public class MinecraftVanlliaInstaller : BaseGameCoreInstaller
     protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
     {
         { "Get Core Json", new () { StepName = "Get Core Json" } },
-        { "Download Resources", new () { StepName= "Get Core Json", IsIndeterminate = false } }
+        { "Download Resources", new () { StepName= "Download Resources", IsIndeterminate = false } }
     };
 
     public MinecraftVanlliaInstaller(

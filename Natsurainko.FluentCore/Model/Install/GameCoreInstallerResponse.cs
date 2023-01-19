@@ -7,13 +7,13 @@ namespace Natsurainko.FluentCore.Model.Install;
 
 public class GameCoreInstallerResponse
 {
-    public bool Success { get; internal set; }
+    public bool Success { get; set; }
 
-    public IGameCore GameCore { get; internal set; }
+    public IGameCore GameCore { get; set; }
 
-    public Exception Exception { get; internal set; }
+    public Exception Exception { get; set; }
 
-    public Stopwatch Stopwatch { get; internal set; }
+    public Stopwatch Stopwatch { get; set; }
 
-    public ParallelDownloaderResponse DownloaderResponse { get; internal set; }
+    public ParallelDownloaderResponse DownloaderResponse { get; set; }
 }

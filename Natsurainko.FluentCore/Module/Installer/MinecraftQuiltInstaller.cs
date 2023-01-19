@@ -1,7 +1,7 @@
 ﻿using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Model.Download;
 using Natsurainko.FluentCore.Model.Install;
-using Natsurainko.FluentCore.Model.Install.Fabric;
+using Natsurainko.FluentCore.Model.Install.Quilt;
 using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Network.Downloader;
@@ -12,15 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Installer;
 
-public class MinecraftFabricInstaller : BaseGameCoreInstaller
+public class MinecraftQuiltInstaller : BaseGameCoreInstaller
 {
-    public FabricInstallBuild FabricBuild { get; private set; }
+    public QuiltInstallBuild QuiltBuild { get; private set; }
 
     protected override Dictionary<string, GameCoreInstallerStepProgress> StepsProgress { get; set; } = new()
     {
@@ -30,12 +29,12 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
         { "Write Files", new () { StepName = "Write Files" } }
     };
 
-    public MinecraftFabricInstaller(
+    public MinecraftQuiltInstaller(
         IGameCoreLocator<IGameCore> coreLocator,
-        FabricInstallBuild fabricInstallBuild,
-        string customId = null) : base(coreLocator, fabricInstallBuild.McVersion ,customId)
+        QuiltInstallBuild quiltInstallBuild,
+        string customId = null) : base(coreLocator, quiltInstallBuild.McVersion, customId)
     {
-        FabricBuild = fabricInstallBuild;
+        QuiltBuild = quiltInstallBuild;
     }
 
     public override Task<GameCoreInstallerResponse> InstallAsync()
@@ -49,7 +48,7 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
         {
             OnProgressChanged("Parse Install Build", 0);
 
-            var responseMessage = await HttpWrapper.HttpGetAsync($"https://meta.fabricmc.net/v2/versions/loader/{McVersion}/{FabricBuild.BuildVersion}/profile/json");
+            var responseMessage = await HttpWrapper.HttpGetAsync($"https://meta.quiltmc.org/v3/versions/loader/{McVersion}/{QuiltBuild.BuildVersion}/profile/json");
             jsonEntity = JsonConvert.DeserializeObject<VersionJsonEntity>(await responseMessage.Content.ReadAsStringAsync());
 
             if (!string.IsNullOrEmpty(CustomId))
@@ -68,7 +67,7 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
 
             using var downloader = new ParallelDownloader<LibraryResource>(
                 libraries.Select(x => new LibraryResource { Root = GameCoreLocator.Root, Name = x.Name, Url = x.Url }),
-                x => x.ToDownloadRequest()); 
+                x => x.ToDownloadRequest());
             downloader.DownloadProgressChanged += (sender, e) =>
                 OnProgressChanged($"Download Libraries", e.Progress, e.TotleTasks, e.CompletedTasks);
 
@@ -125,7 +124,7 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
     {
         try
         {
-            using var responseMessage = await HttpWrapper.HttpGetAsync("https://meta.fabricmc.net/v2/versions/game");
+            using var responseMessage = await HttpWrapper.HttpGetAsync("https://meta.quiltmc.org/v3/versions/game");
             responseMessage.EnsureSuccessStatusCode();
 
             return JArray.Parse(await responseMessage.Content.ReadAsStringAsync()).Select(x => (string)x["version"]).ToArray();
@@ -136,38 +135,38 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
         }
     }
 
-    public static async Task<FabricMavenItem[]> GetFabricLoaderMavensAsync()
+    public static async Task<QuiltMavenItem[]> GetQuiltLoaderMavensAsync()
     {
         try
         {
-            using var responseMessage = await HttpWrapper.HttpGetAsync("https://meta.fabricmc.net/v2/versions/loader");
+            using var responseMessage = await HttpWrapper.HttpGetAsync("https://meta.quiltmc.org/v3/versions/loader");
             responseMessage.EnsureSuccessStatusCode();
 
-            return JsonConvert.DeserializeObject<FabricMavenItem[]>(await responseMessage.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<QuiltMavenItem[]>(await responseMessage.Content.ReadAsStringAsync());
         }
         catch
         {
-            return Array.Empty<FabricMavenItem>();
+            return Array.Empty<QuiltMavenItem>();
         }
     }
 
-    public static async Task<FabricInstallBuild[]> GetFabricBuildsFromMcVersionAsync(string mcVersion)
+    public static async Task<QuiltInstallBuild[]> GetQuiltBuildsFromMcVersionAsync(string mcVersion)
     {
         try
         {
-            using var responseMessage = await HttpWrapper.HttpGetAsync($"https://meta.fabricmc.net/v2/versions/loader/{mcVersion}");
+            using var responseMessage = await HttpWrapper.HttpGetAsync($"https://meta.quiltmc.org/v3/versions/loader/{mcVersion}");
             responseMessage.EnsureSuccessStatusCode();
 
-            var list = JsonConvert.DeserializeObject<List<FabricInstallBuild>>(await responseMessage.Content.ReadAsStringAsync());
+            var list = JsonConvert.DeserializeObject<List<QuiltInstallBuild>>(await responseMessage.Content.ReadAsStringAsync());
 
-            list.Sort((a, b) => new Version(a.Loader.Version.Replace(a.Loader.Separator, ".")).CompareTo(new Version(b.Loader.Version.Replace(b.Loader.Separator, "."))));
+            list.Sort((a, b) => a.Loader.Version.CompareTo(b.Loader.Version));
             list.Reverse();
 
             return list.ToArray();
         }
         catch // (Exception ex)
         {
-            return Array.Empty<FabricInstallBuild>();
+            return Array.Empty<QuiltInstallBuild>();
         }
     }
 }

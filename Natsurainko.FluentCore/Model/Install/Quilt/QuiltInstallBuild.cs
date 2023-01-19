@@ -1,21 +1,24 @@
 ﻿using Natsurainko.FluentCore.Interface;
-using Natsurainko.FluentCore.Model.Parser;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Natsurainko.FluentCore.Model.Install.Fabric;
+namespace Natsurainko.FluentCore.Model.Install.Quilt;
 
-public class FabricInstallBuild : IModLoaderInstallBuild
+public class QuiltInstallBuild : IModLoaderInstallBuild
 {
     [JsonProperty("intermediary")]
-    public FabricMavenItem Intermediary { get; set; }
+    public QuiltMavenItem Intermediary { get; set; }
 
     [JsonProperty("loader")]
-    public FabricMavenItem Loader { get; set; }
+    public QuiltMavenItem Loader { get; set; }
 
     [JsonProperty("launcherMeta")]
-    public FabricLauncherMeta LauncherMeta { get; set; }
+    public QuiltLauncherMeta LauncherMeta { get; set; }
 
     public string McVersion => Intermediary.Version;
 
@@ -23,19 +26,16 @@ public class FabricInstallBuild : IModLoaderInstallBuild
 
     public string BuildVersion => Loader.Version;
 
-    public ModLoaderType ModLoaderType => ModLoaderType.Fabric;
+    public ModLoaderType ModLoaderType => ModLoaderType.Quilt;
 }
 
-public class FabricLauncherMeta
+public class QuiltLauncherMeta
 {
     [JsonProperty("mainClass")]
-    public JToken MainClass { get; set; }
-
-    [JsonProperty("libraries")]
-    public Dictionary<string, List<LibraryJsonEntity>> Libraries { get; set; }
+    public Dictionary<string, string> MainClass { get; set; }
 }
 
-public class FabricMavenItem
+public class QuiltMavenItem
 {
     [JsonProperty("separator")]
     public string Separator { get; set; }
