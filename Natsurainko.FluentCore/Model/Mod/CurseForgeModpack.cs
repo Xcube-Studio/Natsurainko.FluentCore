@@ -31,7 +31,7 @@ public class CurseForgeModpack
     public List<CurseForgeModpackFileInfo> LatestFilesIndexes { get; set; }
 
     [JsonProperty("categories")]
-    public List<CurseForgeModpackCategory> Categories { get; set; }
+    public List<CurseForgeCategory> Categories { get; set; }
 
     public string IconUrl { get; set; }
 

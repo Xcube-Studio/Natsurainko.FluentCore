@@ -133,7 +133,7 @@ public class CurseForgeModpackFinder
         return null;
     }
 
-    public async Task<List<CurseForgeModpackCategory>> GetCategories()
+    public async Task<List<CurseForgeCategory>> GetCategories()
     {
         try
         {
@@ -142,7 +142,7 @@ public class CurseForgeModpackFinder
 
             var entity = JObject.Parse(await responseMessage.Content.ReadAsStringAsync());
 
-            return ((JArray)entity["data"]).Select(x => x.ToObject<CurseForgeModpackCategory>()).ToList();
+            return ((JArray)entity["data"]).Select(x => x.ToObject<CurseForgeCategory>()).ToList();
         }
         catch { }
 

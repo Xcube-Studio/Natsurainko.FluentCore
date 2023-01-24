@@ -9,19 +9,20 @@ using Natsurainko.FluentCore.Module.Authenticator;
 using Natsurainko.FluentCore.Module.Downloader;
 using Natsurainko.FluentCore.Module.Installer;
 using Natsurainko.FluentCore.Module.Launcher;
+using Natsurainko.FluentCore.Module.Mod;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.FluentCore.Wrapper;
 using Natsurainko.Toolkits.Network.Downloader;
 using Natsurainko.Toolkits.Text;
 using System;
 using System.Linq;
-using static System.Formats.Asn1.AsnWriter;
+using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Demo;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         #region Microsoft Device Flow
         /*
@@ -137,6 +138,7 @@ public class Program
         #endregion
 
         #region Vanllia Installer
+        /*
         DownloadApiManager.Current = DownloadApiManager.Mcbbs;
         ResourceDownloader.MaxDownloadThreads = 256;
 
@@ -148,31 +150,19 @@ public class Program
         var res = installer.Install();
 
         Console.ReadKey();
-        return;
+        return;*/
         #endregion
 
-        #region CurseForge Modpack Finder
-        // CurseForgeModpackFinder curseForgeModpackFinder = new CurseForgeModpackFinder("Token");
-        // var modpacks = curseForgeModpackFinder.GetFeaturedModpacksAsync().GetAwaiter().GetResult();
-        //
-        // modpacks.ForEach(x =>
-        // {
-        //     Console.WriteLine(x.Name);
-        //     Console.WriteLine($"[{x.SupportedVersions.First()}{(x.SupportedVersions.First() == x.SupportedVersions.Last() ? string.Empty : $"-{x.SupportedVersions.Last()}")}]|{x.Description}|{x.DownloadCount}|{x.LastUpdateTime}");
-        //     Console.WriteLine($"[{string.Join('|', x.SupportedVersions)}]");
-        //
-        //     foreach (var (key, value) in x.Links)
-        //         Console.WriteLine($"{key}:{value}");
-        //
-        //     foreach (var (key, value) in x.Files)
-        //         value.ForEach(y => Console.WriteLine($"[{y.ModLoaderType}][{y.SupportedVersion}][{y.FileName}][{y.DownloadUrl}]"));
-        // });
-        //
-        // curseForgeModpackFinder.GetCategories().GetAwaiter().GetResult().ForEach(x => Console.WriteLine($"{x.Name}|{x.Id}"));
-        //
-        // Console.ReadKey();
-        //
-        //return;
+        #region CurseForge Api
+
+        CurseForgeApi.InitApiKey("$2a$10$Awb53b9gSOIJJkdV3Zrgp.CyFP.dI13QKbWn/4UZI4G4ff18WneB6");
+        var categories = (await CurseForgeApi.GetCategoriesClassesOnly()).ToList();
+        var versions = (await CurseForgeApi.GetMinecraftVersions()).ToList();
+        var test = (await CurseForgeApi.SearchResources("OptiFabric")).ToList();
+
+        var description = await CurseForgeApi.GetResourceDescription(test[1].Id);
+
+        return;
         #endregion
 
         #region UwpMinecraftLauncher
