@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Natsurainko.FluentCore.Model.Mod;
+namespace Natsurainko.FluentCore.Model.Mod.CureseForge;
 
 public class CurseForgeVersion
 {

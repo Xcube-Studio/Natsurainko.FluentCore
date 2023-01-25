@@ -1,5 +1,5 @@
 ﻿using Natsurainko.FluentCore.Model.Install;
-using Natsurainko.FluentCore.Model.Mod;
+using Natsurainko.FluentCore.Model.Mod.CureseForge;
 using Natsurainko.Toolkits.Network;
 using Newtonsoft.Json.Linq;
 using System;

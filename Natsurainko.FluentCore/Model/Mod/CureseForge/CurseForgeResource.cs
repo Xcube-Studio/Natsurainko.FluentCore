@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace Natsurainko.FluentCore.Model.Mod;
+namespace Natsurainko.FluentCore.Model.Mod.CureseForge;
 
 public class CurseForgeResource
 {
@@ -68,7 +68,7 @@ public class CurseForgeResource
     public IEnumerable<CurseForgeAuthor> Author { get; set; }
 
     [JsonProperty("links")]
-    public Dictionary<string,string> Links { get; set; }
+    public Dictionary<string, string> Links { get; set; }
 
     [JsonProperty("logo")]
     public CurseForgeImage Logo { get; set; }

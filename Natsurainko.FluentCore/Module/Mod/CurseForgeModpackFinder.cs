@@ -1,7 +1,8 @@
 ﻿using Natsurainko.FluentCore.Model.Install;
-using Natsurainko.FluentCore.Model.Mod;
+using Natsurainko.FluentCore.Model.Mod.CureseForge;
 using Natsurainko.Toolkits.Network;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Mod;
 
+[Obsolete]
 public class CurseForgeModpackFinder
 {
     public string AccessToken { get; set; }

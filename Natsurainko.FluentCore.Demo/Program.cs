@@ -154,7 +154,7 @@ public class Program
         #endregion
 
         #region CurseForge Api
-
+        /*
         CurseForgeApi.InitApiKey("$2a$10$Awb53b9gSOIJJkdV3Zrgp.CyFP.dI13QKbWn/4UZI4G4ff18WneB6");
         var categories = (await CurseForgeApi.GetCategoriesClassesOnly()).ToList();
         var versions = (await CurseForgeApi.GetMinecraftVersions()).ToList();
@@ -163,6 +163,7 @@ public class Program
         var description = await CurseForgeApi.GetResourceDescription(test[1].Id);
 
         return;
+        */
         #endregion
 
         #region UwpMinecraftLauncher

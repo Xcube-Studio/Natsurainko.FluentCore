@@ -1,7 +1,7 @@
 ﻿using Natsurainko.FluentCore.Model.Install;
 using Newtonsoft.Json;
 
-namespace Natsurainko.FluentCore.Model.Mod;
+namespace Natsurainko.FluentCore.Model.Mod.CureseForge;
 
 public class CurseForgeModpackFileInfo
 {

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Natsurainko.FluentCore.Model.Mod;
+namespace Natsurainko.FluentCore.Model.Mod.CureseForge;
 
 public class CurseForgeModpack
 {
