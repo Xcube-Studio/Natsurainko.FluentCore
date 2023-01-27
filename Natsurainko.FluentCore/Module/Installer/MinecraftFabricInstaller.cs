@@ -32,17 +32,10 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
     public MinecraftFabricInstaller(
         IGameCoreLocator<IGameCore> coreLocator,
         FabricInstallBuild fabricInstallBuild,
-
-        /* 项目“Natsurainko.FluentCore (net6.0)”的未合并的更改
-        在此之前:
-                string customId = null) : base(coreLocator, fabricInstallBuild.McVersion ,customId)
-        在此之后:
-                string customId = null) : base(coreLocator, fabricInstallBuild.McVersion, customId)
-        */
         string customId = null) : base(coreLocator, fabricInstallBuild.McVersion, customId)
-    {
-        FabricBuild = fabricInstallBuild;
-    }
+        {
+            FabricBuild = fabricInstallBuild;
+        }
 
     public override Task<GameCoreInstallerResponse> InstallAsync()
     {
