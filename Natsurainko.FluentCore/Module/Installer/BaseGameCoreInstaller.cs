@@ -41,11 +41,11 @@ public abstract class BaseGameCoreInstaller : IGameCoreInstaller
         if (GameCoreLocator.GetGameCore(McVersion) == null)
         {
             var installer = new MinecraftVanlliaInstaller(GameCoreLocator, McVersion);
-            installer.ProgressChanged += (sender, e) 
+            installer.ProgressChanged += (sender, e)
                 => OnProgressChanged(
-                    $"Check Inherited Core", 
-                    e.TotleProgress, 
-                    e.StepsProgress.Values.Sum(x => x.TotleTask), 
+                    $"Check Inherited Core",
+                    e.TotleProgress,
+                    e.StepsProgress.Values.Sum(x => x.TotleTask),
                     e.StepsProgress.Values.Sum(x => x.CompletedTask));
 
 
@@ -55,7 +55,7 @@ public abstract class BaseGameCoreInstaller : IGameCoreInstaller
         OnProgressChanged("Check Inherited Core", 1);
     }
 
-    protected virtual void OnProgressChanged(string stepName, double progress, int totol = default, int completed = default) 
+    protected virtual void OnProgressChanged(string stepName, double progress, int totol = default, int completed = default)
     {
         int sumProcesses = 0;
         int completedProcesses = 0;

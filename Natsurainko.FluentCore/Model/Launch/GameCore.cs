@@ -57,9 +57,9 @@ public class GameCore : IGameCore
 
     public override int GetHashCode()
     {
-         return Root.FullName.GetHashCode() ^
-                Id.GetHashCode() ^
-                MainClass.GetHashCode() ^
-                IsVanilla.GetHashCode();
+        return Root.FullName.GetHashCode() ^
+               Id.GetHashCode() ^
+               MainClass.GetHashCode() ^
+               IsVanilla.GetHashCode();
     }
 }

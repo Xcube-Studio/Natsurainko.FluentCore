@@ -23,7 +23,7 @@ public class YggdrasilAuthenticator : IAuthenticator
     public AuthenticatorMethod Method { get; private set; }
 
     public YggdrasilAuthenticator(
-        string yggdrasilServerUrl = "https://authserver.mojang.com", 
+        string yggdrasilServerUrl = "https://authserver.mojang.com",
         AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         YggdrasilServerUrl = yggdrasilServerUrl;
@@ -31,11 +31,11 @@ public class YggdrasilAuthenticator : IAuthenticator
     }
 
     public YggdrasilAuthenticator(
-        AuthenticatorMethod method = AuthenticatorMethod.Login, 
-        string accessToken = default, 
-        string clientToken = default, 
-        string email = default, 
-        string password = default, 
+        AuthenticatorMethod method = AuthenticatorMethod.Login,
+        string accessToken = default,
+        string clientToken = default,
+        string email = default,
+        string password = default,
         string yggdrasilServerUrl = "https://authserver.mojang.com")
     {
         Email = email;

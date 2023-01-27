@@ -34,7 +34,7 @@ public class MicrosoftAuthenticateDialog
 
     public MicrosoftAuthenticateDialog()
     {
-        
+
     }
 
     public DialogResult ShowDialog()

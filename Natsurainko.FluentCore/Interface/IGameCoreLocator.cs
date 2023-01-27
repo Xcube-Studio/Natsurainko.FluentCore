@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Natsurainko.FluentCore.Interface;
 
-public interface IGameCoreLocator<out TCore> 
+public interface IGameCoreLocator<out TCore>
     where TCore : IGameCore
 {
     DirectoryInfo Root { get; }

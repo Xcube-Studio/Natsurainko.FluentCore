@@ -37,7 +37,7 @@ public class MinecraftForgeInstaller : BaseGameCoreInstaller
         { "Write Files", new () { StepName = "Write Files" } },
         { "Check Inherited Core", new () { StepName = "Check Inherited Core", IsIndeterminate = false } },
     };
-    
+
     public string PackageFile { get; private set; }
 
     public MinecraftForgeInstaller(

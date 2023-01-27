@@ -17,7 +17,7 @@ public partial class AuthenticateDialog : Window
         "&redirect_uri=https://login.live.com/oauth20_desktop.srf" +
         "&prompt=";
 
-    internal new DialogResult DialogResult { get; private set; } 
+    internal new DialogResult DialogResult { get; private set; }
         = DialogResult.Abort;
 
     internal string AccessCode { get; private set; }

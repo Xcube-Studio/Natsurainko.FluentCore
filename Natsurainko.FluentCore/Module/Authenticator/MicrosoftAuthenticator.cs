@@ -30,7 +30,7 @@ public class MicrosoftAuthenticator : IAuthenticator
     public MicrosoftAuthenticator() { }
 
     public MicrosoftAuthenticator(
-        string code, 
+        string code,
         AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         Code = code;
@@ -38,8 +38,8 @@ public class MicrosoftAuthenticator : IAuthenticator
     }
 
     public MicrosoftAuthenticator(
-        string clientId, 
-        string redirectUri, 
+        string clientId,
+        string redirectUri,
         AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         ClientId = clientId;
@@ -48,9 +48,9 @@ public class MicrosoftAuthenticator : IAuthenticator
     }
 
     public MicrosoftAuthenticator(
-        string code, 
-        string clientId, 
-        string redirectUri, 
+        string code,
+        string clientId,
+        string redirectUri,
         AuthenticatorMethod method = AuthenticatorMethod.Login)
     {
         Code = code;
@@ -60,14 +60,14 @@ public class MicrosoftAuthenticator : IAuthenticator
     }
 
     public MicrosoftAuthenticator(
-        OAuth20TokenResponseModel oAuth20TokenResponseModel, 
-        string clientId, 
+        OAuth20TokenResponseModel oAuth20TokenResponseModel,
+        string clientId,
         string redirectUri)
     {
         OAuth20TokenResponse = oAuth20TokenResponseModel;
         ClientId = clientId;
         RedirectUri = redirectUri;
-        
+
         CreatedFromDeviceCodeFlow = true;
     }
 

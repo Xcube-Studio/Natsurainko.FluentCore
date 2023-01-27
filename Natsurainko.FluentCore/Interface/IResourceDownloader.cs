@@ -1,5 +1,4 @@
-﻿using Natsurainko.FluentCore.Model.Launch;
-using Natsurainko.Toolkits.Network.Downloader;
+﻿using Natsurainko.Toolkits.Network.Downloader;
 using System;
 using System.Threading.Tasks;
 

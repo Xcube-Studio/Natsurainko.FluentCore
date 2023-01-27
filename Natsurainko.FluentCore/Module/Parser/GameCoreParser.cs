@@ -4,7 +4,6 @@ using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.FluentCore.Service;
 using Natsurainko.Toolkits.Text;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -253,7 +252,7 @@ public class GameCoreParser
         }
     }
 
-    public static Dictionary<string, (ModLoaderType, Func<string, string>)> HandleModLoaderDictionary { get; } = new() 
+    public static Dictionary<string, (ModLoaderType, Func<string, string>)> HandleModLoaderDictionary { get; } = new()
     {
         { "net.minecraftforge:forge:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
         { "net.minecraftforge:fmlloader:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },

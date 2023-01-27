@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,7 +32,14 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
     public MinecraftFabricInstaller(
         IGameCoreLocator<IGameCore> coreLocator,
         FabricInstallBuild fabricInstallBuild,
-        string customId = null) : base(coreLocator, fabricInstallBuild.McVersion ,customId)
+
+        /* 项目“Natsurainko.FluentCore (net6.0)”的未合并的更改
+        在此之前:
+                string customId = null) : base(coreLocator, fabricInstallBuild.McVersion ,customId)
+        在此之后:
+                string customId = null) : base(coreLocator, fabricInstallBuild.McVersion, customId)
+        */
+        string customId = null) : base(coreLocator, fabricInstallBuild.McVersion, customId)
     {
         FabricBuild = fabricInstallBuild;
     }
@@ -68,7 +74,7 @@ public class MinecraftFabricInstaller : BaseGameCoreInstaller
 
             using var downloader = new ParallelDownloader<LibraryResource>(
                 libraries.Select(x => new LibraryResource { Root = GameCoreLocator.Root, Name = x.Name, Url = x.Url }),
-                x => x.ToDownloadRequest()); 
+                x => x.ToDownloadRequest());
             downloader.DownloadProgressChanged += (sender, e) =>
                 OnProgressChanged($"Download Libraries", e.Progress, e.TotleTasks, e.CompletedTasks);
 

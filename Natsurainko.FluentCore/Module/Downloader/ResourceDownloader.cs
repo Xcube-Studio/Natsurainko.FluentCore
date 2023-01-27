@@ -1,5 +1,4 @@
 ﻿using Natsurainko.FluentCore.Interface;
-using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Model.Parser;
 using Natsurainko.FluentCore.Module.Parser;
 using Natsurainko.Toolkits.IO;

@@ -11,8 +11,8 @@ public static class JvmSettingExtension
         var memoryInfo = MEMORY_INFO.GetMemoryStatus();
         var willUsed = (memoryInfo.ullAvailPhys / 1024 / 1024) * 0.75;
 
-        jvmSetting.MaxMemory = willUsed < minimum 
-            ? minimum 
+        jvmSetting.MaxMemory = willUsed < minimum
+            ? minimum
             : Convert.ToInt32(willUsed);
         jvmSetting.MinMemory = minimum;
     }

@@ -1,5 +1,4 @@
-﻿using Natsurainko.FluentCore.Event;
-using Natsurainko.FluentCore.Interface;
+﻿using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Model.Launch;
 using Natsurainko.FluentCore.Module.Launcher;
 using System;

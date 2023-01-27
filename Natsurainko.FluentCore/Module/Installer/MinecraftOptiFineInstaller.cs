@@ -44,7 +44,7 @@ public class MinecraftOptiFineInstaller : BaseGameCoreInstaller
         OptiFineInstallBuild build,
         string javaPath,
         string packageFile = null,
-        string customId = null) : base(coreLocator, build.McVersion ,customId)
+        string customId = null) : base(coreLocator, build.McVersion, customId)
     {
         OptiFineBuild = build;
         JavaPath = javaPath;
@@ -93,7 +93,7 @@ public class MinecraftOptiFineInstaller : BaseGameCoreInstaller
             OnProgressChanged("Download OptiFine Package", 1);
         }
 
-        void ParsePackage() 
+        void ParsePackage()
         {
             OnProgressChanged("Parse Installer Package", 0);
 

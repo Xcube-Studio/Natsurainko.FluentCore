@@ -6,7 +6,7 @@ namespace Natsurainko.FluentCore.Model.Install.Forge;
 public class ForgeInstallProcessorModel
 {
     [JsonProperty("sides")]
-    public List<string> Sides { get; set; } = new ();
+    public List<string> Sides { get; set; } = new();
 
     [JsonProperty("jar")]
     public string Jar { get; set; }
