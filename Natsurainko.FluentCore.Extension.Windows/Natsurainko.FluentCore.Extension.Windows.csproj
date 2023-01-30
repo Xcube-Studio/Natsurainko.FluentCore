@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>disable</Nullable>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心
 Natsurainko.FluentCore 的 Windows 扩展</Description>

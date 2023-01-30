@@ -77,7 +77,7 @@ public class CurseForgeResource
     public IEnumerable<CurseForgeImage> Screenshots { get; set; }
 
     [JsonProperty("latestFilesIndexes")]
-    public List<CurseForgeModpackFileInfo> LatestFilesIndexes { get; set; }
+    public List<CurseForgeResourceFileInfo> LatestFilesIndexes { get; set; }
 }
 
 public class CurseForgeAuthor
@@ -116,8 +116,6 @@ public class CurseForgeImage
 
 public class CurseForgeResourceFileInfo
 {
-    public string DownloadUrl { get; set; }
-
     [JsonProperty("fileId")]
     public int FileId { get; set; }
 

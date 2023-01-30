@@ -153,10 +153,19 @@ public static class CurseForgeApi
         return null;
     }
 
-    public static async Task<string> GetResourceDescription(int modId)
+    public static async Task<string> GetModDescription(int modId)
     {
         using var responseMessage = await HttpWrapper.HttpGetAsync(Api + "mods" +
             $"/{modId}/description", Headers);
+
+        return JObject.Parse(await responseMessage.Content.ReadAsStringAsync())["data"]
+            .ToObject<string>();
+    }
+
+    public static async Task<string> GetModFileDownloadUrl(int modId, int fileId)
+    {
+        using var responseMessage = await HttpWrapper.HttpGetAsync(Api + "mods" +
+            $"/{modId}/files/{fileId}/download-url", Headers);  
 
         return JObject.Parse(await responseMessage.Content.ReadAsStringAsync())["data"]
             .ToObject<string>();

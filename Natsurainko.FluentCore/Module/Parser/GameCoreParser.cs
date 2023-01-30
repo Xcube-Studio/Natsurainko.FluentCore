@@ -210,7 +210,9 @@ public class GameCoreParser
 
     protected static IEnumerable<ModLoaderInformation> GetModLoaders(GameCore core)
     {
-        var libFind = core.LibraryResources.Where(lib => HandleModLoaderDictionary.Where(kvp => lib.Name.ToLower().Contains(kvp.Key)).Any());
+        var libFind = core.LibraryResources.Where(lib => HandleModLoaderDictionary.Where(kvp => lib.Name.ToLower().Contains(kvp.Key)).Any())
+            .GroupBy(x => x.Name)
+            .Select(x => x.First());
 
         foreach (var lib in libFind)
         {
@@ -218,6 +220,7 @@ public class GameCoreParser
             var id = lib.Name.Split(':')[2];
 
             var handle = HandleModLoaderDictionary.Where(kvp => lowerName.Contains(kvp.Key)).First();
+
             yield return new() { LoaderType = handle.Value.Item1, Version = handle.Value.Item2(id) };
         }
     }
