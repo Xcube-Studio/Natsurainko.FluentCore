@@ -1,0 +1,33 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Setup dependencies (include FluentCore&Toolkits)
+      run: |
+            cd ..
+            git clone https://github.com/natsurainko/Natsurainko.Toolkits.git
+            dotnet restore ./Natsurainko.Toolkits/Natsurainko.Toolkits/Natsurainko.Toolkits.csproj
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Capture release artifacts
+      uses: actions/upload-artifact@main
+      with:
+          name: FluentCore.dll
+          path: ./bin/FluentCore.dll
