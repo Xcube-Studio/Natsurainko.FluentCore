@@ -26,8 +26,11 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Capture release artifacts
+    - name: Capture artifacts
       uses: actions/upload-artifact@main
       with:
-          name: FluentCore.dll
-          path: ./bin/FluentCore.dll
+          name: Resource
+          path: |
+            .\Natsurainko.FluentCore\bin\Debug\net6.0\Natsurainko.FluentCore.dll
+            .\Natsurainko.FluentCore.Extension.Windows\bin\Debug\net6.0-windows\Natsurainko.FluentCore.Extension.Windows.dll
+            .\Natsurainko.FluentCore\bin\Debug\Natsurainko.FluentCore.2.0.4.nupkg
