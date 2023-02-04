@@ -1,4 +1,4 @@
-﻿using Natsurainko.FluentCore.Interface;
+﻿    using Natsurainko.FluentCore.Interface;
 using Natsurainko.FluentCore.Model.Download;
 using Natsurainko.FluentCore.Model.Install;
 using Natsurainko.FluentCore.Model.Install.Forge;
@@ -200,11 +200,11 @@ public class MinecraftForgeInstaller : BaseGameCoreInstaller
             var replaceValues = new Dictionary<string, string>
             {
                 { "{SIDE}", "client" },
-                { "{MINECRAFT_JAR}", Path.Combine(GameCoreLocator.Root.FullName, "versions", ForgeBuild.McVersion, $"{ForgeBuild.McVersion}.jar") },
+                { "{MINECRAFT_JAR}", Path.Combine(GameCoreLocator.Root.FullName, "versions", ForgeBuild.McVersion, $"{ForgeBuild.McVersion}.jar").ToPath() },
                 { "{MINECRAFT_VERSION}", ForgeBuild.McVersion },
-                { "{ROOT}", GameCoreLocator.Root.FullName },
-                { "{INSTALLER}", PackageFile },
-                { "{LIBRARY_DIR}", Path.Combine(GameCoreLocator.Root.FullName, "libraries") }
+                { "{ROOT}", GameCoreLocator.Root.FullName.ToPath() },
+                { "{INSTALLER}", PackageFile.ToPath() },
+                { "{LIBRARY_DIR}", Path.Combine(GameCoreLocator.Root.FullName, "libraries").ToPath() }
             };
 
             var replaceProcessorArgs = dataDictionary.ToDictionary(
@@ -241,7 +241,7 @@ public class MinecraftForgeInstaller : BaseGameCoreInstaller
 
             foreach (var forgeInstallProcessor in processors)
             {
-                var fileName = CombineLibraryName(forgeInstallProcessor.Jar);
+                var fileName = CombineLibraryName(forgeInstallProcessor.Jar, false);
                 using var fileArchive = ZipFile.OpenRead(fileName);
 
                 string mainClass = fileArchive.GetEntry("META-INF/MANIFEST.MF")
@@ -367,14 +367,14 @@ public class MinecraftForgeInstaller : BaseGameCoreInstaller
         return null;
     }
 
-    private string CombineLibraryName(string name)
+    private string CombineLibraryName(string name, bool toPath = true)
     {
-        string libraries = Path.Combine(GameCoreLocator.Root.FullName, "libraries");
+        string library = Path.Combine(GameCoreLocator.Root.FullName, "libraries");
 
         foreach (var subPath in LibraryResource.FormatName(name.TrimStart('[').TrimEnd(']')))
-            libraries = Path.Combine(libraries, subPath);
+            library = Path.Combine(library, subPath);
 
-        return libraries;
+        return toPath ? library.ToPath() : library;
     }
 
     public static async Task<string[]> GetSupportedMcVersionsAsync()

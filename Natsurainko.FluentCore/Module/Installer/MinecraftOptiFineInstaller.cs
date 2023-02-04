@@ -176,11 +176,11 @@ public class MinecraftOptiFineInstaller : BaseGameCoreInstaller
                 Arguments = string.Join(" ", new string[]
                 {
                     "-cp",
-                    PackageFile,
+                    PackageFile.ToPath(),
                     "optifine.Patcher",
-                    inheritsFromFile,
-                    PackageFile,
-                    optiFineLibraryFile.FullName
+                    inheritsFromFile.ToPath(),
+                    PackageFile.ToPath(),
+                    optiFineLibraryFile.FullName.ToPath()
                 })
             });
 
