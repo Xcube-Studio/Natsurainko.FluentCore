@@ -203,8 +203,7 @@ public class Program
             {
                 MaxMemory = 2048,
                 MinMemory = 1024,
-                AdvancedArguments = DefaultSettings.DefaultAdvancedArguments,
-                GCArguments = DefaultSettings.DefaultGCArguments
+                JvmArguments = DefaultSettings.DefaultJvmArguments
             },
             NativesFolder = null,
             ServerSetting = new ServerSetting
