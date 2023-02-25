@@ -39,9 +39,7 @@ public class JvmSetting
 
     public int MinMemory { get; set; } = 512;
 
-    public List<string> AdvancedArguments { get; set; } = DefaultSettings.DefaultAdvancedArguments;
-
-    public List<string> GCArguments { get; set; } = DefaultSettings.DefaultGCArguments;
+    public List<string> JvmArguments { get; set; } = DefaultSettings.DefaultJvmArguments;
 
     public JvmSetting() { }
 

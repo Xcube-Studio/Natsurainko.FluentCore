@@ -71,8 +71,7 @@ public class ArgumentsBuilder : IArgumentsBuilder
         foreach (var item in GetEnvironmentJVMArguments())
             args.Add(item);
 
-        LaunchSetting.JvmSetting.GCArguments?.ForEach(item => args.Add(item));
-        LaunchSetting.JvmSetting.AdvancedArguments?.ForEach(item => args.Add(item));
+        LaunchSetting.JvmSetting.JvmArguments?.ForEach(item => args.Add(item));
 
         args.Add("-Dlog4j2.formatMsgNoLookups=true");
 

@@ -4,6 +4,8 @@ using Natsurainko.Toolkits.Network;
 using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Natsurainko.FluentCore.Module.Authenticator;
@@ -50,7 +52,12 @@ public class YggdrasilAuthenticator : IAuthenticator
     public IAccount Authenticate()
         => AuthenticateAsync().GetAwaiter().GetResult();
 
-    public async Task<IAccount> AuthenticateAsync()
+    public IAccount Authenticate(Func<IEnumerable<ProfileModel>, Task<ProfileModel>> selectProfileFunc)
+        => AuthenticateAsync(selectProfileFunc).GetAwaiter().GetResult();
+
+    public async Task<IAccount> AuthenticateAsync() => await AuthenticateAsync(profiles => Task.Run(() => profiles.First()));
+
+    public async Task<IAccount> AuthenticateAsync(Func<IEnumerable<ProfileModel>, Task<ProfileModel>> selectProfileFunc)
     {
         string url = YggdrasilServerUrl;
         string content = string.Empty;
@@ -85,6 +92,8 @@ public class YggdrasilAuthenticator : IAuthenticator
         res.EnsureSuccessStatusCode();
 
         var model = JsonConvert.DeserializeObject<YggdrasilResponseModel>(result);
+        model.SelectedProfile ??= await selectProfileFunc(model.AvailableProfiles);
+
         return new YggdrasilAccount()
         {
             AccessToken = model.AccessToken,
