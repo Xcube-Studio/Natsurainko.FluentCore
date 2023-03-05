@@ -47,10 +47,7 @@ public class JavaHelper
         process.StandardInput.WriteLine("exit");
         process.WaitForExit();
 
-        output.Where(x => string.IsNullOrEmpty(x) || x.Contains('>')).ToList().ForEach(x => output.Remove(x));
-
-        if (output.Any())
-            result.AddNotRepeating(output.Skip(2));
+        result.AddNotRepeating(output.Where(x => !string.IsNullOrEmpty(x) && x.EndsWith("javaw.exe") && File.Exists(x)));
 
         #endregion
 
