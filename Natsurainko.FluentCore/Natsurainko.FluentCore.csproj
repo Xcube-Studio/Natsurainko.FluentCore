@@ -4,10 +4,10 @@
     <TargetFrameworks>net6.0;netstandard2.0</TargetFrameworks>
 	<LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>2.0.4</Version>
+    <Version>2.0.5</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心</Description>
-    <Copyright>Copyright © Natsurainko 2022</Copyright>
+    <Copyright>Copyright © Natsurainko 2022-2023</Copyright>
     <PackageProjectUrl>https://github.com/Xcube-Studio/Natsurainko.FluentCore</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Xcube-Studio/Natsurainko.FluentCore</RepositoryUrl>

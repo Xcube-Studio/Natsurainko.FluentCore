@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>disable</Nullable>
-    <Version>2.0.4</Version>
+    <Version>2.0.5</Version>
     <Authors>Natsurainko</Authors>
     <Description>一个高效的模块化的 Minecraft 启动核心
 Natsurainko.FluentCore 的 Windows 扩展</Description>
-    <Copyright>Copyright © Natsurainko 2022</Copyright>
+    <Copyright>Copyright © Natsurainko 2022-2023</Copyright>
     <PackageProjectUrl>https://github.com/Xcube-Studio/Natsurainko.FluentCore</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Xcube-Studio/Natsurainko.FluentCore</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -32,11 +32,6 @@ Natsurainko.FluentCore 的 Windows 扩展</Description>
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="PInvoke.User32" Version="0.7.124" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Natsurainko.Toolkits\Natsurainko.Toolkits\Natsurainko.Toolkits.csproj" />
-    <ProjectReference Include="..\Natsurainko.FluentCore\Natsurainko.FluentCore.csproj" />
   </ItemGroup>
 
 </Project>
