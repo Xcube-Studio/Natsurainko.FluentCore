@@ -34,4 +34,8 @@ Natsurainko.FluentCore 的 Windows 扩展</Description>
     <PackageReference Include="PInvoke.User32" Version="0.7.124" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Natsurainko.FluentCore\Natsurainko.FluentCore.csproj" />
+  </ItemGroup>
+
 </Project>
