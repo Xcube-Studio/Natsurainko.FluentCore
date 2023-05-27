@@ -3,7 +3,7 @@ using System;
 
 namespace Natsurainko.FluentCore.Exceptions;
 
-internal class MicrosoftAuthenticationException : Exception
+public class MicrosoftAuthenticationException : Exception
 {
     public MicrosoftAuthenticationExceptionType Type { get; internal set; }
 
