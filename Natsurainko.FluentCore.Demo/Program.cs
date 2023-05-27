@@ -34,7 +34,14 @@ public class Program
             var microsoftAuthenticator = new MicrosoftAuthenticator
                 (res.OAuth20TokenResponse, "0844e754-1d2e-4861-8e2b-18059609badb", "http://localhost:5001/fluentlauncher/auth-response");
 
-            Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+            try
+            {
+                Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToJson());
+            }
         }
 
         Console.ReadKey();
@@ -54,7 +61,15 @@ public class Program
             Console.WriteLine(dialog.AccessCode);
 
             var microsoftAuthenticator = new MicrosoftAuthenticator(dialog.AccessCode);
-            Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+
+            try
+            {
+                Console.WriteLine(microsoftAuthenticator.AuthenticateAsync().GetAwaiter().GetResult().ToJson());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToJson());
+            }
         }
 
         Console.ReadKey();
@@ -212,9 +227,6 @@ public class Program
                 Port = 25565
             }
         };
-
-        var authenticator = new MicrosoftAuthenticator();
-        MinecraftLauncher minecraftLauncher = new MinecraftLauncher(launchSetting, authenticator, gameLocator);
 
         var launcher = new MinecraftLauncher(launchSetting, gameLocator);
 

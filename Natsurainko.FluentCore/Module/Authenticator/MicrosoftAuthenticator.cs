@@ -5,8 +5,13 @@ using Natsurainko.Toolkits.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using AuthException = Natsurainko.FluentCore.Exceptions.MicrosoftAuthenticationException;
 
 namespace Natsurainko.FluentCore.Module.Authenticator;
 
@@ -71,11 +76,86 @@ public class MicrosoftAuthenticator : IAuthenticator
         CreatedFromDeviceCodeFlow = true;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Natsurainko.FluentCore.Exceptions.MicrosoftAuthenticationException"></exception>
     public IAccount Authenticate()
         => AuthenticateAsync().GetAwaiter().GetResult();
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Natsurainko.FluentCore.Exceptions.MicrosoftAuthenticationException"></exception>
     public async Task<IAccount> AuthenticateAsync()
     {
+        static void EnsureSuccessStatusCode(HttpResponseMessage httpResponseMessage, MicrosoftAuthenticationStep step)
+        {
+            try
+            {
+                httpResponseMessage.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                var message = $"An error occurred while connecting to the \"{httpResponseMessage.RequestMessage.RequestUri}\"";
+                if (!string.IsNullOrEmpty(ex.Message))
+                    message += $"\r\n{ex.Message}";
+
+                string data = null;
+                if (httpResponseMessage.Content.Headers.ContentLength > 0)
+                {
+                    var @string = httpResponseMessage.Content.ReadAsStringAsync();
+                    @string.Wait();
+
+                    data = @string.Result;
+                }
+
+                httpResponseMessage.Dispose();
+
+                throw new AuthException
+                {
+                    Message = message,
+                    InnerException = ex,
+                    HelpLink = "Please check your network connection and try again",
+                    Step = step,
+                    Type = MicrosoftAuthenticationExceptionType.NetworkConnectionError,
+                    Data =
+                    {
+                        { "HttpResponseMessage.Content", data }
+                    },
+                };
+            }
+        }
+
+        static HttpResponseMessage HttpTaskContinueWith(Task<HttpResponseMessage> task, MicrosoftAuthenticationStep step, bool ensureSuccessStatusCode = true)
+        {
+            if (task.IsFaulted)
+            {
+                var message = $"Network request failed";
+                if (!string.IsNullOrEmpty(task.Exception.Message))
+                    message += "\r\n" + task.Exception.Message;
+
+                throw new AuthException
+                {
+                    Message = message,
+                    InnerException = task.Exception,
+                    HelpLink = "Please check your network connection and try again",
+                    Step = step,
+                    Type = MicrosoftAuthenticationExceptionType.NetworkConnectionError
+                };
+            }
+
+            if (!ensureSuccessStatusCode)
+                return task.Result;
+
+            var httpResponseMessage = task.Result;
+            EnsureSuccessStatusCode(httpResponseMessage, step);
+
+            return httpResponseMessage;
+        }
+
         #region Get Authorization Token
 
         if (!CreatedFromDeviceCodeFlow)
@@ -88,7 +168,12 @@ public class MicrosoftAuthenticator : IAuthenticator
                 $"&grant_type={(Method == AuthenticatorMethod.Login ? "authorization_code" : "refresh_token")}" +
                 $"&redirect_uri={RedirectUri}";
 
-            var authCodePostRes = await HttpWrapper.HttpPostAsync($"https://login.live.com/oauth20_token.srf", authCodePost, "application/x-www-form-urlencoded");
+            var authCodePostRes = await HttpWrapper.HttpPostAsync(
+                $"https://login.live.com/oauth20_token.srf", 
+                authCodePost, 
+                "application/x-www-form-urlencoded")
+                .ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Get_Authorization_Token));
+
             OAuth20TokenResponse = JsonConvert.DeserializeObject<OAuth20TokenResponseModel>(await authCodePostRes.Content.ReadAsStringAsync());
         }
 
@@ -101,7 +186,11 @@ public class MicrosoftAuthenticator : IAuthenticator
         var xBLReqModel = new XBLAuthenticateRequestModel();
         xBLReqModel.Properties.RpsTicket = xBLReqModel.Properties.RpsTicket.Replace("<access token>", OAuth20TokenResponse.AccessToken);
 
-        using var xBLReqModelPostRes = await HttpWrapper.HttpPostAsync($"https://user.auth.xboxlive.com/user/authenticate", xBLReqModel.ToJson());
+        using var xBLReqModelPostRes = await HttpWrapper.HttpPostAsync(
+            $"https://user.auth.xboxlive.com/user/authenticate", 
+            xBLReqModel.ToJson())
+            .ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Authenticate_with_XboxLive));
+
         var xBLResModel = JsonConvert.DeserializeObject<XBLAuthenticateResponseModel>(await xBLReqModelPostRes.Content.ReadAsStringAsync());
 
         #endregion
@@ -113,7 +202,41 @@ public class MicrosoftAuthenticator : IAuthenticator
         var xSTSReqModel = new XSTSAuthenticateRequestModel();
         xSTSReqModel.Properties.UserTokens.Add(xBLResModel.Token);
 
-        using var xSTSReqModelPostRes = await HttpWrapper.HttpPostAsync($"https://xsts.auth.xboxlive.com/xsts/authorize", xSTSReqModel.ToJson());
+        using var xSTSReqModelPostRes = await HttpWrapper.HttpPostAsync(
+            $"https://xsts.auth.xboxlive.com/xsts/authorize", 
+            xSTSReqModel.ToJson()).
+            ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Obtain_XSTS_token_for_Minecraft, false));
+
+        if (xSTSReqModelPostRes.StatusCode.Equals(HttpStatusCode.Unauthorized))
+        {
+            var xSTSAuthenticateErrorModel = JsonConvert.DeserializeObject<XSTSAuthenticateErrorModel>(await xSTSReqModelPostRes.Content.ReadAsStringAsync());
+
+            var message = "An error occurred while verifying with Xbox Live";
+            if (!string.IsNullOrEmpty(xSTSAuthenticateErrorModel.Message))
+                message += $" ({xSTSAuthenticateErrorModel.Message})";
+
+            throw new AuthException
+            {
+                Message = message,
+                HelpLink = xSTSAuthenticateErrorModel.XErr switch
+                {
+                    "2148916233" => "The account doesn't have an Xbox account. Once they sign up for one (or login through minecraft.net to create one) " +
+                        "then they can proceed with the login. This shouldn't happen with accounts that have purchased Minecraft with a Microsoft account, " +
+                        "as they would've already gone through that Xbox signup process.",
+                    "2148916235" => "The account is from a country where Xbox Live is not available/banned",
+                    "2148916236" => "The account needs adult verification on Xbox page. (South Korea)",
+                    "2148916237" => "The account needs adult verification on Xbox page. (South Korea)",
+                    "2148916238" => "The account is a child (under 18) and cannot proceed unless the account is added to a Family by an adult. " +
+                        "This only seems to occur when using a custom Microsoft Azure application. When using the Minecraft launchers client id, " +
+                        "this doesn't trigger.",
+                    _ => string.Empty
+                },
+                Step = MicrosoftAuthenticationStep.Obtain_XSTS_token_for_Minecraft,
+                Type = MicrosoftAuthenticationExceptionType.XboxLiveError
+            };
+        }
+        else EnsureSuccessStatusCode(xSTSReqModelPostRes, MicrosoftAuthenticationStep.Obtain_XSTS_token_for_Minecraft);
+
         var xSTSResModel = JsonConvert.DeserializeObject<XSTSAuthenticateResponseModel>(await xSTSReqModelPostRes.Content.ReadAsStringAsync());
 
         #endregion
@@ -125,8 +248,36 @@ public class MicrosoftAuthenticator : IAuthenticator
         string authenticateMinecraftPost =
             $"{{\"identityToken\":\"XBL3.0 x={xBLResModel.DisplayClaims.Xui[0]["uhs"]};{xSTSResModel.Token}\"}}";
 
-        using var authenticateMinecraftPostRes = await HttpWrapper.HttpPostAsync($"https://api.minecraftservices.com/authentication/login_with_xbox", authenticateMinecraftPost);
+        using var authenticateMinecraftPostRes = await HttpWrapper.HttpPostAsync(
+            $"https://api.minecraftservices.com/authentication/login_with_xbox", 
+            authenticateMinecraftPost)
+            .ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Authenticate_with_Minecraft));
+        
         string access_token = (string)JObject.Parse(await authenticateMinecraftPostRes.Content.ReadAsStringAsync())["access_token"];
+
+        #endregion
+
+        var authorization = new Tuple<string, string>("Bearer", access_token);
+
+        #region Checking Game Ownership
+
+        ProgressChanged?.Invoke(this, (0.80f, "Checking Game Ownership"));
+
+        using var checkingGameOwnershipGetRes = await HttpWrapper.HttpGetAsync(
+            $"https://api.minecraftservices.com/entitlements/mcstore",
+            authorization)
+            .ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Checking_Game_Ownership));
+
+        var gameOwnershipItems = JObject.Parse(await checkingGameOwnershipGetRes.Content.ReadAsStringAsync())["items"].ToObject<JArray>();
+
+        if (!gameOwnershipItems.Any())
+            throw new AuthException
+            {
+                Message = "An error occurred while checking game ownership",
+                HelpLink = "The account doesn't own the game",
+                Step = MicrosoftAuthenticationStep.Checking_Game_Ownership,
+                Type = MicrosoftAuthenticationExceptionType.GameOwnershipError
+            };
 
         #endregion
 
@@ -134,8 +285,11 @@ public class MicrosoftAuthenticator : IAuthenticator
 
         ProgressChanged?.Invoke(this, (0.9f, "Getting the profile"));
 
-        var authorization = new Tuple<string, string>("Bearer", access_token);
-        using var profileRes = await HttpWrapper.HttpGetAsync("https://api.minecraftservices.com/minecraft/profile", authorization);
+        using var profileRes = await HttpWrapper.HttpGetAsync(
+            "https://api.minecraftservices.com/minecraft/profile", 
+            authorization)
+            .ContinueWith(task => HttpTaskContinueWith(task, MicrosoftAuthenticationStep.Get_the_profile));
+        
         var microsoftAuthenticationResponse = JsonConvert.DeserializeObject<MicrosoftAuthenticationResponse>(await profileRes.Content.ReadAsStringAsync());
 
         ProgressChanged?.Invoke(this, (1.0f, "Finished"));

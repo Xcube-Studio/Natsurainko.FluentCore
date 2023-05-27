@@ -184,3 +184,21 @@ public class DeviceFlowAuthResult
 
     public OAuth20TokenResponseModel OAuth20TokenResponse { get; set; }
 }
+
+public enum MicrosoftAuthenticationExceptionType
+{
+    Unknown = 0,
+    NetworkConnectionError = 1,
+    XboxLiveError = 3,
+    GameOwnershipError = 4,
+}
+
+public enum MicrosoftAuthenticationStep
+{
+    Get_Authorization_Token = 1,
+    Authenticate_with_XboxLive = 2,
+    Obtain_XSTS_token_for_Minecraft = 3,
+    Authenticate_with_Minecraft = 4,
+    Checking_Game_Ownership = 5,
+    Get_the_profile = 6
+}
