@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Natsurainko.FluentCore (v4)\Natsurainko.FluentCore.csproj" />
+    <PackageReference Include="Tomlyn" Version="0.16.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tomlyn" Version="0.16.2" />
+    <ProjectReference Include="..\Natsurainko.FluentCore\Natsurainko.FluentCore.csproj" />
   </ItemGroup>
 
 </Project>
