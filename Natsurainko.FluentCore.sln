@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32811.315
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore", "Natsurainko.FluentCore (v4)\Natsurainko.FluentCore.csproj", "{E7119A35-58D0-45EA-8149-FE5F6524B378}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore", "Natsurainko.FluentCore\Natsurainko.FluentCore.csproj", "{E7119A35-58D0-45EA-8149-FE5F6524B378}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Natsurainko.FluentCore.Manage", "Natsurainko.FluentCore.Manage\Natsurainko.FluentCore.Manage.csproj", "{B2A7DEBD-9117-4EDB-A9AC-F9F8B09037A1}"
 EndProject
