@@ -9,4 +9,8 @@
 	<LangVersion>11.0</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="DefaultComponents\Install\" />
+  </ItemGroup>
+
 </Project>

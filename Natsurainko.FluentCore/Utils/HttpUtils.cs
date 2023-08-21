@@ -155,6 +155,14 @@ public static class HttpUtils
                         DownloadElement = downloadElement
                     };
 
+                if (responseMessage.Content.Headers.ContentLength == null)
+                    return new DownloadResult
+                    {
+                        IsFaulted = false,
+                        Exception = null,
+                        DownloadElement = downloadElement
+                    };
+
                 return new DownloadResult
                 {
                     IsFaulted = responseMessage.Content.Headers.ContentLength.Value != task.Result,
