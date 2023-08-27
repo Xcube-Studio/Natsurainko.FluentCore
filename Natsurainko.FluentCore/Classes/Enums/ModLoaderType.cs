@@ -12,5 +12,6 @@ public enum ModLoaderType
     Fabric = 4,
     OptiFine = 6,
     Quilt = 7,
+    NeoForge = 8,
     Unknown = 114514,
 }
