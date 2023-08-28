@@ -7,9 +7,11 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Timer = System.Timers.Timer;
 
 namespace Nrk.FluentCore.Utils;
 
@@ -107,10 +109,12 @@ public static class HttpUtils
     public static async Task<DownloadResult> DownloadElementAsync(
         IDownloadElement downloadElement,
         DownloadSetting downloadSetting = default,
-        CancellationTokenSource tokenSource = default)
+        CancellationTokenSource tokenSource = default,
+        Action<double> perSecondProgressChangedAction = default)
     {
         var settings = downloadSetting ?? DownloadSetting;
         tokenSource ??= new CancellationTokenSource();
+        Timer timer = default;
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, downloadElement.Url);
         using var responseMessage = await HttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
@@ -121,11 +125,17 @@ public static class HttpUtils
             return await DownloadElementAsync(downloadElement, downloadSetting, tokenSource);
         }
 
+        if (perSecondProgressChangedAction != null) timer = new Timer(1000);
+
         responseMessage.EnsureSuccessStatusCode();
 
         if (settings.EnableLargeFileMultiPartDownload &&
             responseMessage.Content.Headers.ContentLength.Value > settings.FileSizeThreshold)
-            return await TryMultiPartDownloadFileAsync(responseMessage, settings, downloadElement.AbsolutePath, tokenSource)
+            return await TryMultiPartDownloadFileAsync(
+                responseMessage, 
+                settings, 
+                downloadElement.AbsolutePath, 
+                tokenSource)
                 .ContinueWith(task =>
                 {
                     if (task.IsFaulted)
@@ -144,9 +154,22 @@ public static class HttpUtils
                         DownloadElement = downloadElement
                     };
                 });
-        return await WriteFileFromHttpResponseAsync(responseMessage, downloadElement.AbsolutePath, tokenSource)
+        return await WriteFileFromHttpResponseAsync(
+            responseMessage, 
+            downloadElement.AbsolutePath, 
+            tokenSource,
+            perSecondProgressChangedAction != null ? (timer, perSecondProgressChangedAction, responseMessage.Content.Headers.ContentLength) : null)
             .ContinueWith(task =>
             {
+                if (timer != null)
+                {
+                    perSecondProgressChangedAction(responseMessage.Content.Headers.ContentLength != null ?
+                        task.Result / (double)responseMessage.Content.Headers.ContentLength : 0);
+
+                    timer.Stop();
+                    timer.Dispose();
+                }
+
                 if (task.IsFaulted)
                     return new DownloadResult
                     {
@@ -176,7 +199,8 @@ public static class HttpUtils
     private async static Task<long> WriteFileFromHttpResponseAsync(
         HttpResponseMessage responseMessage,
         string absolutePath,
-        CancellationTokenSource tokenSource)
+        CancellationTokenSource tokenSource,
+        (Timer, Action<double> perSecondProgressChangedAction, long?)? perSecondProgressChange = default)
     {
         var parentFolder = Path.GetDirectoryName(absolutePath);
         if (!Directory.Exists(parentFolder)) Directory.CreateDirectory(parentFolder);
@@ -187,6 +211,13 @@ public static class HttpUtils
 
         long totalReadMemory = 0;
         int readMemory = 0;
+
+        if (perSecondProgressChange != null)
+        {
+            var (timer, action, length) = perSecondProgressChange.Value;
+            timer.Elapsed += (sender, e) => action(length != null ? (double)totalReadMemory / length.Value : 0);
+            timer.Start();
+        }
 
         while ((readMemory = await stream.ReadAsync(rentMemory.Memory, tokenSource.Token)) > 0)
         {

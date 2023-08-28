@@ -42,6 +42,14 @@ public class CurseForgeClient
         return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"].AsArray().Select(ParseFromJsonNode);
     }
 
+    public string GetCurseFileDownloadUrl(CurseFile file)
+    {
+        using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{file.ModId}/files/{file.FileId}", Header);
+        responseMessage.EnsureSuccessStatusCode();
+
+        return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"]["downloadUrl"].GetValue<string>();
+    }
+
     public void GetFeaturedResources(out IEnumerable<CurseResource> mcMods, out IEnumerable<CurseResource> modPacks)
     {
         using var responseMessage = HttpUtils.HttpPost(
@@ -111,6 +119,11 @@ public class CurseForgeClient
         curseResource.Authors = jsonNode["authors"]?.AsArray().Select(x => x["name"].GetValue<string>());
         curseResource.ScreenshotUrls = jsonNode["screenshots"]?.AsArray().Select(x => x["url"].GetValue<string>());
         curseResource.Categories = jsonNode["categories"]?.AsArray().Select(x => x["name"].GetValue<string>());
+        curseResource.Files = curseResource.Files.Select(x =>
+        {
+            x.ModId = curseResource.Id;
+            return x;
+        });
 
         return curseResource;
     }

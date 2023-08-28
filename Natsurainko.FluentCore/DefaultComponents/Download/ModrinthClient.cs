@@ -48,6 +48,21 @@ public class ModrinthClient
         return JsonNode.Parse(responseMessage.Content.ReadAsString())["body"].GetValue<string>();
     }
 
+    public IEnumerable<ModrinthFile> GetProjectVersions(string id)
+    {
+        using var responseMessage = HttpUtils.HttpGet(Host + $"project/{id}/version");
+        responseMessage.EnsureSuccessStatusCode();
+
+        foreach (var file in JsonNode.Parse(responseMessage.Content.ReadAsString()).AsArray())
+            yield return new ModrinthFile
+            {
+                Url = file["files"][0]["url"].GetValue<string>(),
+                FileName = file["files"][0]["filename"].GetValue<string>(),
+                McVersion = file["game_versions"][0].GetValue<string>(),
+                Loaders = string.Join(' ', file["loaders"].AsArray().Select(x => x.GetValue<string>()))
+            };
+    }
+
     public string GetRawJsonSearchResources(
         string query,
         ModrinthResourceType? resourceType = default,
