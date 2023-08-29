@@ -30,8 +30,8 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
     {
         tokenSource ??= new CancellationTokenSource();
 
-        var filteredLibraries = _libraryElements.AsParallel().Where(x => !x.VerifyFile()).ToList();
-        var filteredAssets = _assetElements.AsParallel().Where(x => !x.VerifyFile()).ToList();
+        var filteredLibraries = _libraryElements?.AsParallel().Where(x => !x.VerifyFile()).ToList();
+        var filteredAssets = _assetElements?.AsParallel().Where(x => !x.VerifyFile()).ToList();
 
         var transformBlock = new TransformBlock<IDownloadElement, IDownloadElement>(e =>
         {
@@ -110,8 +110,9 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
         transformManyBlock.LinkTo(transformBlock, linkOptions);
         transformBlock.LinkTo(actionBlock, linkOptions);
 
-        transformManyBlock.Post(filteredLibraries);
-        transformManyBlock.Post(filteredAssets);
+        if (filteredLibraries != null) transformManyBlock.Post(filteredLibraries);
+        if (filteredAssets != null) transformManyBlock.Post(filteredAssets);
+
         transformManyBlock.Complete();
 
         DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);

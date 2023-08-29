@@ -184,4 +184,29 @@ public class DefaultLibraryParser : BaseLibraryParser
         if (libraryElement.Checksum == null && jsonNode["checksums"] != null)
             libraryElement.Checksum = jsonNode["checksums"].AsArray()[0].GetValue<string>();
     }
+
+    public static IEnumerable<LibraryElement> EnumerateLibrariesFromJsonArray(JsonArray jsonArray, string minecraftFolderPath)
+    {
+        foreach (var libNode in jsonArray)
+        {
+            var jsonNatives = libNode["natives"];
+            var libJsonNode = libNode.Deserialize<LibraryJsonNode>();
+
+            if (jsonNatives != null) libJsonNode.Name += ":" + libJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
+
+            var relativePath = StringExtensions.FormatLibraryNameToRelativePath(libJsonNode.Name);
+            var absolutePath = Path.Combine(minecraftFolderPath, "libraries", relativePath);
+
+            var libraryElement = new LibraryElement
+            {
+                RelativePath = relativePath,
+                AbsolutePath = absolutePath,
+                IsNativeLibrary = jsonNatives != null
+            };
+
+            GetLibraryChecksumAndUrl(libraryElement, libNode, libJsonNode);
+
+            yield return libraryElement;
+        }
+    }
 }
