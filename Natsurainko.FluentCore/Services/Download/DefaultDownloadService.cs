@@ -31,7 +31,7 @@ public class DefaultDownloadService
         IEnumerable<AssetElement> assetElements = default,
         DownloadMirrorSource downloadMirrorSource = default)
     {
-        List<LibraryElement> libraries = libraryElements.ToList();
+        List<LibraryElement> libraries = libraryElements?.ToList() ?? new();
 
         if (libraryElements == null)
         {

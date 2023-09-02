@@ -73,6 +73,8 @@ public class ForgeInstallExecutor : BaseInstallExecutor
 
     void ParsePackage()
     {
+        OnProgressChanged(0.1);
+
         _packageArchive = ZipFile.OpenRead(PackageFilePath);
         _installProfile = JsonNode.Parse(_packageArchive.GetEntry("install_profile.json").ReadAsString());
         _isLegacyForgeVersion = _installProfile["install"] != null;
@@ -154,18 +156,26 @@ public class ForgeInstallExecutor : BaseInstallExecutor
                 kvp => kvp.Key.ReplaceFromDictionary(replaceProcessorArgs),
                 kvp => kvp.Value.ReplaceFromDictionary(replaceProcessorArgs));
         }
+
+        OnProgressChanged(0.25);
     }
 
     void DownloadLibraries()
     {
+        OnProgressChanged(0.3);
+
         var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
         resourcesDownloader.SetLibraryElements(_libraries);
 
         resourcesDownloader.Download();
+
+        OnProgressChanged(0.5);
     }
 
     void WriteFiles()
     {
+        OnProgressChanged(0.6);
+
         string forgeLibsFolder = Path.Combine(
             InheritedFrom.MinecraftFolderPath, 
             "libraries\\net\\minecraftforge\\forge", 
@@ -184,8 +194,8 @@ public class ForgeInstallExecutor : BaseInstallExecutor
         _packageArchive.GetEntry("data/client.lzma")?
             .ExtractTo(Path.Combine(forgeLibsFolder, $"forge-{_forgeVersion}-clientdata.lzma"));
 
-        if (this.AbsoluteId != null) 
-            _versionInfoJson["id"] = this.AbsoluteId;
+        if (!string.IsNullOrEmpty(AbsoluteId))
+            _versionInfoJson["id"] = AbsoluteId;
 
         var jsonFile = new FileInfo(Path.Combine(
             InheritedFrom.MinecraftFolderPath, 
@@ -197,10 +207,14 @@ public class ForgeInstallExecutor : BaseInstallExecutor
             jsonFile.Directory.Create();
 
         File.WriteAllText(jsonFile.FullName, _versionInfoJson.ToString());
+
+        OnProgressChanged(0.75);
     }
 
     void RunProcessors()
     {
+        OnProgressChanged(0.8);
+
         int index = 0;
 
         foreach (var processor in _highVersionForgeProcessors)
@@ -266,6 +280,8 @@ public class ForgeInstallExecutor : BaseInstallExecutor
             if (errorOutputs.Any()) _errorOutputs.Add($"{fileName}-{index}", errorOutputs);
 
             index++;
+
+            OnProgressChanged(0.8 + 0.2 * (index / (double)_highVersionForgeProcessors.Count));
         }
     }
 }
