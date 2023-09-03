@@ -166,6 +166,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
 
         var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
         resourcesDownloader.SetLibraryElements(_libraries);
+        resourcesDownloader.SetDownloadMirror(DownloadMirrors.Bmclapi);
 
         resourcesDownloader.Download();
 
