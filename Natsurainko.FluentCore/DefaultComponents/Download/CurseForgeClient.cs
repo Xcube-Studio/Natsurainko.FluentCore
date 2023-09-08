@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
+using System.Xml.Linq;
 
 namespace Nrk.FluentCore.DefaultComponents.Download;
 
@@ -84,6 +85,12 @@ public class CurseForgeClient
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}/description", Header);
         return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"].GetValue<string>();
+    }
+
+    public CurseResource GetResource(int resourceId)
+    {
+        using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}", Header);
+        return ParseFromJsonNode(JsonNode.Parse(responseMessage.Content.ReadAsString())["data"]);
     }
 
     public string GetRawJsonSearchResources(string searchFilter, CurseResourceType? resourceType = default)
