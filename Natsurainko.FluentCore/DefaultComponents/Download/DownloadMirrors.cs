@@ -25,6 +25,7 @@ public static class DownloadMirrors
             { "https://files.minecraftforge.net/maven", "https://bmclapi2.bangbang93.com/maven" },
             { "https://maven.fabricmc.net", "https://bmclapi2.bangbang93.com/maven" },
             { "https://meta.fabricmc.net", "https://bmclapi2.bangbang93.com/fabric-meta" },
+            { "https://maven.neoforged.net/releases/net/neoforged/forge", "https://bmclapi2.bangbang93.com/maven/net/neoforged/forge" }
         }
     };
 
@@ -48,6 +49,7 @@ public static class DownloadMirrors
             { "https://files.minecraftforge.net/maven", "https://download.mcbbs.net/maven" },
             { "https://maven.fabricmc.net", "https://download.mcbbs.net/maven" },
             { "https://meta.fabricmc.net", "https://download.mcbbs.net/fabric-meta" },
+            { "https://maven.neoforged.net/releases/net/neoforged/forge", "https://download.mcbbs.net/maven/net/neoforged/forge" }
         }
     };
 }

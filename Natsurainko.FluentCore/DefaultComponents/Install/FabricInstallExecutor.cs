@@ -1,49 +1,86 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
-using Nrk.FluentCore.Classes.Datas.Install;
+﻿using Nrk.FluentCore.Classes.Datas.Install;
+using Nrk.FluentCore.Classes.Datas.Parse;
 using Nrk.FluentCore.Components.Install;
 using Nrk.FluentCore.DefaultComponents.Download;
+using Nrk.FluentCore.DefaultComponents.Parse;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.DefaultComponents.Install;
 
 public class FabricInstallExecutor : BaseInstallExecutor
 {
-    public required string JavaPath { get; set; }
+    public required FabricInstallBuild FabricBuild { get; set; }
 
-    public required string PackageFilePath { get; set; }
-
-    public DownloadMirrorSource MirrorSource { get; set; }
-
-    private readonly List<string> _outputs = new();
-    private readonly List<string> _errorOutputs = new();
+    private JsonNode _versionInfoJson;
+    private IEnumerable<LibraryElement> _libraries;
 
     public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
     {
-        RunProcessor();
+        ParseBuild();
+
+        DownloadLibraries();
+
+        WriteFiles();
 
         OnProgressChanged(1.0);
 
     }).ContinueWith(task =>
     {
-        if (task.IsFaulted || _errorOutputs.Count > 0)
+        if (task.IsFaulted)
             return new InstallResult
             {
                 Success = false,
                 Exception = task.Exception,
-                Log = _errorOutputs
+                Log = null
             };
 
         return new InstallResult
         {
             Success = true,
             Exception = null,
-            Log = _outputs
+            Log = null
         };
     });
 
+    void ParseBuild()
+    {
+        var responseMessage = HttpUtils.HttpGet($"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json");
+        _versionInfoJson = JsonNode.Parse(responseMessage.Content.ReadAsString());
+
+        _libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(_versionInfoJson["libraries"].AsArray(), InheritedFrom.MinecraftFolderPath);
+    }
+
+    void DownloadLibraries()
+    {
+        var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
+        resourcesDownloader.SetLibraryElements(_libraries);
+
+        resourcesDownloader.Download();
+    }
+
+    void WriteFiles()
+    {
+        if (!string.IsNullOrEmpty(AbsoluteId))
+            _versionInfoJson["id"] = AbsoluteId;
+
+        var jsonFile = new FileInfo(Path.Combine(
+            InheritedFrom.MinecraftFolderPath,
+            "versions",
+            _versionInfoJson["id"].GetValue<string>(),
+            $"{_versionInfoJson["id"].GetValue<string>()}.json"));
+
+        if (!jsonFile.Directory.Exists)
+            jsonFile.Directory.Create();
+
+        File.WriteAllText(jsonFile.FullName, _versionInfoJson.ToString());
+    }
+
+
+    /*
     private void RunProcessor()
     {
         OnProgressChanged(0.35);
@@ -93,4 +130,5 @@ public class FabricInstallExecutor : BaseInstallExecutor
 
         OnProgressChanged(0.9);
     }
+    */
 }

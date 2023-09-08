@@ -238,7 +238,7 @@ public static class HttpUtils
 
         using var httpResponse = await HttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
 
-        if (!httpResponse.IsSuccessStatusCode)
+        if (!httpResponse.IsSuccessStatusCode || httpResponse.Content.Headers.ContentLength.Value != 2)
             return await WriteFileFromHttpResponseAsync(responseMessage, absolutePath, tokenSource);
 
         var totalSize = responseMessage.Content.Headers.ContentLength.Value;

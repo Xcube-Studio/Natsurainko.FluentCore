@@ -87,10 +87,7 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
                 var downloadResult = task.Result;
 
                 if (downloadResult.IsFaulted)
-                {
-                    if (!downloadResult.DownloadElement.VerifyFile())
-                        _errorDownload.Add(downloadResult);
-                }
+                    _errorDownload.Add(downloadResult);
             });
 
             OnSingleFileDownloaded();
@@ -118,6 +115,10 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
         DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);
 
         actionBlock.Completion.Wait();
+
+
+        foreach (var downloadResult in _errorDownload.Where(x => !x.DownloadElement.VerifyFile()).ToList())
+            _errorDownload.Remove(downloadResult);
     }
 
     public override void SetAssetsElements(IEnumerable<AssetElement> assetElements)
