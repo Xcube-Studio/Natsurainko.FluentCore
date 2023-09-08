@@ -48,7 +48,7 @@ public class FabricInstallExecutor : BaseInstallExecutor
 
     void ParseBuild()
     {
-        var responseMessage = HttpUtils.HttpGet($"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json");
+        var responseMessage = HttpUtils.HttpGet($"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{FabricBuild.BuildVersion}/profile/json");
         _versionInfoJson = JsonNode.Parse(responseMessage.Content.ReadAsString());
 
         _libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(_versionInfoJson["libraries"].AsArray(), InheritedFrom.MinecraftFolderPath);
