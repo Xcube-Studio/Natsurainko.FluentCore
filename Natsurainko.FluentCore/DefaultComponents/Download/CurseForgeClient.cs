@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Web;
-using System.Xml.Linq;
 
 namespace Nrk.FluentCore.DefaultComponents.Download;
 

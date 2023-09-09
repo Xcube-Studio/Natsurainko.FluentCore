@@ -38,7 +38,7 @@ public class OptiFineInstallExecutor : BaseInstallExecutor
 
         OnProgressChanged(1.0);
 
-    }).ContinueWith(task => 
+    }).ContinueWith(task =>
     {
         if (task.IsFaulted || _errorOutputs.Count > 0)
             return new InstallResult
@@ -112,7 +112,7 @@ public class OptiFineInstallExecutor : BaseInstallExecutor
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
         }
 
-        File.WriteAllText(Path.Combine(jsonFilePath), 
+        File.WriteAllText(Path.Combine(jsonFilePath),
             JsonSerializer.Serialize(jsonEntity, new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -153,7 +153,7 @@ public class OptiFineInstallExecutor : BaseInstallExecutor
                 return;
 
             _outputs.Add(data);
-            if (error) _errorOutputs.Add(data); 
+            if (error) _errorOutputs.Add(data);
         }
 
         process.OutputDataReceived += (_, args) => AddOutput(args.Data);

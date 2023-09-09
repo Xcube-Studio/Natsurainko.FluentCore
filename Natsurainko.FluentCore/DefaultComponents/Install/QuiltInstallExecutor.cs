@@ -48,7 +48,7 @@ public class QuiltInstallExecutor : BaseInstallExecutor
 
     void ParseBuild()
     {
-        var responseMessage =  HttpUtils.HttpGet($"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json");
+        var responseMessage = HttpUtils.HttpGet($"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json");
         _versionInfoJson = JsonNode.Parse(responseMessage.Content.ReadAsString());
 
         _libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(_versionInfoJson["libraries"].AsArray(), InheritedFrom.MinecraftFolderPath);

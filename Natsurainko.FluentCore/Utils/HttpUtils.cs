@@ -131,9 +131,9 @@ public static class HttpUtils
         if (settings.EnableLargeFileMultiPartDownload &&
             responseMessage.Content.Headers.ContentLength.Value > settings.FileSizeThreshold)
             return await TryMultiPartDownloadFileAsync(
-                responseMessage, 
-                settings, 
-                downloadElement.AbsolutePath, 
+                responseMessage,
+                settings,
+                downloadElement.AbsolutePath,
                 tokenSource)
                 .ContinueWith(task =>
                 {
@@ -154,8 +154,8 @@ public static class HttpUtils
                     };
                 });
         return await WriteFileFromHttpResponseAsync(
-            responseMessage, 
-            downloadElement.AbsolutePath, 
+            responseMessage,
+            downloadElement.AbsolutePath,
             tokenSource,
             perSecondProgressChangedAction != null ? (timer, perSecondProgressChangedAction, responseMessage.Content.Headers.ContentLength) : null)
             .ContinueWith(task =>

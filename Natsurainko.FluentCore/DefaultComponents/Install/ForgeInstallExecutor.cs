@@ -78,7 +78,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
         _packageArchive = ZipFile.OpenRead(PackageFilePath);
         _installProfile = JsonNode.Parse(_packageArchive.GetEntry("install_profile.json").ReadAsString());
         _isLegacyForgeVersion = _installProfile["install"] != null;
-        _forgeVersion = _isLegacyForgeVersion 
+        _forgeVersion = _isLegacyForgeVersion
             ? _installProfile["install"]["version"].GetValue<string>().Replace("forge ", string.Empty)
             : _installProfile["version"].GetValue<string>().Replace("-forge-", "-");
 
@@ -88,7 +88,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
 
         _libraries = new List<LibraryElement>(
             DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
-                _versionInfoJson["libraries"].AsArray(), 
+                _versionInfoJson["libraries"].AsArray(),
                 InheritedFrom.MinecraftFolderPath));
 
         foreach (var lib in _libraries.Where(x => string.IsNullOrEmpty(x.Url)))
@@ -103,7 +103,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
 
         var _highVersionForgeDataDictionary = _installProfile["data"].Deserialize<Dictionary<string, Dictionary<string, string>>>();
 
-        if ( _highVersionForgeDataDictionary.Any())
+        if (_highVersionForgeDataDictionary.Any())
         {
             _highVersionForgeDataDictionary["BINPATCH"]["client"] = $"[net.minecraftforge:forge:{_forgeVersion}:clientdata@lzma]";
             _highVersionForgeDataDictionary["BINPATCH"]["server"] = $"[net.minecraftforge:forge:{_forgeVersion}:serverdata@lzma]";
@@ -118,7 +118,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
             { "{INSTALLER}", PackageFilePath.ToPathParameter() },
             { "{LIBRARY_DIR}", Path.Combine(InheritedFrom.MinecraftFolderPath, "libraries").ToPathParameter() }
         };
-        
+
         var replaceProcessorArgs = _highVersionForgeDataDictionary.ToDictionary(
             kvp => $"{{{kvp.Key}}}", kvp =>
             {
@@ -178,8 +178,8 @@ public class ForgeInstallExecutor : BaseInstallExecutor
         OnProgressChanged(0.6);
 
         string forgeLibsFolder = Path.Combine(
-            InheritedFrom.MinecraftFolderPath, 
-            "libraries\\net\\minecraftforge\\forge", 
+            InheritedFrom.MinecraftFolderPath,
+            "libraries\\net\\minecraftforge\\forge",
             _forgeVersion);
 
         if (_isLegacyForgeVersion)
@@ -199,9 +199,9 @@ public class ForgeInstallExecutor : BaseInstallExecutor
             _versionInfoJson["id"] = AbsoluteId;
 
         var jsonFile = new FileInfo(Path.Combine(
-            InheritedFrom.MinecraftFolderPath, 
-            "versions", 
-            _versionInfoJson["id"].GetValue<string>(), 
+            InheritedFrom.MinecraftFolderPath,
+            "versions",
+            _versionInfoJson["id"].GetValue<string>(),
             $"{_versionInfoJson["id"].GetValue<string>()}.json"));
 
         if (!jsonFile.Directory.Exists)
@@ -276,7 +276,7 @@ public class ForgeInstallExecutor : BaseInstallExecutor
 
             process.WaitForExit();
 
-            _outputs.Add($"{fileName}-{index}" , outputs);
+            _outputs.Add($"{fileName}-{index}", outputs);
 
             if (errorOutputs.Any()) _errorOutputs.Add($"{fileName}-{index}", errorOutputs);
 
