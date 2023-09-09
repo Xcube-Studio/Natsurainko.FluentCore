@@ -47,6 +47,7 @@ public static class GameInfoExtensions
         {
             { "net.minecraftforge:forge:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
             { "net.minecraftforge:fmlloader:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
+            { "net.neoforged.fancymodloader:loader:", (ModLoaderType.NeoForge, libVersion => libVersion) },
             { "optifine:optifine", (ModLoaderType.OptiFine, libVersion => libVersion[(libVersion.IndexOf('_') + 1)..]) },
             { "net.fabricmc:fabric-loader", (ModLoaderType.Fabric, libVersion => libVersion) },
             { "com.mumfrey:liteloader:", (ModLoaderType.LiteLoader, libVersion => libVersion) },
