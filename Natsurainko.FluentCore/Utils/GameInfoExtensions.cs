@@ -48,7 +48,7 @@ public static class GameInfoExtensions
             { "net.minecraftforge:forge:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
             { "net.minecraftforge:fmlloader:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
             { "net.neoforged.fancymodloader:loader:", (ModLoaderType.NeoForge, libVersion => libVersion) },
-            { "optifine:optifine", (ModLoaderType.OptiFine, libVersion => libVersion[(libVersion.IndexOf('_') + 1)..]) },
+            { "optifine:optifine", (ModLoaderType.OptiFine, libVersion => libVersion[(libVersion.IndexOf('_') + 1)..].ToUpper()) },
             { "net.fabricmc:fabric-loader", (ModLoaderType.Fabric, libVersion => libVersion) },
             { "com.mumfrey:liteloader:", (ModLoaderType.LiteLoader, libVersion => libVersion) },
             { "org.quiltmc:quilt-loader:", (ModLoaderType.Quilt, libVersion => libVersion) },
@@ -126,5 +126,15 @@ public static class GameInfoExtensions
             TotalSize = length,
             ModLoaders = GetModLoaders(gameInfo)
         };
+    }
+
+    public static void Delete(this GameInfo gameInfo)
+    {
+        var directory = new DirectoryInfo(Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.AbsoluteVersion));
+
+        if (directory.Exists)
+            directory.DeleteAllFiles();
+
+        directory.Delete();
     }
 }
