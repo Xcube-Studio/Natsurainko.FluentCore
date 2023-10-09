@@ -12,8 +12,8 @@ public static class MemoryUtils
     {
         using var process = Process.Start(new ProcessStartInfo()
         {
-            FileName = "wmic",
-            Arguments = "OS get FreePhysicalMemory,TotalVisibleMemorySize /Value",
+            FileName = "powershell",
+            Arguments = "-NoLogo -NonInteractive -Command \"Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemorySize | Format-List\"",
             RedirectStandardOutput = true,
             CreateNoWindow = true,
         });
@@ -21,8 +21,8 @@ public static class MemoryUtils
         process.WaitForExit();
 
         var lines = process.StandardOutput.ReadToEnd().Trim().Split("\n");
-        var freeMemoryParts = lines[0].Split("=", StringSplitOptions.RemoveEmptyEntries);
-        var totalMemoryParts = lines[1].Split("=", StringSplitOptions.RemoveEmptyEntries);
+        var freeMemoryParts = lines[0].Split(":", StringSplitOptions.RemoveEmptyEntries);
+        var totalMemoryParts = lines[1].Split(":", StringSplitOptions.RemoveEmptyEntries);
 
         var total = Math.Round(double.Parse(totalMemoryParts[1]) / 1024, 0);
         var free = Math.Round(double.Parse(freeMemoryParts[1]) / 1024, 0);
