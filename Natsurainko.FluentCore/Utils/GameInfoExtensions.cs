@@ -130,7 +130,7 @@ public static class GameInfoExtensions
 
     public static void Delete(this GameInfo gameInfo)
     {
-        var directory = new DirectoryInfo(Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.AbsoluteVersion));
+        var directory = new DirectoryInfo(Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.AbsoluteId));
 
         if (directory.Exists)
             directory.DeleteAllFiles();
