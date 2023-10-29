@@ -116,7 +116,9 @@ public static class JavaUtils
     public static JavaInfo GetJavaInfo(string file)
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(file);
-        var name = fileVersionInfo.ProductName.Split(" ")[0];
+        var name = fileVersionInfo.ProductName == null 
+            ? fileVersionInfo.ProductName.Split(" ")[0]
+            : $"Java {fileVersionInfo.ProductMajorPart}";
 
         if (fileVersionInfo.ProductName.StartsWith("Java(TM)"))
             name = $"Java {fileVersionInfo.ProductMajorPart}";

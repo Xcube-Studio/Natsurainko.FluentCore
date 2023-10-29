@@ -1,14 +1,36 @@
 ﻿using Nrk.FluentCore.Classes.Datas;
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 namespace Nrk.FluentCore.Utils;
 
-public static class MemoryUtils
+public static partial class MemoryUtils
 {
     [SupportedOSPlatform("windows")]
-    public static MemoryMetrics GetWindowsMetrics()
+    [LibraryImport("kernel32.dll", EntryPoint = "GlobalMemoryStatusEx")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GlobalMemoryStatusEx(ref MEMORY_INFO mi);
+
+    [SupportedOSPlatform("windows")]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_INFO
+    {
+        public uint dwLength; //当前结构体大小
+        public uint dwMemoryLoad; //当前内存使用率
+        public ulong ullTotalPhys; //总计物理内存大小
+        public ulong ullAvailPhys; //可用物理内存大小
+        public ulong ullTotalPageFile; //总计交换文件大小
+        public ulong ullAvailPageFile; //总计交换文件大小
+        public ulong ullTotalVirtual; //总计虚拟内存大小
+        public ulong ullAvailVirtual; //可用虚拟内存大小
+        public ulong ullAvailExtendedVirtual; //保留 这个值始终为0
+    }
+
+    [Obsolete("在部分 Windows 上有莫名奇妙的问题")]
+    [SupportedOSPlatform("windows")]
+    public static MemoryMetrics GetWindowsMetricsFromPowershell()
     {
         using var process = Process.Start(new ProcessStartInfo()
         {
@@ -26,6 +48,24 @@ public static class MemoryUtils
 
         var total = Math.Round(double.Parse(totalMemoryParts[1]) / 1024, 0);
         var free = Math.Round(double.Parse(freeMemoryParts[1]) / 1024, 0);
+
+        return new MemoryMetrics
+        {
+            Total = total,
+            Free = free,
+            Used = total - free
+        };
+    }
+
+    [SupportedOSPlatform("windows")]
+    public static MemoryMetrics GetWindowsMetrics()
+    {
+        var mi = new MEMORY_INFO();
+        mi.dwLength = (uint)Marshal.SizeOf(mi);
+        GlobalMemoryStatusEx(ref mi);
+
+        var total = Math.Round((double)mi.ullTotalPhys / (1024 * 1024), 0);
+        var free = Math.Round((double)mi.ullAvailPhys / (1024 * 1024), 0);
 
         return new MemoryMetrics
         {
