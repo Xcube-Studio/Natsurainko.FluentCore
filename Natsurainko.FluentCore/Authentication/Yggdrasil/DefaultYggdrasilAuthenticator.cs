@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Authentication.Microsoft;
-using Nrk.FluentCore.Utils;
+﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Linq;
 using System.Text.Json;
@@ -8,17 +7,24 @@ namespace Nrk.FluentCore.Authentication.Yggdrasil;
 
 public class DefaultYggdrasilAuthenticator : IAuthenticator<YggdrasilAccount>
 {
-    private string _yggdrasilServerUrl;
-    private string _email;
-    private string _password;
-    private string _accessToken;
-    private string _clientToken = Guid.NewGuid().ToString("N");
     private string _method;
 
+    // Common
+    private string _yggdrasilServerUrl;
+    private string _clientToken = Guid.NewGuid().ToString("N");
+
+    // For login
+    private string? _email;
+    private string? _password;
+
+    // For refresh
+    private string? _accessToken;
+
     /// <summary>
-    /// 
+    /// Authenticate with Yggdrasil
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Authenticated Yggdrasil accounts</returns>
+    /// <exception cref="YggdrasilAuthenticationException"></exception>
     public YggdrasilAccount[] Authenticate()
     {
         string url = _yggdrasilServerUrl;
@@ -28,21 +34,25 @@ public class DefaultYggdrasilAuthenticator : IAuthenticator<YggdrasilAccount>
         {
             case "authenticate":
                 url += "/authserver/authenticate";
-                content = JsonSerializer.Serialize(new LoginRequestModel
-                {
-                    ClientToken = _clientToken,
-                    UserName = _email,
-                    Password = _password
-                });
+                content = JsonSerializer.Serialize(
+                    new YggdrasilLoginRequest
+                    {
+                        ClientToken = _clientToken,
+                        UserName = _email!, // not null when method is "authenticate"
+                        Password = _password! // not null when method is "authenticate"
+                    }
+                );
                 break;
             case "refresh":
                 url += "/authserver/refresh";
-                content = JsonSerializer.Serialize(new
-                {
-                    ClientToken = _clientToken,
-                    accessToken = _accessToken,
-                    requestUser = true
-                });
+                content = JsonSerializer.Serialize(
+                    new YggdrasilRefreshRequest
+                    {
+                        ClientToken = _clientToken,
+                        AccessToken = _accessToken!, // not null when method is "refresh"
+                        RequestUser = true
+                    }
+                );
                 break;
         }
 
@@ -53,29 +63,69 @@ public class DefaultYggdrasilAuthenticator : IAuthenticator<YggdrasilAccount>
 
         var model = JsonSerializer.Deserialize<YggdrasilResponseModel>(result);
 
-        return model.AvailableProfiles.Select(profile => new YggdrasilAccount
-        (
-            Name: profile.Name,
-            Uuid: Guid.Parse(profile.Id),
-            AccessToken: model.AccessToken,
-            YggdrasilServerUrl: _yggdrasilServerUrl
-        )).ToArray();
+        if (model?.AvailableProfiles is null)
+            throw new YggdrasilAuthenticationException(result);
+
+        return model.AvailableProfiles
+            .Select(profile =>
+            {
+                if (profile.Name is null || profile.Id is null || model.AccessToken is null)
+                    throw new YggdrasilAuthenticationException(result);
+
+                return new YggdrasilAccount(
+                    Name: profile.Name,
+                    Uuid: Guid.Parse(profile.Id),
+                    AccessToken: model.AccessToken,
+                    YggdrasilServerUrl: _yggdrasilServerUrl
+                );
+            })
+            .ToArray();
     }
 
-    public static DefaultYggdrasilAuthenticator CreateForLogin(string email, string password, string yggdrasilServerUrl, string clientToken = null) => new()
-    {
-        _method = "authenticate",
-        _email = email,
-        _password = password,
-        _yggdrasilServerUrl = yggdrasilServerUrl,
-        _clientToken = clientToken ?? Guid.NewGuid().ToString("N")
-    };
+    #region Factory methods
 
-    public static DefaultYggdrasilAuthenticator CreateForRefresh(YggdrasilAccount account, string clientToken = null) => new()
+    // Internal constructor for factory methods
+    DefaultYggdrasilAuthenticator(string method, string serverUrl, string clientToken)
     {
-        _method = "refresh",
-        _clientToken = clientToken ?? Guid.NewGuid().ToString("N"),
-        _accessToken = account.AccessToken,
-        _yggdrasilServerUrl = account.YggdrasilServerUrl
-    };
+        _method = method;
+        _yggdrasilServerUrl = serverUrl;
+        _clientToken = clientToken;
+    }
+
+    /// <summary>
+    /// Create a <see cref="DefaultYggdrasilAuthenticator"/> for login
+    /// </summary>
+    /// <param name="email">Yggdrasil account email</param>
+    /// <param name="password">Yggdrasil account password</param>
+    /// <param name="yggdrasilServerUrl">Yggdrasil server URL</param>
+    /// <param name="clientToken">Yggdrasil client token</param>
+    /// <returns><see cref="DefaultYggdrasilAuthenticator"/> for login</returns>
+    public static DefaultYggdrasilAuthenticator CreateForLogin(
+        string email,
+        string password,
+        string yggdrasilServerUrl,
+        string? clientToken = null
+    ) =>
+        new("authenticate", yggdrasilServerUrl, clientToken ?? Guid.NewGuid().ToString("N"))
+        {
+            _email = email,
+            _password = password,
+        };
+
+    /// <summary>
+    /// Create a <see cref="DefaultYggdrasilAuthenticator"/> for refreshing
+    /// </summary>
+    /// <param name="account"><see cref="Account"/> to be refreshed</param>
+    /// <param name="clientToken">Yggdrasil client token</param>
+    /// <returns><see cref="DefaultYggdrasilAuthenticator"/> for refreshing</returns>
+    public static DefaultYggdrasilAuthenticator CreateForRefresh(
+        YggdrasilAccount account,
+        string? clientToken = null
+    ) =>
+        new("refresh", account.YggdrasilServerUrl, clientToken ?? Guid.NewGuid().ToString("N"))
+        {
+            _accessToken = account.AccessToken,
+        };
+
+    #endregion
 }
