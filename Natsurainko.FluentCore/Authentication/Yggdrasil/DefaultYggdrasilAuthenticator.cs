@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Nrk.FluentCore.Authentication.Yggdrasil;
 
-public class DefaultYggdrasilAuthenticator : BaseAuthenticator<YggdrasilAccount[]>
+public class DefaultYggdrasilAuthenticator : AuthenticatorBase<YggdrasilAccount[]>
 {
     private string _yggdrasilServerUrl;
     private string _email;

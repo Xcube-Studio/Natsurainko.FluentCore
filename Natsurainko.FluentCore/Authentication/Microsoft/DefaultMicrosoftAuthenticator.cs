@@ -14,7 +14,7 @@ using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateSt
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
-public class DefaultMicrosoftAuthenticator : BaseAuthenticator<MicrosoftAccount>
+public class DefaultMicrosoftAuthenticator : AuthenticatorBase<MicrosoftAccount>
 {
     private string _clientId;
     private string _redirectUri;

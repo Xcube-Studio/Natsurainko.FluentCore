@@ -6,7 +6,6 @@ using Nrk.FluentCore.Authentication.Microsoft;
 using Nrk.FluentCore.Utils;
 using System.IO;
 using System.Linq;
-using Nrk.FluentCore.Authentication;
 
 namespace Nrk.FluentCore.Services.Launch;
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Nrk.FluentCore.Authentication.Offline;
 
-public class DefaultOfflineAuthenticator : BaseAuthenticator<OfflineAccount>
+public class DefaultOfflineAuthenticator : AuthenticatorBase<OfflineAccount>
 {
     private readonly string _name;
     private readonly Guid _uuid;

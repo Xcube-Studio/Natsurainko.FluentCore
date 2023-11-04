@@ -4,7 +4,7 @@
 /// 验证器接口
 /// </summary>
 /// <typeparam name="TAccount"></typeparam>
-public interface IAuthenticator<out TAccount>
+public interface IAuthenticator<TAccount> where TAccount : Account
 {
     TAccount Authenticate();
 }
