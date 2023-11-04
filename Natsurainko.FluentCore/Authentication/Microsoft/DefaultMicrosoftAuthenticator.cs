@@ -14,7 +14,7 @@ using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateSt
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
-public class DefaultMicrosoftAuthenticator : AuthenticatorBase<MicrosoftAccount>
+public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 {
     private string _clientId;
     private string _redirectUri;
@@ -30,7 +30,7 @@ public class DefaultMicrosoftAuthenticator : AuthenticatorBase<MicrosoftAccount>
     /// </summary>
     /// <returns></returns>
     /// <exception cref="AuthException"></exception>
-    public override MicrosoftAccount Authenticate()
+    public MicrosoftAccount Authenticate()
     {
         #region Get Authorization Token
 
@@ -182,6 +182,7 @@ public class DefaultMicrosoftAuthenticator : AuthenticatorBase<MicrosoftAccount>
 
         #endregion
     }
+    MicrosoftAccount[] IAuthenticator<MicrosoftAccount>.Authenticate() => new[] { Authenticate() };
 
     public static DefaultMicrosoftAuthenticator CreateForLogin(string clientId, string redirectUri, string code) => new()
     {
