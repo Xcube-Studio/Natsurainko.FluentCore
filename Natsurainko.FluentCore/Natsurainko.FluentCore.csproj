@@ -5,11 +5,9 @@
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
     <AssemblyName>Natsurainko.FluentCore</AssemblyName>
     <RootNamespace>Nrk.FluentCore</RootNamespace>
-	<LangVersion>11.0</LangVersion>
-	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>

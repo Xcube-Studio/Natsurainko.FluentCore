@@ -15,10 +15,10 @@ public class DefaultOfflineAuthenticator : BaseAuthenticator<OfflineAccount>
         _uuid = uuid ?? new Guid(MD5.HashData(Encoding.UTF8.GetBytes(name)));
     }
 
-    public override OfflineAccount Authenticate() => new()
-    {
-        AccessToken = Guid.NewGuid().ToString("N"),
-        Name = _name,
-        Uuid = _uuid
-    };
+    public override OfflineAccount Authenticate() => new
+    (
+        Name: _name,
+        Uuid: _uuid,
+        AccessToken: Guid.NewGuid().ToString("N")
+    );
 }
