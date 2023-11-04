@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
+﻿using Nrk.FluentCore.Authentication;
 using Nrk.FluentCore.Interfaces.ServiceInterfaces;
 
 namespace Nrk.FluentCore.Authentication;

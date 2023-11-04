@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
+﻿using Nrk.FluentCore.Authentication;
 using Nrk.FluentCore.Classes.Datas.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
 using Nrk.FluentCore.Classes.Enums;

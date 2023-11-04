@@ -8,9 +8,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using AuthException = Nrk.FluentCore.Classes.Exceptions.MicrosoftAuthenticateException;
-using AuthExceptionType = Nrk.FluentCore.Classes.Enums.MicrosoftAuthenticateExceptionType;
-using AuthStep = Nrk.FluentCore.Classes.Enums.MicrosoftAuthenticateStep;
+using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateException;
+using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateExceptionType;
+using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateStep;
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
@@ -172,14 +172,13 @@ public class DefaultMicrosoftAuthenticator : BaseAuthenticator<MicrosoftAccount>
 
         ProgressChanged?.Invoke(this, (AuthStep.Finished, 1.0));
 
-        return new MicrosoftAccount
-        {
-            AccessToken = access_token,
-            Name = microsoftAuthenticationResponse.Name,
-            Uuid = Guid.Parse(microsoftAuthenticationResponse.Id),
-            RefreshToken = _oAuth20TokenResponse.RefreshToken,
-            LastRefreshTime = DateTime.Now
-        };
+        return new MicrosoftAccount(
+            Name: microsoftAuthenticationResponse.Name,
+            Uuid: Guid.Parse(microsoftAuthenticationResponse.Id),
+            AccessToken: access_token,
+            RefreshToken: _oAuth20TokenResponse.RefreshToken,
+            LastRefreshTime: DateTime.Now
+        );
 
         #endregion
     }

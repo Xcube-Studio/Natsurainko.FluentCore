@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
+﻿using Nrk.FluentCore.Authentication.Microsoft;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Linq;
@@ -54,12 +54,12 @@ public class DefaultYggdrasilAuthenticator : BaseAuthenticator<YggdrasilAccount[
         var model = JsonSerializer.Deserialize<YggdrasilResponseModel>(result);
 
         return model.AvailableProfiles.Select(profile => new YggdrasilAccount
-        {
-            AccessToken = model.AccessToken,
-            Name = profile.Name,
-            Uuid = Guid.Parse(profile.Id),
-            YggdrasilServerUrl = _yggdrasilServerUrl
-        }).ToArray();
+        (
+            Name: profile.Name,
+            Uuid: Guid.Parse(profile.Id),
+            AccessToken: model.AccessToken,
+            YggdrasilServerUrl: _yggdrasilServerUrl
+        )).ToArray();
     }
 
     public static DefaultYggdrasilAuthenticator CreateForLogin(string email, string password, string yggdrasilServerUrl, string clientToken = null) => new()
