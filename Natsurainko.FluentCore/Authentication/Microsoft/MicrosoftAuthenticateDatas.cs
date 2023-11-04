@@ -2,7 +2,7 @@
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Authenticate;
+namespace Nrk.FluentCore.Authentication.Microsoft;
 
 public class DisplayClaimsModel
 {

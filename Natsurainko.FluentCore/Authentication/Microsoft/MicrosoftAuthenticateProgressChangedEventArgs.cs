@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Enums;
-
-namespace Nrk.FluentCore.Classes.Events;
+﻿namespace Nrk.FluentCore.Authentication.Microsoft;
 
 public class MicrosoftAuthenticateProgressChangedEventArgs
 {

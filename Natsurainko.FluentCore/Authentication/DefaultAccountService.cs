@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
 using Nrk.FluentCore.Interfaces.ServiceInterfaces;
 
-namespace Nrk.FluentCore.Services.Authenticate;
+namespace Nrk.FluentCore.Authentication;
 
 /// <summary>
 /// 账户系统的默认实现（IoC适应）

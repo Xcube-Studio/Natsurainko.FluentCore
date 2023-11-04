@@ -1,11 +1,10 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
-using Nrk.FluentCore.Components.Authenticate;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Linq;
 using System.Text.Json;
 
-namespace Nrk.FluentCore.DefaultComponents.Authenticate;
+namespace Nrk.FluentCore.Authentication.Yggdrasil;
 
 public class DefaultYggdrasilAuthenticator : BaseAuthenticator<YggdrasilAccount[]>
 {

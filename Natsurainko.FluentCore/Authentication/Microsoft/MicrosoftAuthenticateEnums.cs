@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Enums;
+﻿namespace Nrk.FluentCore.Authentication.Microsoft;
 
 public enum MicrosoftAuthenticateExceptionType
 {

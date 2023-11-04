@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Authenticate;
+namespace Nrk.FluentCore.Authentication.Yggdrasil;
 
 public class LoginRequestModel
 {

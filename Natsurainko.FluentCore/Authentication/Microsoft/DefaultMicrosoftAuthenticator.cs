@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Authenticate;
-using Nrk.FluentCore.Classes.Events;
-using Nrk.FluentCore.Components.Authenticate;
+﻿using Nrk.FluentCore.Authentication;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Diagnostics;
@@ -14,7 +12,7 @@ using AuthException = Nrk.FluentCore.Classes.Exceptions.MicrosoftAuthenticateExc
 using AuthExceptionType = Nrk.FluentCore.Classes.Enums.MicrosoftAuthenticateExceptionType;
 using AuthStep = Nrk.FluentCore.Classes.Enums.MicrosoftAuthenticateStep;
 
-namespace Nrk.FluentCore.DefaultComponents.Authenticate;
+namespace Nrk.FluentCore.Authentication.Microsoft;
 
 public class DefaultMicrosoftAuthenticator : BaseAuthenticator<MicrosoftAccount>
 {

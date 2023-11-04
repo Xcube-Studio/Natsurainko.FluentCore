@@ -1,7 +1,6 @@
-﻿using Nrk.FluentCore.Classes.Enums;
-using System;
+﻿using System;
 
-namespace Nrk.FluentCore.Classes.Exceptions;
+namespace Nrk.FluentCore.Authentication.Microsoft;
 
 public class MicrosoftAuthenticateException : Exception
 {

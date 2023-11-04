@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Interfaces;
+﻿namespace Nrk.FluentCore.Authentication;
 
 /// <summary>
 /// 验证器接口

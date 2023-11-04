@@ -1,6 +1,6 @@
 ﻿using Nrk.FluentCore.Interfaces;
 
-namespace Nrk.FluentCore.Components.Authenticate;
+namespace Nrk.FluentCore.Authentication;
 
 /// <summary>
 /// 验证器的抽象定义
