@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Enums;
+﻿namespace Nrk.FluentCore.Authentication;
 
 /// <summary>
 /// 游戏账户类型
