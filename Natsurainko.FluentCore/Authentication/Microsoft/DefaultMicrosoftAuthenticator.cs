@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using AuthException = Nrk.FluentCore.Authentication.Microsoft.YggdrasilAuthenticationException;
+using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateException;
 using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateExceptionType;
 using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateStep;
 
