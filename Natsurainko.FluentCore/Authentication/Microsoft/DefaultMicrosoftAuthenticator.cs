@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateException;
+using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationException;
 using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateExceptionType;
 using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateStep;
 
@@ -20,7 +20,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
     private string _redirectUri;
     private string _code;
     private string _parameterName;
-    private OAuth20TokenResponseModel _oAuth20TokenResponse;
+    private OAuth20TokenResponse _oAuth20TokenResponse;
     private bool _createdFromDeviceFlow = false;
 
     public event EventHandler<MicrosoftAuthenticateProgressChangedEventArgs> ProgressChanged;
@@ -51,7 +51,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
             authCodePostRes.EnsureSuccessStatusCode();
 
-            _oAuth20TokenResponse = JsonSerializer.Deserialize<OAuth20TokenResponseModel>(authCodePostRes.Content.ReadAsString());
+            _oAuth20TokenResponse = JsonSerializer.Deserialize<OAuth20TokenResponse>(authCodePostRes.Content.ReadAsString());
         }
 
         #endregion
@@ -60,7 +60,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         ProgressChanged?.Invoke(this, (AuthStep.Authenticate_with_XboxLive, 0.40));
 
-        var xBLReqModel = new XBLAuthenticateRequestModel();
+        var xBLReqModel = new XBLAuthenticateRequest();
         xBLReqModel.Properties.RpsTicket = xBLReqModel.Properties.RpsTicket.Replace("<access token>", _oAuth20TokenResponse.AccessToken);
 
         using var xBLReqModelPostRes = HttpUtils.HttpPost(
@@ -69,7 +69,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         xBLReqModelPostRes.EnsureSuccessStatusCode();
 
-        var xBLResModel = JsonSerializer.Deserialize<XBLAuthenticateResponseModel>(xBLReqModelPostRes.Content.ReadAsString());
+        var xBLResModel = JsonSerializer.Deserialize<XBLAuthenticateResponse>(xBLReqModelPostRes.Content.ReadAsString());
 
         #endregion
 
@@ -77,7 +77,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         ProgressChanged?.Invoke(this, (AuthStep.Obtain_XSTS_token_for_Minecraft, 0.55));
 
-        var xSTSReqModel = new XSTSAuthenticateRequestModel();
+        var xSTSReqModel = new XSTSAuthenticateRequest();
         xSTSReqModel.Properties.UserTokens.Add(xBLResModel.Token);
 
         using var xSTSReqModelPostRes = HttpUtils.HttpPost(
@@ -115,7 +115,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         xSTSReqModelPostRes.EnsureSuccessStatusCode();
 
-        var xSTSResModel = JsonSerializer.Deserialize<XSTSAuthenticateResponseModel>(xSTSReqModelPostRes.Content.ReadAsString());
+        var xSTSResModel = JsonSerializer.Deserialize<XSTSAuthenticateResponse>(xSTSReqModelPostRes.Content.ReadAsString());
 
         #endregion
 
@@ -200,7 +200,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
         _parameterName = "refresh_token"
     };
 
-    public static DefaultMicrosoftAuthenticator CreateFromDeviceFlow(string clientId, string redirectUri, OAuth20TokenResponseModel oAuth20TokenResponseModel) => new()
+    public static DefaultMicrosoftAuthenticator CreateFromDeviceFlow(string clientId, string redirectUri, OAuth20TokenResponse oAuth20TokenResponseModel) => new()
     {
         _redirectUri = redirectUri,
         _clientId = clientId,
@@ -227,12 +227,12 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
             var stopwatch = Stopwatch.StartNew();
 
-            while (stopwatch.Elapsed < TimeSpan.FromSeconds(deviceAuthResponse.ExpiresIn))
+            while (stopwatch.Elapsed < TimeSpan.FromSeconds((double)deviceAuthResponse.ExpiresIn))
             {
                 if (token.IsCancellationRequested)
                     break;
 
-                await Task.Delay(deviceAuthResponse.Interval * 1000);
+                await Task.Delay((int)deviceAuthResponse.Interval * 1000);
 
                 var pollingPost =
                     "grant_type=urn:ietf:params:oauth:grant-type:device_code" +
@@ -247,7 +247,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
                     return new()
                     {
                         Success = true,
-                        OAuth20TokenResponse = pollingPostJson.Deserialize<OAuth20TokenResponseModel>()
+                        OAuth20TokenResponse = pollingPostJson.Deserialize<OAuth20TokenResponse>()
                     };
                 else
                 {
