@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Launch;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Interfaces;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏定位器接口

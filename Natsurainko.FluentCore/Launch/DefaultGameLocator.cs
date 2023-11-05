@@ -1,6 +1,5 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
-using Nrk.FluentCore.Components.Launch;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.DefaultComponents.Launch;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏定位器的默认实现
@@ -218,12 +217,12 @@ public class DefaultGameLocator : BaseGameLocator
 
         if (!string.IsNullOrEmpty(jsonEntity.InheritsFrom)
             || !ensureMainClass
-            || (ensureMainClass
+            || ensureMainClass
                 && (jsonEntity.MinecraftArguments?.Contains("--tweakClass")).GetValueOrDefault()
-                && !(jsonEntity.MinecraftArguments?.Contains("--tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker")).GetValueOrDefault())
-            || (ensureMainClass
+                && !(jsonEntity.MinecraftArguments?.Contains("--tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker")).GetValueOrDefault()
+            || ensureMainClass
                 && (jsonEntity.Arguments?.Game?.Where(e => e.ValueKind.Equals(JsonValueKind.String)
-                && e.GetString().Equals("--tweakClass")).Any()).GetValueOrDefault()))
+                && e.GetString().Equals("--tweakClass")).Any()).GetValueOrDefault())
             gameInfo.IsVanilla = false;
 
         if (gameInfo.IsVanilla) gameInfo.AbsoluteVersion = gameInfo.AbsoluteId;

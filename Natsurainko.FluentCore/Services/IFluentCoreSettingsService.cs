@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Launch;
 using System.Collections.ObjectModel;
 
-namespace Nrk.FluentCore.Interfaces.ServiceInterfaces;
+namespace Nrk.FluentCore.Services;
 
 /// <summary>
 /// 设置服务接口

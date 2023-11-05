@@ -5,7 +5,7 @@ using Nrk.FluentCore.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Components.Launch;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 参数构建器的抽象定义

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Nrk.FluentCore.Components.Launch;
+namespace Nrk.FluentCore.Launch;
 
 public abstract class BaseLaunchProcessBuilder<TProcess, TBuilder> where TProcess : BaseLaunchProcess
 {
