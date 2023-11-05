@@ -24,7 +24,7 @@ public record GameInfo
     /// <summary>
     /// 游戏核心的绝对版本号（如果能获取）
     /// </summary>
-    public required string AbsoluteVersion { get; set; }
+    public string? AbsoluteVersion { get; set; }
 
     /// <summary>
     /// 游戏核心的类型，可取的值 "release","snapshot","old_beta","old_alpha"
