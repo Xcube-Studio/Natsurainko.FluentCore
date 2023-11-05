@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Enums;
+﻿using Nrk.FluentCore.Launch.Logging;
 using System;
 using System.Text.RegularExpressions;
 
@@ -17,22 +17,22 @@ public partial record GameLoggerOutput
     /// <summary>
     /// 日志产生线程
     /// </summary>
-    public string Thread { get; private set; }
+    public required string? Thread { get; init; }
 
     /// <summary>
     /// 正文内容
     /// </summary>
-    public string Text { get; private set; }
+    public required string Text { get; init; }
 
     /// <summary>
     /// 源文本
     /// </summary>
-    public string FullData { get; private set; }
+    public required string FullData { get; init; }
 
     /// <summary>
     /// 日志产生时间
     /// </summary>
-    public DateTime DateTime { get; private set; }
+    public DateTime DateTime { get; init; }
 
     /// <summary>
     /// 解析一行日志
@@ -45,17 +45,12 @@ public partial record GameLoggerOutput
         var timeRegex = TimeRegex().Match(data).Value;
         var regex = LineRegex().Match(data).Value.TrimStart('[').TrimEnd(']');
 
-        var processOutput = new GameLoggerOutput()
-        {
-            FullData = data,
-            Text = data.Contains(": ") ? data[(data.IndexOf(": ") + 2)..] : data,
-            DateTime = string.IsNullOrEmpty(timeRegex) ? DateTime.Now : DateTime.Parse(timeRegex),
-            Level = GameLoggerOutputLevel.Info,
-        };
+        GameLoggerOutputLevel outputLevel = GameLoggerOutputLevel.Info;
+        string? thread = null;
 
         if (regex.Contains('/'))
         {
-            processOutput.Level = regex.Split('/')[1].ToLower() switch
+            outputLevel = regex.Split('/')[1].ToLower() switch
             {
                 "info" => GameLoggerOutputLevel.Info,
                 "warn" => GameLoggerOutputLevel.Warn,
@@ -64,16 +59,23 @@ public partial record GameLoggerOutput
                 "debug" => GameLoggerOutputLevel.Debug,
                 _ => GameLoggerOutputLevel.Info,
             };
-            processOutput.Thread = regex.Split('/')[0];
+            thread = regex.Split('/')[0];
         }
 
         if (data.StartsWith("\tat") || data.Contains(": ") && data.Split(':')[0].EndsWith("Exception"))
-            processOutput.Level = GameLoggerOutputLevel.Error;
+            outputLevel = GameLoggerOutputLevel.Error;
 
         if (error)
-            processOutput.Level = GameLoggerOutputLevel.Error;
+            outputLevel = GameLoggerOutputLevel.Error;
 
-        return processOutput;
+        return new GameLoggerOutput
+        {
+            FullData = data,
+            Text = data.Contains(": ") ? data[(data.IndexOf(": ") + 2)..] : data,
+            DateTime = string.IsNullOrEmpty(timeRegex) ? DateTime.Now : DateTime.Parse(timeRegex),
+            Level = outputLevel,
+            Thread = thread
+        };
     }
 
     [GeneratedRegex("\\[[\\w/\\s-]+\\]")]
