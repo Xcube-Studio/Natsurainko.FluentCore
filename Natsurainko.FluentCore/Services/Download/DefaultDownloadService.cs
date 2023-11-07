@@ -1,11 +1,11 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Download;
 using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Classes.Datas.Parse;
-using Nrk.FluentCore.DefaultComponents.Download;
 using Nrk.FluentCore.DefaultComponents.Parse;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using Nrk.FluentCore.GameResources.Parsing;
+using Nrk.FluentCore.GameResources.ThirdPartySources;
 
 namespace Nrk.FluentCore.Services.Download;
 

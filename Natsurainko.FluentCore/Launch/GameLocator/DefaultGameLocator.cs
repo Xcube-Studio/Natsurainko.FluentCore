@@ -1,11 +1,11 @@
 ﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Classes.Datas.Parse;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Nrk.FluentCore.GameResources.Parsing;
 
 namespace Nrk.FluentCore.Launch;
 
