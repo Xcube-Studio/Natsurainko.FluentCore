@@ -37,7 +37,7 @@ public static partial class MemoryUtils
             Arguments = "-NoLogo -NonInteractive -Command \"Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemorySize | Format-List\"",
             RedirectStandardOutput = true,
             CreateNoWindow = true,
-        });
+        }) ?? throw new Exception("Error in starting powershell process.");
 
         process.WaitForExit();
 
@@ -83,7 +83,7 @@ public static partial class MemoryUtils
             FileName = "/bin/bash",
             Arguments = "-c \"free -m\"",
             RedirectStandardOutput = true
-        });
+        }) ?? throw new Exception("Error in starting bash process.");
 
         process.WaitForExit();
 

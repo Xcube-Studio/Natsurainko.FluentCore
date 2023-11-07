@@ -10,22 +10,22 @@ public record JavaInfo
     /// <summary>
     /// 版本
     /// </summary>
-    public Version Version { get; set; }
+    public required Version Version { get; init; }
 
     /// <summary>
     /// 发行
     /// </summary>
-    public string Company { get; set; }
+    public required string? Company { get; init; }
 
-    public string ProductName { get; set; }
+    public required string? ProductName { get; init; }
 
     /// <summary>
     /// 架构体系
     /// </summary>
-    public string Architecture { get; set; }
+    public required string Architecture { get; init; }
 
     /// <summary>
     /// 显示名称
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; init; }
 }
