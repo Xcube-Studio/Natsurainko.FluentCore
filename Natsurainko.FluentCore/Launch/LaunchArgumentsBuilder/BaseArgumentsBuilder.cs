@@ -1,7 +1,6 @@
 ﻿using Nrk.FluentCore.Authentication;
-using Nrk.FluentCore.Classes.Datas.Launch;
+using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
-using Nrk.FluentCore.Interfaces;
 using System;
 using System.Collections.Generic;
 

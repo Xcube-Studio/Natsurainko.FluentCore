@@ -31,5 +31,5 @@ internal class EnvironmentUtils
     /// 获取系统位数
     /// </summary>
     /// <returns></returns>
-    public static string GetSystemArch() => Environment.Is64BitOperatingSystem ? "64" : "32";
+    public static string GetSystemArch() => System.Environment.Is64BitOperatingSystem ? "64" : "32";
 }

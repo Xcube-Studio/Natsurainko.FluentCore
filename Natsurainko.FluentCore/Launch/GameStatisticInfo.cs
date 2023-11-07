@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Parse;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Classes.Data.Launch;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏统计数据

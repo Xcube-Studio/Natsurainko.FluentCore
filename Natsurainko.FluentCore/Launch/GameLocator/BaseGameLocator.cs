@@ -1,8 +1,8 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
+﻿using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Launch.GameLocator;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏定位器的抽象定义

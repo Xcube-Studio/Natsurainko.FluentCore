@@ -18,7 +18,7 @@ public class DefaultLaunchProcess : BaseLaunchProcess
     {
         if (!InspectAction())
         {
-            State = Classes.Enums.LaunchState.Faulted;
+            State = LaunchState.Faulted;
             return;
         }
     }

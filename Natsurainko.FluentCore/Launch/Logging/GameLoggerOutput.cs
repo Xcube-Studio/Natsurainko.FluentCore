@@ -1,8 +1,7 @@
-﻿using Nrk.FluentCore.Launch.Logging;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Nrk.FluentCore.Classes.Datas.Launch;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 表示游戏日志的一行输出

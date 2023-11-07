@@ -1,5 +1,5 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Install;
-using Nrk.FluentCore.Classes.Datas.Launch;
+using Nrk.FluentCore.Launch;
 using System;
 using System.Threading.Tasks;
 

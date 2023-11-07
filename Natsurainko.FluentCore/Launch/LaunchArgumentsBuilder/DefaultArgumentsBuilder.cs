@@ -1,5 +1,5 @@
 ﻿using Nrk.FluentCore.Authentication;
-using Nrk.FluentCore.Classes.Datas.Launch;
+using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
 using Nrk.FluentCore.Classes.Enums;
 using Nrk.FluentCore.DefaultComponents.Parse;

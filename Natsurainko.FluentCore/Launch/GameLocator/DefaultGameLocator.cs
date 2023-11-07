@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
+﻿using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Launch.GameLocator;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏定位器的默认实现

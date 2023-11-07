@@ -1,5 +1,5 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Download;
-using Nrk.FluentCore.Classes.Datas.Launch;
+using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Classes.Datas.Parse;
 using Nrk.FluentCore.Components.Download;
 using Nrk.FluentCore.Interfaces;

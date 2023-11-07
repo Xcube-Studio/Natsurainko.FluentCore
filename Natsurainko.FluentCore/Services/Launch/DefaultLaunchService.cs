@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
+﻿using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.DefaultComponents.Parse;
 using Nrk.FluentCore.Authentication.Microsoft;
 using Nrk.FluentCore.Utils;

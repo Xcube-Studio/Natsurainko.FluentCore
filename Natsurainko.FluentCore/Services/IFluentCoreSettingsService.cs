@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
+﻿using Nrk.FluentCore.Launch;
 using System.Collections.ObjectModel;
 
 namespace Nrk.FluentCore.Services;

@@ -59,7 +59,7 @@ public static class DefaultVmParameterParser
         {
             case "windows":
                 yield return "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump";
-                if (Environment.OSVersion.Version.Major == 10)
+                if (System.Environment.OSVersion.Version.Major == 10)
                 {
                     yield return "-Dos.name=\"Windows 10\"";
                     yield return "-Dos.version=10.0";

@@ -95,8 +95,8 @@ public static class JavaUtils
 
         var folders = new List<string>()
         {
-            Path.Combine(Environment.GetEnvironmentVariable("APPDATA"),".minecraft\\cache\\java"),
-            Environment.GetEnvironmentVariable("JAVA_HOME"),
+            Path.Combine(System.Environment.GetEnvironmentVariable("APPDATA"),".minecraft\\cache\\java"),
+            System.Environment.GetEnvironmentVariable("JAVA_HOME"),
             "C:\\Program Files\\Java"
         };
 

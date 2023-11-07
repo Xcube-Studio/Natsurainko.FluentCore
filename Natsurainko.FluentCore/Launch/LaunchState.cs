@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Enums;
+﻿namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 启动状态

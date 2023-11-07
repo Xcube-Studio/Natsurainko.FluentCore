@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Launch.Logging;
+﻿namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 游戏日志输出等级

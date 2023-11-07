@@ -1,7 +1,7 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
+﻿using Nrk.FluentCore.Launch;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Interfaces;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 参数生成器接口

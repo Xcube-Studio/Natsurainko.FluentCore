@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Datas.Launch;
+﻿namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 用于记录游戏的基本信息和信息源
