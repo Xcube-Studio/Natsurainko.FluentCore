@@ -18,11 +18,7 @@ public static class DefaultModInfoParser
     {
         var supportedModLoaders = new List<ModLoaderType>();
 
-        var modInfo = new ModInfo
-        {
-            AbsolutePath = filePath,
-            IsEnabled = Path.GetExtension(filePath).Equals(".jar")
-        };
+        var modInfo = new ModInfo { AbsolutePath = filePath, IsEnabled = Path.GetExtension(filePath).Equals(".jar") };
 
         using var zipArchive = ZipFile.OpenRead(filePath);
 
@@ -31,18 +27,26 @@ public static class DefaultModInfoParser
         var modsToml = zipArchive.GetEntry("META-INF/mods.toml");
         var mcmodInfo = zipArchive.GetEntry("mcmod.info");
 
-        if (quiltModJson != null) supportedModLoaders.Add(ModLoaderType.Quilt);
-        if (fabricModJson != null) supportedModLoaders.Add(ModLoaderType.Fabric);
-        if (modsToml != null || mcmodInfo != null) supportedModLoaders.Add(ModLoaderType.Forge);
+        if (quiltModJson != null)
+            supportedModLoaders.Add(ModLoaderType.Quilt);
+        if (fabricModJson != null)
+            supportedModLoaders.Add(ModLoaderType.Fabric);
+        if (modsToml != null || mcmodInfo != null)
+            supportedModLoaders.Add(ModLoaderType.Forge);
 
-        if (!supportedModLoaders.Any()) supportedModLoaders.Add(ModLoaderType.Unknown);
+        if (!supportedModLoaders.Any())
+            supportedModLoaders.Add(ModLoaderType.Unknown);
         modInfo.SupportedModLoaders = supportedModLoaders.ToArray();
 
-        if (quiltModJson != null) return ParseModJson(ref modInfo, quiltModJson.ReadAsString(), true);
-        if (fabricModJson != null) return ParseModJson(ref modInfo, fabricModJson.ReadAsString(), false);
+        if (quiltModJson != null)
+            return ParseModJson(ref modInfo, quiltModJson.ReadAsString(), true);
+        if (fabricModJson != null)
+            return ParseModJson(ref modInfo, fabricModJson.ReadAsString(), false);
 
-        if (modsToml != null) return ParseModsToml(ref modInfo, modsToml.ReadAsString());
-        if (mcmodInfo != null) return ParseMcmodInfo(ref modInfo, mcmodInfo.ReadAsString());
+        if (modsToml != null)
+            return ParseModsToml(ref modInfo, modsToml.ReadAsString());
+        if (mcmodInfo != null)
+            return ParseMcmodInfo(ref modInfo, mcmodInfo.ReadAsString());
 
         throw new Exception("Unknown Mod Type");
     }
@@ -50,19 +54,30 @@ public static class DefaultModInfoParser
     private static ModInfo ParseModJson(ref ModInfo mod, string jsonContent, bool isQuilt)
     {
         var jsonNode = JsonNode.Parse(jsonContent);
-        if (isQuilt) jsonNode = jsonNode["quilt_loader"]["metadata"];
 
-        mod.DisplayName = jsonNode["name"].GetValue<string>();
+        if (isQuilt)
+            jsonNode = jsonNode?["quilt_loader"]?["metadata"];
+
+        if (jsonNode is null)
+            throw new InvalidDataException($"Invalid {nameof(jsonContent)}");
+
+        mod.DisplayName = jsonNode["name"]?.GetValue<string>();
         mod.Version = jsonNode["version"]?.GetValue<string>();
         mod.Description = jsonNode["description"]?.GetValue<string>();
-        mod.Authors = jsonNode["authors"].AsArray().Select(x => x.GetValue<string>()).ToArray();
+        mod.Authors = jsonNode["authors"]
+            ?.AsArray()
+            .Where(x => x?.GetValue<string>() is not null)
+            .Select(x => x?.GetValue<string>()!)
+            .ToArray();
 
         return mod;
     }
 
     private static ModInfo ParseModsToml(ref ModInfo mod, string tomlContent)
     {
-        var tomlTable = (Toml.ToModel(tomlContent)["mods"] as TomlTableArray).First();
+        var tomlTable = (Toml.ToModel(tomlContent)["mods"] as TomlTableArray)?.First();
+        if (tomlTable is null)
+            throw new InvalidDataException("Invalid mods.toml");
 
         mod.DisplayName = tomlTable.GetString("displayName");
         mod.Version = tomlTable.GetString("version");
@@ -74,13 +89,18 @@ public static class DefaultModInfoParser
 
     private static ModInfo ParseMcmodInfo(ref ModInfo mod, string jsonContent)
     {
-        var jsonNode = JsonNode.Parse(jsonContent.Replace("\u000a", "")).AsArray().FirstOrDefault()
+        var jsonNode =
+            JsonNode.Parse(jsonContent.Replace("\u000a", "") ?? "")?.AsArray().FirstOrDefault()
             ?? throw new InvalidDataException("Invalid mcmod.info");
 
-        mod.DisplayName = jsonNode["name"].GetValue<string>();
+        mod.DisplayName = jsonNode["name"]?.GetValue<string>();
         mod.Version = jsonNode["version"]?.GetValue<string>();
         mod.Description = jsonNode["description"]?.GetValue<string>();
-        mod.Authors = (jsonNode["authorList"] ?? jsonNode["authors"])?.AsArray().Select(x => x.GetValue<string>()).ToArray();
+        mod.Authors = (jsonNode["authorList"] ?? jsonNode["authors"])
+            ?.AsArray()
+            .Where(x => x?.GetValue<string>() is not null)
+            .Select(x => x?.GetValue<string>()!)
+            .ToArray();
 
         return mod;
     }

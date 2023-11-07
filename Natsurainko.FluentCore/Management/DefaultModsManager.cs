@@ -9,7 +9,8 @@ public class DefaultModsManager : BaseModsManager
     private readonly List<(Exception, string)> _errorMods = new();
     public List<(Exception, string)> ErrorMods => _errorMods;
 
-    public DefaultModsManager(string modsFolder) : base(modsFolder) { }
+    public DefaultModsManager(string modsFolder)
+        : base(modsFolder) { }
 
     public override IEnumerable<ModInfo> EnumerateMods()
     {
@@ -17,11 +18,15 @@ public class DefaultModsManager : BaseModsManager
         {
             var fileExtension = Path.GetExtension(file);
 
-            if (!(fileExtension.Equals(".jar") || fileExtension.Equals(".disabled"))) continue;
+            if (!(fileExtension.Equals(".jar") || fileExtension.Equals(".disabled")))
+                continue;
 
-            ModInfo modInfo = default;
+            ModInfo? modInfo = null;
 
-            try { modInfo = DefaultModInfoParser.Parse(file); }
+            try
+            {
+                modInfo = DefaultModInfoParser.Parse(file);
+            }
             catch (Exception ex)
             {
                 _errorMods.Add((ex, file));
@@ -42,11 +47,17 @@ public class DefaultModsManager : BaseModsManager
 
     public override void Switch(ModInfo modInfo, bool isEnable)
     {
-        var rawFilePath = modInfo.AbsolutePath;
+        var originalPath = modInfo.AbsolutePath;
 
+        string parentPath =
+            Path.GetDirectoryName(originalPath)
+            ?? Path.GetPathRoot(originalPath) // The parent directory is null because the file is in the root directory
+            ?? throw new InvalidDataException("ModInfo has an invalid absolute path");
+
+        string newFileName = Path.GetFileNameWithoutExtension(originalPath) + (isEnable ? ".jar" : ".disabled");
+
+        modInfo.AbsolutePath = Path.Combine(parentPath, newFileName);
         modInfo.IsEnabled = isEnable;
-        modInfo.AbsolutePath = Path.Combine(Path.GetDirectoryName(rawFilePath), Path.GetFileNameWithoutExtension(rawFilePath) + (isEnable ? ".jar" : ".disabled"));
-
-        File.Move(rawFilePath, modInfo.AbsolutePath);
+        File.Move(originalPath, modInfo.AbsolutePath);
     }
 }
