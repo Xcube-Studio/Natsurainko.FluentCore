@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Launch.GameLocator;
 
 /// <summary>
 /// 游戏定位器的抽象定义
@@ -20,7 +20,7 @@ public abstract class BaseGameLocator : IGameLocator
 
     public virtual IEnumerable<GameInfo> EnumerateGames() => throw new NotImplementedException();
 
-    public virtual GameInfo GetGame(string absoluteId) => throw new NotImplementedException();
+    public virtual GameInfo? GetGame(string absoluteId) => throw new NotImplementedException();
 
     public virtual IReadOnlyList<GameInfo> GetGames(out IReadOnlyList<string> errorGameNames)
     {

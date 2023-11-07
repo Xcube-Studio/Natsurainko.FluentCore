@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Launch.GameLocator;
 
 /// <summary>
 /// 游戏定位器的默认实现
@@ -158,7 +158,7 @@ public class DefaultGameLocator : BaseGameLocator
         return games;
     }
 
-    public override GameInfo GetGame(string absoluteId)
+    public override GameInfo? GetGame(string absoluteId)
     {
         var jsonFile = new FileInfo(Path.Combine(MinecraftFolderPath, "versions", absoluteId, absoluteId + ".json"));
 

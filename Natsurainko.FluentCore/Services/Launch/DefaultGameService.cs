@@ -1,5 +1,5 @@
 ﻿using Nrk.FluentCore.Classes.Datas.Launch;
-using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Launch.GameLocator;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
