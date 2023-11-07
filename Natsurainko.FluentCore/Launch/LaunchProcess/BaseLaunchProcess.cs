@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Classes.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 

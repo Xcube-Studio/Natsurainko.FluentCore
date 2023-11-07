@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Datas.Download;
+﻿namespace Nrk.FluentCore.GameResources.ThirdPartySources;
 
 /// <summary>
 /// 表示一个下载设置

@@ -1,10 +1,9 @@
-﻿using Nrk.FluentCore.Classes.Enums;
-using Nrk.FluentCore.GameResources.Parsing;
+﻿using Nrk.FluentCore.GameResources.Parsing;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Install;
+namespace Nrk.FluentCore.GameResources.ModLoaders;
 
 public record FabricInstallBuild
 {

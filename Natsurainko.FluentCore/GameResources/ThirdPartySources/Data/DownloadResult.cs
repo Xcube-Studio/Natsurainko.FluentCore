@@ -1,7 +1,6 @@
-﻿using Nrk.FluentCore.GameResources.ThirdPartySources;
-using System;
+﻿using System;
 
-namespace Nrk.FluentCore.Classes.Datas.Download;
+namespace Nrk.FluentCore.GameResources.ThirdPartySources;
 
 /// <summary>
 /// 表示下载任务结果

@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Enums;
-using System;
+﻿using System;
 
 namespace Nrk.FluentCore.Authentication;
 

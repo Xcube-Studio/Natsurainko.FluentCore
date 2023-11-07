@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
-using Nrk.FluentCore.Utils;
+﻿using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

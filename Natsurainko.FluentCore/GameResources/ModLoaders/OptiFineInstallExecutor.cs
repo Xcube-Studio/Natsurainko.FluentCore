@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Install;
-using Nrk.FluentCore.GameResources.Parsing;
+﻿using Nrk.FluentCore.GameResources.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;

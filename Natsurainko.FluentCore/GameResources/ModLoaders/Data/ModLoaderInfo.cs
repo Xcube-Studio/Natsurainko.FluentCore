@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Enums;
-
-namespace Nrk.FluentCore.Classes.Datas.Parse;
+﻿namespace Nrk.FluentCore.GameResources.ModLoaders;
 
 /// <summary>
 /// 表示一个模组加载信息

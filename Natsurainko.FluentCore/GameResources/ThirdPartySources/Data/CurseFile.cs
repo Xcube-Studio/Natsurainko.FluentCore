@@ -1,7 +1,7 @@
-﻿using Nrk.FluentCore.Classes.Enums;
+﻿using Nrk.FluentCore.GameResources.ModLoaders;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Download;
+namespace Nrk.FluentCore.GameResources.ThirdPartySources;
 
 public record CurseFile
 {

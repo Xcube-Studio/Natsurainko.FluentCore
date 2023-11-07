@@ -1,10 +1,9 @@
-﻿using Nrk.FluentCore.Environment;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Nrk.FluentCore.Utils;
+namespace Nrk.FluentCore.Environment;
 
 public static partial class MemoryUtils
 {

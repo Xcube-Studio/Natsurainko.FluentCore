@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Nrk.FluentCore.GameResources.ThirdPartySources;
 

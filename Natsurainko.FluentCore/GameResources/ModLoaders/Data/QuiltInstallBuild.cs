@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Install;
+namespace Nrk.FluentCore.GameResources.ModLoaders;
 
 public record QuiltInstallBuild
 {

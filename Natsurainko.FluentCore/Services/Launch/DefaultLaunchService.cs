@@ -1,10 +1,9 @@
 ﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.DefaultComponents.Parse;
 using Nrk.FluentCore.Authentication.Microsoft;
 using Nrk.FluentCore.Utils;
 using System.IO;
 using System.Linq;
-using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.GameResources.Parsing;
 
 namespace Nrk.FluentCore.Services.Launch;
 

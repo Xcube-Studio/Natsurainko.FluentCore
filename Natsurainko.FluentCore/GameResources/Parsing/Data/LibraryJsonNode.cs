@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
+﻿using Nrk.FluentCore.GameResources.ThirdPartySources;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 

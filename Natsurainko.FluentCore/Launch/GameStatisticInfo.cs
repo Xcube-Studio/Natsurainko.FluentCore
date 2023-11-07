@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Parse;
+﻿using Nrk.FluentCore.GameResources.ModLoaders;
 using System.Collections.Generic;
 
 namespace Nrk.FluentCore.Launch;

@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Enums;
+﻿namespace Nrk.FluentCore.GameResources.ModLoaders;
 
 /// <summary>
 /// 模组加载器类型

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Classes.Datas.Download;
+namespace Nrk.FluentCore.GameResources.ThirdPartySources;
 
 public record VersionManifestJsonEntity
 {
