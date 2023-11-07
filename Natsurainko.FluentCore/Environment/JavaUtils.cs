@@ -1,5 +1,5 @@
 ﻿using Microsoft.Win32;
-using Nrk.FluentCore.Classes.Datas;
+using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 
-namespace Nrk.FluentCore.Utils;
+namespace Nrk.FluentCore.Environment;
 
 [SupportedOSPlatform("windows")]
 public static class JavaUtils
@@ -38,8 +38,8 @@ public static class JavaUtils
 
         var output = new List<string>();
 
-        process.OutputDataReceived += (object sender, DataReceivedEventArgs e) => output.Add(e.Data);
-        process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => output.Add(e.Data);
+        process.OutputDataReceived += (sender, e) => output.Add(e.Data);
+        process.ErrorDataReceived += (sender, e) => output.Add(e.Data);
 
         process.StandardInput.WriteLine("where javaw");
         process.StandardInput.WriteLine("exit");
@@ -116,7 +116,7 @@ public static class JavaUtils
     public static JavaInfo GetJavaInfo(string file)
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(file);
-        var name = fileVersionInfo.ProductName == null 
+        var name = fileVersionInfo.ProductName == null
             ? fileVersionInfo.ProductName.Split(" ")[0]
             : $"Java {fileVersionInfo.ProductMajorPart}";
 

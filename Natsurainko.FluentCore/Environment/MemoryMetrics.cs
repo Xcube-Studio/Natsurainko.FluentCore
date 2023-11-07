@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Classes.Datas;
+﻿namespace Nrk.FluentCore.Environment;
 
 /// <summary>
 /// 内存使用情况

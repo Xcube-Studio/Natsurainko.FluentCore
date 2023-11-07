@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Nrk.FluentCore.Classes.Datas;
+namespace Nrk.FluentCore.Environment;
 
 /// <summary>
 /// 表示 Java 基本信息
