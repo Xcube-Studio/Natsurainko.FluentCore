@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.GameResources.ThirdPartySources;
+﻿using Nrk.FluentCore.Resources;
 using System;
 using System.Buffers;
 using System.Collections.Generic;

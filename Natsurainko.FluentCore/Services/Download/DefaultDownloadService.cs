@@ -2,8 +2,8 @@
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Linq;
-using Nrk.FluentCore.GameResources.Parsing;
-using Nrk.FluentCore.GameResources.ThirdPartySources;
+using Nrk.FluentCore.Management.Parsing;
+using Nrk.FluentCore.Resources;
 
 namespace Nrk.FluentCore.Services.Download;
 

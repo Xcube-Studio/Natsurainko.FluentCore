@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Nrk.FluentCore.GameResources.Parsing;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
-using Nrk.FluentCore.GameResources.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 
 namespace Nrk.FluentCore.Launch;
 

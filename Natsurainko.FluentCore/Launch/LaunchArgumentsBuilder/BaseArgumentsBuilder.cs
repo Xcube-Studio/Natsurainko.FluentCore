@@ -2,7 +2,7 @@
 using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.Generic;
-using Nrk.FluentCore.GameResources.Parsing;
+using Nrk.FluentCore.Management.Parsing;
 
 namespace Nrk.FluentCore.Launch;
 
