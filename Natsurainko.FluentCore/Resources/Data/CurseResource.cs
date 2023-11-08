@@ -7,33 +7,33 @@ namespace Nrk.FluentCore.Resources;
 public record CurseResource
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public required int Id { get; set; }
 
     [JsonPropertyName("classId")]
-    public int ClassId { get; set; }
+    public required int ClassId { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [JsonPropertyName("summary")]
-    public string Summary { get; set; }
+    public required string Summary { get; set; }
 
     [JsonPropertyName("downloadCount")]
-    public int DownloadCount { get; set; }
+    public required int DownloadCount { get; set; }
 
     [JsonPropertyName("dateModified")]
-    public DateTime DateModified { get; set; }
+    public required DateTime DateModified { get; set; }
 
     [JsonPropertyName("latestFilesIndexes")]
-    public IEnumerable<CurseFile> Files { get; set; }
+    public required IEnumerable<CurseFile> Files { get; set; }
 
-    public IEnumerable<string> Categories { get; set; }
+    public required IEnumerable<string> Categories { get; set; }
 
-    public IEnumerable<string> Authors { get; set; }
+    public required IEnumerable<string> Authors { get; set; }
 
-    public IEnumerable<string> ScreenshotUrls { get; set; }
+    public required IEnumerable<string> ScreenshotUrls { get; set; }
 
-    public string WebLink { get; set; }
+    public required string WebLink { get; set; }
 
-    public string IconUrl { get; set; }
+    public required string IconUrl { get; set; }
 }

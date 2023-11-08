@@ -6,18 +6,18 @@ namespace Nrk.FluentCore.Resources;
 public record CurseFile
 {
     [JsonPropertyName("fileId")]
-    public int FileId { get; set; }
+    public required int FileId { get; set; }
 
     [JsonPropertyName("gameVersion")]
-    public string McVersion { get; set; }
+    public required string McVersion { get; set; }
 
     [JsonPropertyName("filename")]
-    public string FileName { get; set; }
+    public required string FileName { get; set; }
 
     [JsonPropertyName("modLoader")]
-    public ModLoaderType ModLoaderType { get; set; }
+    public required ModLoaderType ModLoaderType { get; set; }
 
-    public int ModId { get; set; }
+    public required int ModId { get; set; }
 
     public string DisplayDescription => $"{ModLoaderType} {McVersion}";
 }

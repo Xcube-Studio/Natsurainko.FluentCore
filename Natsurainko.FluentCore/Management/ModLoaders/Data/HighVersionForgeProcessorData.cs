@@ -9,13 +9,13 @@ public record HighVersionForgeProcessorData
     public List<string> Sides { get; set; } = new();
 
     [JsonPropertyName("jar")]
-    public string Jar { get; set; }
+    public required string Jar { get; set; }
 
     [JsonPropertyName("classpath")]
-    public IEnumerable<string> Classpath { get; set; }
+    public required IEnumerable<string> Classpath { get; set; }
 
     [JsonPropertyName("args")]
-    public IEnumerable<string> Args { get; set; }
+    public required IEnumerable<string> Args { get; set; }
 
     [JsonPropertyName("outputs")]
     public Dictionary<string, string> Outputs { get; set; } = new();

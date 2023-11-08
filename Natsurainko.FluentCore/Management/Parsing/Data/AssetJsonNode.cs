@@ -5,5 +5,5 @@ namespace Nrk.FluentCore.Management.Parsing;
 public record AssetJsonNode
 {
     [JsonPropertyName("hash")]
-    public string Hash { get; set; }
+    public required string Hash { get; set; }
 }

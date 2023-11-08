@@ -5,9 +5,9 @@
 /// </summary>
 public class DownloadRange
 {
-    public long Start { get; set; }
+    public required long Start { get; set; }
 
-    public long End { get; set; }
+    public required long End { get; set; }
 
-    public string TempFileAbsolutePath { get; set; }
+    public required string TempFileAbsolutePath { get; set; }
 }

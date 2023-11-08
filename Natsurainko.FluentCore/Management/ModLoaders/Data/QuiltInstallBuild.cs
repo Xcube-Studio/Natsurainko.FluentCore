@@ -6,13 +6,13 @@ namespace Nrk.FluentCore.Management.ModLoaders;
 public record QuiltInstallBuild
 {
     [JsonPropertyName("intermediary")]
-    public QuiltMavenItem Intermediary { get; set; }
+    public required QuiltMavenItem Intermediary { get; set; }
 
     [JsonPropertyName("loader")]
-    public QuiltMavenItem Loader { get; set; }
+    public required QuiltMavenItem Loader { get; set; }
 
     [JsonPropertyName("launcherMeta")]
-    public QuiltLauncherMeta LauncherMeta { get; set; }
+    public required QuiltLauncherMeta LauncherMeta { get; set; }
 
     public string McVersion => Intermediary.Version;
 
@@ -24,17 +24,17 @@ public record QuiltInstallBuild
 public record QuiltLauncherMeta
 {
     [JsonPropertyName("mainClass")]
-    public Dictionary<string, string> MainClass { get; set; }
+    public required Dictionary<string, string> MainClass { get; set; }
 }
 
 public record QuiltMavenItem
 {
     [JsonPropertyName("separator")]
-    public string Separator { get; set; }
+    public required string Separator { get; set; }
 
     [JsonPropertyName("maven")]
-    public string Maven { get; set; }
+    public required string Maven { get; set; }
 
     [JsonPropertyName("version")]
-    public string Version { get; set; }
+    public required string Version { get; set; }
 }

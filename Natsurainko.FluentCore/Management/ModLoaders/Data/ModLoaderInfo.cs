@@ -13,5 +13,5 @@ public record ModLoaderInfo
     /// <summary>
     /// 加载器版本
     /// </summary>
-    public string Version { get; set; }
+    public required string Version { get; set; }
 }

@@ -15,20 +15,20 @@ public record LibraryElement : IDownloadElement
     /// <summary>
     /// 相对于 libraries 文件夹路径
     /// </summary>
-    public string RelativePath { get; set; }
+    public string? RelativePath { get; set; }
 
     /// <summary>
     /// 绝对路径
     /// </summary>
-    public string AbsolutePath { get; set; }
+    public required string AbsolutePath { get; set; }
 
     /// <summary>
     /// 下载地址（如果可能）
     /// </summary>
-    public string Url { get; set; }
+    public string? Url { get; set; }
 
     /// <summary>
     /// 校验码（如果可能）
     /// </summary>
-    public string Checksum { get; set; }
+    public string? Checksum { get; set; }
 }

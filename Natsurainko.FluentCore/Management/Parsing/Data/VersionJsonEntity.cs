@@ -10,28 +10,28 @@ namespace Nrk.FluentCore.Management.Parsing;
 public record VersionJsonEntity
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [JsonPropertyName("mainClass")]
-    public string MainClass { get; set; }
+    public required string MainClass { get; set; }
 
     [JsonPropertyName("minecraftArguments")]
-    public string MinecraftArguments { get; set; }
+    public required string MinecraftArguments { get; set; }
 
     [JsonPropertyName("inheritsFrom")]
-    public string InheritsFrom { get; set; }
+    public required string InheritsFrom { get; set; }
 
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public required string Type { get; set; }
 
     [JsonPropertyName("assets")]
-    public string Assets { get; set; }
+    public required string Assets { get; set; }
 
     [JsonPropertyName("arguments")]
-    public ArgumentsJsonNode Arguments { get; set; }
+    public required ArgumentsJsonNode Arguments { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public AssstIndexJsonNode AssetIndex { get; set; }
+    public required AssstIndexJsonNode AssetIndex { get; set; }
 }
 
 /// <summary>
@@ -40,10 +40,10 @@ public record VersionJsonEntity
 public class ArgumentsJsonNode
 {
     [JsonPropertyName("game")]
-    public IEnumerable<JsonElement> Game { get; set; }
+    public required IEnumerable<JsonElement> Game { get; set; }
 
     [JsonPropertyName("jvm")]
-    public IEnumerable<JsonElement> Jvm { get; set; }
+    public required IEnumerable<JsonElement> Jvm { get; set; }
 }
 
 /// <summary>
@@ -52,11 +52,11 @@ public class ArgumentsJsonNode
 public class AssstIndexJsonNode
 {
     [JsonPropertyName("url")]
-    public string Url { get; set; }
+    public required string Url { get; set; }
 
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [JsonPropertyName("sha1")]
-    public string Sha1 { get; set; }
+    public required string Sha1 { get; set; }
 }

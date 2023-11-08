@@ -8,15 +8,15 @@ public class DownloadElement : IDownloadElement
     /// <summary>
     /// 绝对路径
     /// </summary>
-    public string AbsolutePath { get; set; }
+    public required string AbsolutePath { get; set; }
 
     /// <summary>
     /// 下载地址
     /// </summary>
-    public string Url { get; set; }
+    public required string Url { get; set; }
 
     /// <summary>
     /// 校验码
     /// </summary>
-    public string Checksum { get; set; }
+    public string? Checksum { get; set; }
 }

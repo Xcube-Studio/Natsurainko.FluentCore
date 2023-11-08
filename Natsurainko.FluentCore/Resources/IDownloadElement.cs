@@ -6,5 +6,5 @@ public interface IDownloadElement
 
     public string Url { get; set; }
 
-    public string Checksum { get; set; }
+    public string? Checksum { get; set; }
 }

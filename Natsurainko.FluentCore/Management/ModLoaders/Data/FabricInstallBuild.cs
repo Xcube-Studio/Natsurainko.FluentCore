@@ -8,13 +8,13 @@ namespace Nrk.FluentCore.Management.ModLoaders;
 public record FabricInstallBuild
 {
     [JsonPropertyName("intermediary")]
-    public FabricMavenItem Intermediary { get; set; }
+    public required FabricMavenItem Intermediary { get; set; }
 
     [JsonPropertyName("loader")]
-    public FabricMavenItem Loader { get; set; }
+    public required FabricMavenItem Loader { get; set; }
 
     [JsonPropertyName("launcherMeta")]
-    public FabricLauncherMeta LauncherMeta { get; set; }
+    public required FabricLauncherMeta LauncherMeta { get; set; }
 
     public string McVersion => Intermediary.Version;
 
@@ -28,20 +28,20 @@ public record FabricInstallBuild
 public record FabricLauncherMeta
 {
     [JsonPropertyName("mainClass")]
-    public JsonNode MainClass { get; set; }
+    public required JsonNode MainClass { get; set; }
 
     [JsonPropertyName("libraries")]
-    public Dictionary<string, List<LibraryJsonNode>> Libraries { get; set; }
+    public required Dictionary<string, List<LibraryJsonNode>> Libraries { get; set; }
 }
 
 public record FabricMavenItem
 {
     [JsonPropertyName("separator")]
-    public string Separator { get; set; }
+    public required string Separator { get; set; }
 
     [JsonPropertyName("maven")]
-    public string Maven { get; set; }
+    public required string Maven { get; set; }
 
     [JsonPropertyName("version")]
-    public string Version { get; set; }
+    public required string Version { get; set; }
 }

@@ -7,37 +7,37 @@ namespace Nrk.FluentCore.Resources;
 public record ModrinthResource
 {
     [JsonPropertyName("project_id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     [JsonPropertyName("slug")]
-    public string Slug { get; set; }
+    public required string Slug { get; set; }
 
     [JsonPropertyName("project_type")]
-    public string ProjectType { get; set; }
+    public required string ProjectType { get; set; }
 
     [JsonPropertyName("title")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [JsonPropertyName("description")]
-    public string Summary { get; set; }
+    public required string Summary { get; set; }
 
     [JsonPropertyName("downloads")]
-    public int DownloadCount { get; set; }
+    public required int DownloadCount { get; set; }
 
     [JsonPropertyName("date_modified")]
-    public DateTime DateModified { get; set; }
+    public required DateTime DateModified { get; set; }
 
     [JsonPropertyName("author")]
-    public string Author { get; set; }
+    public required string Author { get; set; }
 
     [JsonPropertyName("display_categories")]
-    public IEnumerable<string> Categories { get; set; }
+    public required IEnumerable<string> Categories { get; set; }
 
     [JsonPropertyName("gallery")]
-    public IEnumerable<string> ScreenshotUrls { get; set; }
+    public required IEnumerable<string> ScreenshotUrls { get; set; }
 
     [JsonPropertyName("icon_url")]
-    public string IconUrl { get; set; }
+    public required string IconUrl { get; set; }
 
     public string WebLink => $"https://modrinth.com/{ProjectType}/{Slug}";
 }

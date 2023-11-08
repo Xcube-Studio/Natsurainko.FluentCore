@@ -249,14 +249,14 @@ public static class HttpUtils
         while (totalSize > 0)
         {
             bool enough = totalSize - singleSize > 1024 * 10;
-
+            long start = enough ? totalSize - singleSize : 0;
             var range = new DownloadRange
             {
+                Start = start,
                 End = totalSize,
-                Start = enough ? totalSize - singleSize : 0
+                TempFileAbsolutePath = Path.Combine(folder, $"{start}-{totalSize}-" + Path.GetFileName(absolutePath))
             };
 
-            range.TempFileAbsolutePath = Path.Combine(folder, $"{range.Start}-{range.End}-" + Path.GetFileName(absolutePath));
             rangesList.Add(range);
 
             if (!enough) break;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Nrk.FluentCore.Resources;
 
@@ -10,15 +11,16 @@ public class DownloadResult
     /// <summary>
     /// 是否失败
     /// </summary>
-    public bool IsFaulted { get; set; }
+    [MemberNotNullWhen(true, nameof(DownloadElement), nameof(Exception))]
+    public required bool IsFaulted { get; set; }
 
     /// <summary>
     /// 失败的下载元素，若未失败该值为null
     /// </summary>
-    public IDownloadElement DownloadElement { get; set; }
+    public IDownloadElement? DownloadElement { get; set; }
 
     /// <summary>
     /// 导致失败的异常，若未失败该值为null
     /// </summary>
-    public Exception Exception { get; set; }
+    public Exception? Exception { get; set; }
 }
