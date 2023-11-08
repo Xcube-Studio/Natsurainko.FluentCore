@@ -1,4 +1,6 @@
-﻿namespace Nrk.FluentCore.Launch;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 用于记录游戏的基本信息和信息源
@@ -39,6 +41,7 @@ public record GameInfo
     /// <summary>
     /// 是否有继承的核心
     /// </summary>
+    [MemberNotNullWhen(true, nameof(InheritsFrom))]
     public bool IsInheritedFrom { get; set; }
 
     /// <summary>

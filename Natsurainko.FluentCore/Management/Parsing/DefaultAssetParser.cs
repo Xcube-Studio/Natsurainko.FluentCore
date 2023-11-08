@@ -21,8 +21,15 @@ public class DefaultAssetParser : BaseAssetParser
 
     public override AssetElement GetAssetIndexJson()
     {
-        var assetIndex = JsonNode.Parse(File.ReadAllText(_gameInfo.IsInheritedFrom ? _gameInfo.InheritsFrom.VersionJsonPath : _gameInfo.VersionJsonPath))
-            ["assetIndex"].Deserialize<AssstIndexJsonNode>();
+        // Parse version.json
+        string versionJsonPath = _gameInfo.IsInheritedFrom ? _gameInfo.InheritsFrom.VersionJsonPath : _gameInfo.VersionJsonPath;
+        JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(versionJsonPath));
+        var assetIndex = jsonNode?["assetIndex"]?.Deserialize<AssstIndexJsonNode>();
+
+        if (assetIndex is null)
+            throw new InvalidDataException("Error in parsing version.json");
+
+        // Create AssetElement
         var assetIndexFilePath = _gameInfo.IsInheritedFrom ? _gameInfo.InheritsFrom.AssetsIndexJsonPath : _gameInfo.AssetsIndexJsonPath;
 
         return new AssetElement
@@ -37,10 +44,18 @@ public class DefaultAssetParser : BaseAssetParser
 
     public override IEnumerable<AssetElement> EnumerateAssets()
     {
-        if (string.IsNullOrEmpty(_gameInfo.AssetsIndexJsonPath)) yield break; //未找到 assets\indexes\assetindex.json
+        if (string.IsNullOrEmpty(_gameInfo.AssetsIndexJsonPath))
+            yield break; //未找到 assets\indexes\assetindex.json
 
-        var assets = JsonNode.Parse(File.ReadAllText(_gameInfo.AssetsIndexJsonPath))["objects"].Deserialize<Dictionary<string, AssetJsonNode>>();
+        // Parse assetindex.json
+        var assets = JsonNode
+            .Parse(File.ReadAllText(_gameInfo.AssetsIndexJsonPath))
+            ?["objects"].Deserialize<Dictionary<string, AssetJsonNode>>();
 
+        if (assets is null)
+            throw new InvalidDataException("Error in parsing assetindex.json");
+
+        // Parse AssetElement objects
         foreach (var keyValuePair in assets)
         {
             var hashPath = Path.Combine(keyValuePair.Value.Hash[..2], keyValuePair.Value.Hash);

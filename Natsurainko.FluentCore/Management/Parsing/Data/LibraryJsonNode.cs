@@ -7,20 +7,20 @@ namespace Nrk.FluentCore.Management.Parsing;
 public record LibraryJsonNode
 {
     [JsonPropertyName("downloads")]
-    public DownloadsJsonNode Downloads { get; set; }
+    public DownloadsJsonNode? Downloads { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     [JsonPropertyName("natives")]
-    public Dictionary<string, string> Natives { get; set; }
+    public Dictionary<string, string>? Natives { get; set; }
 }
 
 public class RuleModel
 {
     [JsonPropertyName("action")]
-    public string Action { get; set; }
+    public required string Action { get; set; }
 
     [JsonPropertyName("os")]
-    public Dictionary<string, string> System { get; set; }
+    public required Dictionary<string, string> System { get; set; }
 }

@@ -18,26 +18,23 @@ public class ForgeInstaller : ModLoaderInstallerBase
 
     public required string PackageFilePath { get; set; }
 
-    private ZipArchive _packageArchive;
     private bool _isLegacyForgeVersion = false;
-    private string _forgeVersion;
-
-    private JsonNode _installProfile;
-    private JsonNode _versionInfoJson;
-    private List<LibraryElement> _libraries;
-
-    private IReadOnlyList<HighVersionForgeProcessorData> _highVersionForgeProcessors;
 
     private readonly Dictionary<string, List<string>> _outputs = new();
     private readonly Dictionary<string, List<string>> _errorOutputs = new();
 
     public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
     {
-        ParsePackage();
-
-        WriteFiles();
-
-        DownloadLibraries();
+        ParsePackage(
+            out ZipArchive packageArchive,
+            out JsonNode installProfile,
+            out string forgeVersion,
+            out JsonNode versionInfoJson,
+            out List<LibraryElement> libraries,
+            out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors
+        );
+        WriteFiles(packageArchive, installProfile, forgeVersion, versionInfoJson);
+        DownloadLibraries(libraries);
 
         if (_isLegacyForgeVersion)
         {
@@ -45,8 +42,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
             return;
         }
 
-        RunProcessors();
-
+        RunProcessors(highVersionForgeProcessors);
         OnProgressChanged(1.0);
 
     }).ContinueWith(task =>
@@ -67,50 +63,56 @@ public class ForgeInstaller : ModLoaderInstallerBase
         };
     });
 
-
-    void ParsePackage()
+    void ParsePackage(
+        out ZipArchive packageArchive,
+        out JsonNode installProfile,
+        out string forgeVersion,
+        out JsonNode versionInfoJson,
+        out List<LibraryElement> libraries,
+        out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors)
     {
+        highVersionForgeProcessors = null; // default output
         OnProgressChanged(0.1);
 
-        _packageArchive = ZipFile.OpenRead(PackageFilePath);
-        _installProfile = JsonNode.Parse(_packageArchive.GetEntry("install_profile.json").ReadAsString());
-        _isLegacyForgeVersion = _installProfile["install"] != null;
-        _forgeVersion = _isLegacyForgeVersion
-            ? _installProfile["install"]["version"].GetValue<string>().Replace("forge ", string.Empty)
-            : _installProfile["version"].GetValue<string>().Replace("-forge-", "-");
+        packageArchive = ZipFile.OpenRead(PackageFilePath);
+        installProfile = JsonNode.Parse(packageArchive.GetEntry("install_profile.json").ReadAsString());
+        _isLegacyForgeVersion = installProfile["install"] != null;
+        forgeVersion = _isLegacyForgeVersion
+            ? installProfile["install"]["version"].GetValue<string>().Replace("forge ", string.Empty)
+            : installProfile["version"].GetValue<string>().Replace("-forge-", "-");
 
-        _versionInfoJson = _isLegacyForgeVersion
-            ? _installProfile["versionInfo"]
-            : JsonNode.Parse(_packageArchive.GetEntry("version.json").ReadAsString());
+        versionInfoJson = _isLegacyForgeVersion
+            ? installProfile["versionInfo"]
+            : JsonNode.Parse(packageArchive.GetEntry("version.json").ReadAsString());
 
-        _libraries = new List<LibraryElement>(
+        libraries = new List<LibraryElement>(
             DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
-                _versionInfoJson["libraries"].AsArray(),
+                versionInfoJson["libraries"].AsArray(),
                 InheritedFrom.MinecraftFolderPath));
 
-        foreach (var lib in _libraries.Where(x => string.IsNullOrEmpty(x.Url)))
+        foreach (var lib in libraries.Where(x => string.IsNullOrEmpty(x.Url)))
             lib.Url = "https://bmclapi2.bangbang93.com/maven/" + lib.RelativePath.Replace("\\", "/");
 
         if (_isLegacyForgeVersion)
             return;
 
-        _libraries.AddRange(DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
-            _installProfile["libraries"].AsArray(),
+        libraries.AddRange(DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
+            installProfile["libraries"].AsArray(),
             InheritedFrom.MinecraftFolderPath));
 
-        var _highVersionForgeDataDictionary = _installProfile["data"].Deserialize<Dictionary<string, Dictionary<string, string>>>();
+        var _highVersionForgeDataDictionary = installProfile["data"].Deserialize<Dictionary<string, Dictionary<string, string>>>();
 
         if (_highVersionForgeDataDictionary.Any())
         {
-            _highVersionForgeDataDictionary["BINPATCH"]["client"] = $"[net.minecraftforge:forge:{_forgeVersion}:clientdata@lzma]";
-            _highVersionForgeDataDictionary["BINPATCH"]["server"] = $"[net.minecraftforge:forge:{_forgeVersion}:serverdata@lzma]";
+            _highVersionForgeDataDictionary["BINPATCH"]["client"] = $"[net.minecraftforge:forge:{forgeVersion}:clientdata@lzma]";
+            _highVersionForgeDataDictionary["BINPATCH"]["server"] = $"[net.minecraftforge:forge:{forgeVersion}:serverdata@lzma]";
         }
 
         var replaceValues = new Dictionary<string, string>
         {
             { "{SIDE}", "client" },
             { "{MINECRAFT_JAR}", InheritedFrom.JarPath.ToPathParameter() },
-            { "{MINECRAFT_VERSION}", _installProfile["minecraft"].GetValue<string>() },
+            { "{MINECRAFT_VERSION}", installProfile["minecraft"].GetValue<string>() },
             { "{ROOT}", InheritedFrom.MinecraftFolderPath.ToPathParameter() },
             { "{INSTALLER}", PackageFilePath.ToPathParameter() },
             { "{LIBRARY_DIR}", Path.Combine(InheritedFrom.MinecraftFolderPath, "libraries").ToPathParameter() }
@@ -129,12 +131,12 @@ public class ForgeInstaller : ModLoaderInstallerBase
                     .ToPathParameter();
             });
 
-        _highVersionForgeProcessors = _installProfile["processors"]
+        highVersionForgeProcessors = installProfile["processors"]
             .Deserialize<IEnumerable<HighVersionForgeProcessorData>>()
             .Where(x => !(x.Sides.Count == 1 && x.Sides.Contains("server")))
             .ToList();
 
-        foreach (var processor in _highVersionForgeProcessors)
+        foreach (var processor in highVersionForgeProcessors)
         {
             processor.Args = processor.Args.Select(x =>
             {
@@ -157,7 +159,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         OnProgressChanged(0.25);
     }
 
-    void DownloadLibraries()
+    void DownloadLibraries(List<LibraryElement> _libraries)
     {
         OnProgressChanged(0.3);
 
@@ -170,7 +172,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         OnProgressChanged(0.5);
     }
 
-    void WriteFiles()
+    void WriteFiles(ZipArchive _packageArchive, JsonNode _installProfile, string _forgeVersion, JsonNode _versionInfoJson)
     {
         OnProgressChanged(0.6);
 
@@ -209,7 +211,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         OnProgressChanged(0.75);
     }
 
-    void RunProcessors()
+    void RunProcessors(IReadOnlyList<HighVersionForgeProcessorData>? _highVersionForgeProcessors)
     {
         OnProgressChanged(0.8);
 

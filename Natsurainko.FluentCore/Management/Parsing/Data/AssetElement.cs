@@ -10,25 +10,25 @@ public record AssetElement : IDownloadElement
     /// <summary>
     /// 对应依赖文件的原始文件名
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     /// <summary>
     /// 相对于 assets 文件夹路径
     /// </summary>
-    public string RelativePath { get; set; }
+    public required string RelativePath { get; set; }
 
     /// <summary>
     /// 绝对路径
     /// </summary>
-    public string AbsolutePath { get; set; }
+    public required string AbsolutePath { get; set; }
 
     /// <summary>
     /// 下载地址
     /// </summary>
-    public string Url { get; set; }
+    public required string Url { get; set; }
 
     /// <summary>
     /// 校验码
     /// </summary>
-    public string Checksum { get; set; }
+    public required string Checksum { get; set; }
 }
