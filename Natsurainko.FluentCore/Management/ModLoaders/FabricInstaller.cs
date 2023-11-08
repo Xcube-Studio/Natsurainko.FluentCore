@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;
 
-public class FabricInstallExecutor : BaseInstallExecutor
+public class FabricInstaller : ModLoaderInstallerBase
 {
     public required FabricInstallBuild FabricBuild { get; set; }
 

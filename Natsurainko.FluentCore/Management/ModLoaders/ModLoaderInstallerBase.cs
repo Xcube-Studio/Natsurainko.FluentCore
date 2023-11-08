@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;
 
-public abstract class BaseInstallExecutor : IInstallExecutor
+public abstract class ModLoaderInstallerBase : IModLoaderInstaller
 {
     public string AbsoluteId { get; set; }
 

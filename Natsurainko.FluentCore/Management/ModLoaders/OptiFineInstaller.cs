@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;
 
-public class OptiFineInstallExecutor : BaseInstallExecutor
+public class OptiFineInstaller : ModLoaderInstallerBase
 {
     public required string JavaPath { get; set; }
 

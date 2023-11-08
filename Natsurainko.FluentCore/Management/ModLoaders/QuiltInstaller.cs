@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;
 
-public class QuiltInstallExecutor : BaseInstallExecutor
+public class QuiltInstaller : ModLoaderInstallerBase
 {
     public required QuiltInstallBuild QuiltBuild { get; set; }
 

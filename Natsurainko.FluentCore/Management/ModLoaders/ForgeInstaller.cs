@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;
 
-public class ForgeInstallExecutor : BaseInstallExecutor
+public class ForgeInstaller : ModLoaderInstallerBase
 {
     public required string JavaPath { get; set; }
 
