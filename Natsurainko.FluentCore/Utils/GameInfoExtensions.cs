@@ -4,27 +4,31 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Nrk.FluentCore.Management.Parsing;
-using Nrk.FluentCore.Utils;
 using Nrk.FluentCore.Management.ModLoaders;
+using Nrk.FluentCore.Launch;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Utils;
 
 public static class GameInfoExtensions
 {
-    public static LibraryElement GetJarElement(this GameInfo gameInfo)
+    public static LibraryElement? GetJarElement(this GameInfo gameInfo)
     {
         var jsonClient = JsonNode.Parse(File.ReadAllText(gameInfo.IsInheritedFrom ? gameInfo.InheritsFrom.VersionJsonPath : gameInfo.VersionJsonPath))
             ?["downloads"]?["client"];
 
-        if (jsonClient != null)
-            return new LibraryElement
-            {
-                AbsolutePath = gameInfo.IsInheritedFrom ? gameInfo.InheritsFrom.JarPath : gameInfo.JarPath,
-                Checksum = jsonClient["sha1"].GetValue<string>(),
-                Url = jsonClient["url"].GetValue<string>()
-            };
+        if (jsonClient is null)
+            return null;
 
-        return null;
+        string? absolutePath = gameInfo.IsInheritedFrom ? gameInfo.InheritsFrom.JarPath : gameInfo.JarPath;
+        if (absolutePath is null)
+            return null;
+
+        return new LibraryElement
+        {
+            AbsolutePath = absolutePath,
+            Checksum = jsonClient["sha1"]?.GetValue<string>(),
+            Url = jsonClient["url"]?.GetValue<string>()
+        };
     }
 
     public static string GetSuitableJavaVersion(this GameInfo gameInfo)
@@ -32,8 +36,9 @@ public static class GameInfoExtensions
         if (gameInfo.IsInheritedFrom)
             return gameInfo.InheritsFrom.GetSuitableJavaVersion();
 
-        var jsonMajorVersion = JsonNode.Parse(File.ReadAllText(gameInfo.VersionJsonPath))["javaVersion"]?["majorVersion"];
+        JsonNode jsonNode = JsonUtils.ParseJsonNodeFromFile(gameInfo.VersionJsonPath);
 
+        var jsonMajorVersion = jsonNode["javaVersion"]?["majorVersion"];
         if (jsonMajorVersion != null) return jsonMajorVersion.GetValue<int>().ToString();
 
         return "8";
@@ -52,9 +57,12 @@ public static class GameInfoExtensions
             { "org.quiltmc:quilt-loader:", (ModLoaderType.Quilt, libVersion => libVersion) },
         };
 
-        var libraryJsonNodes = JsonNode.Parse(File.ReadAllText(gameInfo.VersionJsonPath))["libraries"].Deserialize<IEnumerable<LibraryJsonNode>>();
-        var enumed = new List<ModLoaderInfo>();
+        JsonNode jsonNode = JsonUtils.ParseJsonNodeFromFile(gameInfo.VersionJsonPath);
+        var libraryJsonNodes = jsonNode["libraries"].Deserialize<IEnumerable<LibraryJsonNode>>();
+        if (libraryJsonNodes is null)
+            yield break;
 
+        var enumed = new List<ModLoaderInfo>();
         foreach (var library in libraryJsonNodes)
         {
             var loweredName = library.Name.ToLower();

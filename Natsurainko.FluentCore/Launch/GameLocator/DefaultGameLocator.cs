@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,21 +27,25 @@ public class DefaultGameLocator : BaseGameLocator
 
         if (!versionsDirectory.Exists) yield break; // 不存在 .versions 文件夹
 
-        var enumedGames = new List<GameInfo>();
+        List<GameInfo> enumedGames = new();
         var inheritedFromGames = new Dictionary<VersionJsonEntity, GameInfo>();
 
         foreach (var dir in versionsDirectory.EnumerateDirectories())
         {
-            var jsonFile = new FileInfo(Path.Combine(dir.FullName, dir.Name + ".json"));
-            VersionJsonEntity jsonEntity = default;
+            VersionJsonEntity? jsonEntity = null;
 
+            var jsonFile = new FileInfo(Path.Combine(dir.FullName, dir.Name + ".json"));
             if (!jsonFile.Exists) continue; // 不存在 version.json
 
-            try { jsonEntity = JsonSerializer.Deserialize<VersionJsonEntity>(File.ReadAllText(jsonFile.FullName)); } catch { }
+            try
+            {
+                jsonEntity = JsonSerializer.Deserialize<VersionJsonEntity>(File.ReadAllText(jsonFile.FullName));
+            }
+            catch (JsonException) { }
 
             if (jsonEntity == null) continue; // version.json 读取失败
 
-            var gameInfo = new GameInfo
+            GameInfo gameInfo = new()
             {
                 AbsoluteId = jsonEntity.Id,
                 Name = jsonEntity.Id,
@@ -72,7 +75,7 @@ public class DefaultGameLocator : BaseGameLocator
 
         foreach (var keyValuePair in inheritedFromGames)
         {
-            var inheritsFrom = enumedGames.FirstOrDefault(info => info.AbsoluteId.Equals(keyValuePair.Key.InheritsFrom), null);
+            var inheritsFrom = enumedGames.FirstOrDefault(info => info.AbsoluteId.Equals(keyValuePair.Key.InheritsFrom));
             if (inheritsFrom == null) continue; // 继承的核心未找到
 
             keyValuePair.Value.InheritsFrom = inheritsFrom;
@@ -101,7 +104,7 @@ public class DefaultGameLocator : BaseGameLocator
         foreach (var dir in versionsDirectory.EnumerateDirectories())
         {
             var jsonFile = new FileInfo(Path.Combine(dir.FullName, dir.Name + ".json"));
-            VersionJsonEntity jsonEntity = default;
+            VersionJsonEntity? jsonEntity = null;
 
             if (!jsonFile.Exists) continue; // 不存在 version.json
 
@@ -141,7 +144,7 @@ public class DefaultGameLocator : BaseGameLocator
 
         foreach (var keyValuePair in inheritedFromGames)
         {
-            var inheritsFrom = games.FirstOrDefault(info => info.AbsoluteId.Equals(keyValuePair.Key.InheritsFrom), null);
+            var inheritsFrom = games.FirstOrDefault(info => info.AbsoluteId.Equals(keyValuePair.Key.InheritsFrom));
             if (inheritsFrom == null)
             {
                 errorGames.Add(keyValuePair.Key.Id);
@@ -165,7 +168,7 @@ public class DefaultGameLocator : BaseGameLocator
         if (!jsonFile.Exists) // 不存在对应的 version.json 文件
             return null;
 
-        VersionJsonEntity jsonEntity = default;
+        VersionJsonEntity? jsonEntity = null;
 
         try { jsonEntity = JsonSerializer.Deserialize<VersionJsonEntity>(File.ReadAllText(jsonFile.FullName)); } catch { }
 
@@ -221,21 +224,31 @@ public class DefaultGameLocator : BaseGameLocator
                 && (jsonEntity.MinecraftArguments?.Contains("--tweakClass")).GetValueOrDefault()
                 && !(jsonEntity.MinecraftArguments?.Contains("--tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker")).GetValueOrDefault()
             || ensureMainClass
-                && (jsonEntity.Arguments?.Game?.Where(e => e.ValueKind.Equals(JsonValueKind.String)
-                && e.GetString().Equals("--tweakClass")).Any()).GetValueOrDefault())
+                && (jsonEntity.Arguments?.Game?.Where(e => e.ValueKind.Equals(JsonValueKind.String) && e.GetString()?.Equals("--tweakClass") == true).Any()).GetValueOrDefault())
             gameInfo.IsVanilla = false;
 
         if (gameInfo.IsVanilla) gameInfo.AbsoluteVersion = gameInfo.AbsoluteId;
         else if (gameInfo.IsInheritedFrom) gameInfo.AbsoluteVersion = gameInfo.InheritsFrom.AbsoluteId;
         else
         {
-            var json = JsonNode.Parse(File.ReadAllText(gameInfo.VersionJsonPath));
+            JsonNode? json = null;
+            try
+            {
+                json = JsonNode.Parse(File.ReadAllText(gameInfo.VersionJsonPath));
+            }
+            catch (JsonException) { }
+
+            if (json == null)
+                throw new InvalidDataException("Error in parsing version.json");
 
             var pathchs = json["patches"]; // hmcl合并核心版本号读取
             var clientVersion = json["clientVersion"]; // pcl合并核心版本号读取
 
-            if (pathchs != null) gameInfo.AbsoluteVersion = pathchs[0]["version"].GetValue<string>();
-            if (clientVersion != null) gameInfo.AbsoluteVersion = clientVersion.GetValue<string>();
+            if (pathchs != null)
+                gameInfo.AbsoluteVersion = pathchs[0]?["version"]?.GetValue<string>();
+
+            if (clientVersion != null)
+                gameInfo.AbsoluteVersion = clientVersion.GetValue<string>();
         }
     }
 }
