@@ -36,7 +36,7 @@ public static class GameInfoExtensions
         if (gameInfo.IsInheritedFrom)
             return gameInfo.InheritsFrom.GetSuitableJavaVersion();
 
-        JsonNode jsonNode = JsonUtils.ParseJsonNodeFromFile(gameInfo.VersionJsonPath);
+        JsonNode jsonNode = JsonNodeUtils.ParseFile(gameInfo.VersionJsonPath);
 
         var jsonMajorVersion = jsonNode["javaVersion"]?["majorVersion"];
         if (jsonMajorVersion != null) return jsonMajorVersion.GetValue<int>().ToString();
@@ -57,7 +57,7 @@ public static class GameInfoExtensions
             { "org.quiltmc:quilt-loader:", (ModLoaderType.Quilt, libVersion => libVersion) },
         };
 
-        JsonNode jsonNode = JsonUtils.ParseJsonNodeFromFile(gameInfo.VersionJsonPath);
+        JsonNode jsonNode = JsonNodeUtils.ParseFile(gameInfo.VersionJsonPath);
         var libraryJsonNodes = jsonNode["libraries"].Deserialize<IEnumerable<LibraryJsonNode>>();
         if (libraryJsonNodes is null)
             yield break;

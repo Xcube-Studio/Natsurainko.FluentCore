@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Utils;
 
-internal static class JsonUtils
+internal static class JsonNodeUtils
 {
-    public static JsonNode ParseJsonNodeFromFile(string filePath)
+    public static JsonNode ParseFile(string filePath)
     {
         JsonNode? jsonNode = null;
         try
