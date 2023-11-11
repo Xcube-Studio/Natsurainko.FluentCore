@@ -24,8 +24,11 @@ public static class DefaultGameParameterParser
             foreach (var arg in StringExtensions.ArgumnetsGroup(jsonMinecraftArguments.GetValue<string>().Split(' ')))
                 yield return arg;
 
-        if (jsonGame != null)
-            foreach (var item in StringExtensions.ArgumnetsGroup(jsonGame.AsArray().Where(x => x is JsonValue).Select(x => x.GetValue<string>())))
-                yield return item;
+        if (jsonGame is null)
+            yield break;
+
+        var list = StringExtensions.ArgumnetsGroup(jsonGame.AsArray().WhereNotNull().Select(x => x.GetValue<string>()));
+        foreach (var item in list)
+            yield return item;
     }
 }

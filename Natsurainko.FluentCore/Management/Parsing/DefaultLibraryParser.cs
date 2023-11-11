@@ -28,20 +28,35 @@ public class DefaultLibraryParser : BaseLibraryParser
         var libraries = new List<LibraryElement>();
         var natives = new List<LibraryElement>();
 
-        var libsNode = JsonNode.Parse(File.ReadAllText(_gameInfo.VersionJsonPath))["libraries"].AsArray();
+        enabledLibraries = libraries;
+        enabledNativesLibraries = natives;
+
+        var libsNode = JsonNodeUtils.ParseFile(_gameInfo.VersionJsonPath)?["libraries"]?.AsArray();
+        if (libsNode is null)
+            return;
 
         foreach (var libNode in libsNode)
         {
+            if (libNode is null)
+                continue;
+
             var jsonRules = libNode["rules"];
             var jsonNatives = libNode["natives"];
 
-            if (jsonRules != null)
-                if (!GetLibraryEnable(jsonRules.Deserialize<IEnumerable<RuleModel>>()))
+            if (jsonRules is not null)
+            {
+                var ruleModelList = jsonRules.Deserialize<IEnumerable<RuleModel>>();
+
+                if (ruleModelList is not null && !GetLibraryEnable(ruleModelList))
                     continue;
+            }
 
             var libJsonNode = libNode.Deserialize<LibraryJsonNode>();
+            if (libJsonNode is null)
+                continue;
 
-            if (jsonNatives != null) libJsonNode.Name += ":" + libJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
+            if (jsonNatives is not null)
+                libJsonNode.Name += ":" + libJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
 
             var relativePath = StringExtensions.FormatLibraryNameToRelativePath(libJsonNode.Name);
             var absolutePath = Path.Combine(_gameInfo.MinecraftFolderPath, "libraries", relativePath);
@@ -72,9 +87,6 @@ public class DefaultLibraryParser : BaseLibraryParser
             enabledNativesLibraries = enabledNativesLibraries1;
             return;
         }
-
-        enabledLibraries = libraries;
-        enabledNativesLibraries = natives;
     }
 
     /// <summary>
@@ -157,14 +169,14 @@ public class DefaultLibraryParser : BaseLibraryParser
             if (libraryJsonNode.Natives != null)
             {
                 var nativeName = libraryJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
-                libraryElement.Checksum = libraryJsonNode.Downloads.Classifiers[nativeName].Sha1;
-                libraryElement.Url = libraryJsonNode.Downloads.Classifiers[nativeName].Url;
+                libraryElement.Checksum = libraryJsonNode.Downloads?.Classifiers[nativeName].Sha1;
+                libraryElement.Url = libraryJsonNode.Downloads?.Classifiers[nativeName].Url;
             }
 
-            if (jsonNode["name"].GetValue<string>().Contains("natives"))
+            if (jsonNode["name"] is JsonNode node && node.GetValue<string>().Contains("natives"))
             {
-                libraryElement.Checksum = libraryJsonNode.Downloads.Artifact.Sha1;
-                libraryElement.Url = libraryJsonNode.Downloads.Artifact.Url;
+                libraryElement.Checksum = libraryJsonNode.Downloads?.Artifact.Sha1;
+                libraryElement.Url = libraryJsonNode.Downloads?.Artifact.Url;
             }
             return;
         }
@@ -178,18 +190,20 @@ public class DefaultLibraryParser : BaseLibraryParser
         }
 
         if (libraryElement.Url == null && jsonNode["url"] != null)
-            libraryElement.Url = (jsonNode["url"].GetValue<string>() + libraryElement.RelativePath).Replace('\\', '/');
+            libraryElement.Url = (jsonNode["url"]?.GetValue<string>() + libraryElement.RelativePath).Replace('\\', '/');
 
         if (libraryElement.Checksum == null && jsonNode["checksums"] != null)
-            libraryElement.Checksum = jsonNode["checksums"].AsArray()[0].GetValue<string>();
+            libraryElement.Checksum = jsonNode["checksums"]?.AsArray()?[0]?.GetValue<string>();
     }
 
     public static IEnumerable<LibraryElement> EnumerateLibrariesFromJsonArray(JsonArray jsonArray, string minecraftFolderPath)
     {
-        foreach (var libNode in jsonArray)
+        foreach (var libNode in jsonArray.WhereNotNull())
         {
             var jsonNatives = libNode["natives"];
             var libJsonNode = libNode.Deserialize<LibraryJsonNode>();
+            if (libJsonNode is null)
+                continue;
 
             if (jsonNatives != null) libJsonNode.Name += ":" + libJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
 

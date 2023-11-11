@@ -32,13 +32,16 @@ public class DefaultAssetParser : BaseAssetParser
         // Create AssetElement
         var assetIndexFilePath = _gameInfo.IsInheritedFrom ? _gameInfo.InheritsFrom.AssetsIndexJsonPath : _gameInfo.AssetsIndexJsonPath;
 
+        if (assetIndexFilePath is null)
+            throw new InvalidDataException("Cannot find asset index file"); // QUESTION: does GameInfo guarantee that at least one of InheritsFrom and AssetsIndexJsonPath is not null?
+
         return new AssetElement
         {
             Name = assetIndex.Id + ".json",
             Checksum = assetIndex.Sha1,
             Url = assetIndex.Url,
             AbsolutePath = assetIndexFilePath,
-            RelativePath = assetIndexFilePath.Replace(Path.Combine(_gameInfo.MinecraftFolderPath, "assets"), string.Empty).TrimStart('\\')
+            RelativePath = assetIndexFilePath.Replace(Path.Combine(_gameInfo.MinecraftFolderPath, "assets"), string.Empty).TrimStart('\\') // QUESTION: does this work for OS other than Windows?
         };
     }
 

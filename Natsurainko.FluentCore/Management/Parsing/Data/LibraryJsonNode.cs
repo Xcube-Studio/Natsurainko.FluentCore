@@ -13,7 +13,7 @@ public record LibraryJsonNode
     public required string Name { get; set; }
 
     [JsonPropertyName("natives")]
-    public Dictionary<string, string>? Natives { get; set; }
+    public Dictionary<string, string> Natives { get; set; } = new();
 }
 
 public class RuleModel
