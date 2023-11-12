@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 
 namespace Nrk.FluentCore.Utils;
 
@@ -106,4 +107,6 @@ public static class StringExtensions
         host = value;
         port = 25565;
     }
+
+    public static JsonNode? ToJsonNode(this string value) => JsonNode.Parse(value);
 }

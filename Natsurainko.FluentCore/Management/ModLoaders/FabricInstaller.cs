@@ -12,70 +12,84 @@ public class FabricInstaller : ModLoaderInstallerBase
 {
     public required FabricInstallBuild FabricBuild { get; set; }
 
-    private JsonNode _versionInfoJson;
-    private IEnumerable<LibraryElement> _libraries;
-
     public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
-    {
-        ParseBuild();
+        {
+            ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries);
 
-        DownloadLibraries();
+            DownloadLibraries(libraries);
 
-        WriteFiles();
+            WriteFiles(versionInfoJson);
 
-        OnProgressChanged(1.0);
+            OnProgressChanged(1.0);
+        })
+        .ContinueWith(task =>
+        {
+            if (task.IsFaulted)
+                return new InstallResult
+                {
+                    Success = false,
+                    Exception = task.Exception,
+                    Log = null
+                };
 
-    }).ContinueWith(task =>
-    {
-        if (task.IsFaulted)
             return new InstallResult
             {
-                Success = false,
-                Exception = task.Exception,
+                Success = true,
+                Exception = null,
                 Log = null
             };
+        });
 
-        return new InstallResult
-        {
-            Success = true,
-            Exception = null,
-            Log = null
-        };
-    });
-
-    void ParseBuild()
+    void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
-        var responseMessage = HttpUtils.HttpGet($"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{FabricBuild.BuildVersion}/profile/json");
-        _versionInfoJson = JsonNode.Parse(responseMessage.Content.ReadAsString());
+        var responseMessage = HttpUtils.HttpGet(
+            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{FabricBuild.BuildVersion}/profile/json"
+        );
+        versionInfoJson =
+            JsonNode.Parse(responseMessage.Content.ReadAsString())
+            ?? throw new InvalidDataException("Error in parsing version info json");
 
-        _libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(_versionInfoJson["libraries"].AsArray(), InheritedFrom.MinecraftFolderPath);
+        var librariesJson = versionInfoJson["libraries"];
+        if (librariesJson is null)
+            throw new InvalidDataException("Error in parsing version info json");
+
+        libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
+            librariesJson.AsArray(),
+            InheritedFrom.MinecraftFolderPath
+        );
     }
 
-    void DownloadLibraries()
+    void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
         var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        resourcesDownloader.SetLibraryElements(_libraries);
+        resourcesDownloader.SetLibraryElements(libraries);
 
         resourcesDownloader.Download();
     }
 
-    void WriteFiles()
+    void WriteFiles(JsonNode versionInfoJson)
     {
         if (!string.IsNullOrEmpty(AbsoluteId))
-            _versionInfoJson["id"] = AbsoluteId;
+            versionInfoJson["id"] = AbsoluteId;
 
-        var jsonFile = new FileInfo(Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
-            "versions",
-            _versionInfoJson["id"].GetValue<string>(),
-            $"{_versionInfoJson["id"].GetValue<string>()}.json"));
+        var id = versionInfoJson["id"];
+        if (id is null)
+            throw new InvalidDataException("Error in parsing version info json");
 
-        if (!jsonFile.Directory.Exists)
+        var jsonFile = new FileInfo(
+            Path.Combine(
+                InheritedFrom.MinecraftFolderPath,
+                "versions",
+                id.GetValue<string>(),
+                $"{id.GetValue<string>()}.json"
+            )
+        );
+
+        if (jsonFile.Directory is not null && !jsonFile.Directory.Exists)
             jsonFile.Directory.Create();
 
-        File.WriteAllText(jsonFile.FullName, _versionInfoJson.ToString());
+        File.WriteAllText(jsonFile.FullName, versionInfoJson.ToString());
     }
-
 
     /*
     private void RunProcessor()

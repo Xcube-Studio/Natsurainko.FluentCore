@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Resources;
 using Nrk.FluentCore.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
@@ -12,67 +13,80 @@ public class QuiltInstaller : ModLoaderInstallerBase
 {
     public required QuiltInstallBuild QuiltBuild { get; set; }
 
-    private JsonNode _versionInfoJson;
-    private IEnumerable<LibraryElement> _libraries;
-
-    public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
-    {
-        ParseBuild();
-
-        DownloadLibraries();
-
-        WriteFiles();
-
-        OnProgressChanged(1.0);
-
-    }).ContinueWith(task =>
-    {
-        if (task.IsFaulted)
-            return new InstallResult
+    public override Task<InstallResult> ExecuteAsync() =>
+        Task.Run(() =>
             {
-                Success = false,
-                Exception = task.Exception,
-                Log = null
-            };
+                ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries);
 
-        return new InstallResult
-        {
-            Success = true,
-            Exception = null,
-            Log = null
-        };
-    });
+                DownloadLibraries(libraries);
 
-    void ParseBuild()
+                WriteFiles(versionInfoJson);
+
+                OnProgressChanged(1.0);
+            })
+            .ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                    return new InstallResult
+                    {
+                        Success = false,
+                        Exception = task.Exception,
+                        Log = null
+                    };
+
+                return new InstallResult
+                {
+                    Success = true,
+                    Exception = null,
+                    Log = null
+                };
+            });
+
+    void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
-        var responseMessage = HttpUtils.HttpGet($"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json");
-        _versionInfoJson = JsonNode.Parse(responseMessage.Content.ReadAsString());
+        var responseMessage = HttpUtils.HttpGet(
+            $"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json"
+        );
+        var node = JsonNode.Parse(responseMessage.Content.ReadAsString());
+        if (node is null)
+            throw new Exception("Version info is null");
 
-        _libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(_versionInfoJson["libraries"].AsArray(), InheritedFrom.MinecraftFolderPath);
+        versionInfoJson = node;
+        var lib = versionInfoJson["libraries"]?.AsArray();
+        if (lib is null)
+            throw new Exception("Version info libraries not exist");
+
+        libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
+            lib,
+            InheritedFrom.MinecraftFolderPath
+        );
     }
 
-    void DownloadLibraries()
+    void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
         var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        resourcesDownloader.SetLibraryElements(_libraries);
+        resourcesDownloader.SetLibraryElements(libraries);
 
         resourcesDownloader.Download();
     }
 
-    void WriteFiles()
+    void WriteFiles(JsonNode versionInfoJson)
     {
         if (!string.IsNullOrEmpty(AbsoluteId))
-            _versionInfoJson["id"] = AbsoluteId;
+            versionInfoJson["id"] = AbsoluteId;
 
-        var jsonFile = new FileInfo(Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
-            "versions",
-            _versionInfoJson["id"].GetValue<string>(),
-            $"{_versionInfoJson["id"].GetValue<string>()}.json"));
+        var id = versionInfoJson["id"]?.GetValue<string>();
+        if (string.IsNullOrEmpty(id))
+            throw new Exception("Version ID is null or empty");
+
+        var jsonFile = new FileInfo(Path.Combine(InheritedFrom.MinecraftFolderPath, "versions", id, $"{id}.json"));
+
+        if (jsonFile.Directory is null)
+            throw new Exception("Version directory is null");
 
         if (!jsonFile.Directory.Exists)
             jsonFile.Directory.Create();
 
-        File.WriteAllText(jsonFile.FullName, _versionInfoJson.ToString());
+        File.WriteAllText(jsonFile.FullName, versionInfoJson.ToString());
     }
 }
