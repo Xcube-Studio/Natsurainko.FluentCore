@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace Nrk.FluentCore.Utils;
 
-public static class IDownloadElementExtensions
+internal static class IDownloadElementExtensions
 {
     /// <summary>
     /// 验证文件

@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace Nrk.FluentCore.Utils;
 
+// TOOD: use internal
 public static class StringExtensions
 {
     /// <summary>

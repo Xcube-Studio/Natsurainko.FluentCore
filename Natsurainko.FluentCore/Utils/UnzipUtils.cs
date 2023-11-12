@@ -5,6 +5,7 @@ using Nrk.FluentCore.Environment;
 
 namespace Nrk.FluentCore.Utils;
 
+// TOOD: use internal
 public static class UnzipUtils
 {
     public static void BatchUnzip(string targetFolder, IEnumerable<string> files)

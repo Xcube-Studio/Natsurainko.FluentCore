@@ -3,7 +3,7 @@ using System.IO.Compression;
 
 namespace Nrk.FluentCore.Utils;
 
-public static class ZipArchiveExtensions
+internal static class ZipArchiveExtensions
 {
     public static string ReadAsString(this ZipArchiveEntry archiveEntry)
     {

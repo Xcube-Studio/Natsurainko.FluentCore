@@ -9,6 +9,7 @@ using Nrk.FluentCore.Launch;
 
 namespace Nrk.FluentCore.Utils;
 
+// TOOD: use internal
 public static class GameInfoExtensions
 {
     public static LibraryElement? GetJarElement(this GameInfo gameInfo)

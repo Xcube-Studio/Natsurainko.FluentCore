@@ -13,6 +13,7 @@ using Timer = System.Timers.Timer;
 
 namespace Nrk.FluentCore.Utils;
 
+// TOOD: use internal
 public static class HttpUtils
 {
     public static DownloadSetting DownloadSetting { get; set; } = new()
