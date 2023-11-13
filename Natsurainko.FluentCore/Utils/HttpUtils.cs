@@ -13,6 +13,9 @@ using Timer = System.Timers.Timer;
 
 namespace Nrk.FluentCore.Utils;
 
+#nullable disable
+// TODO: refactor downloading system later
+
 // TOOD: use internal
 public static class HttpUtils
 {

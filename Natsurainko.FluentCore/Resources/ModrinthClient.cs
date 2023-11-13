@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,8 +14,8 @@ public class ModrinthClient
 
     public IEnumerable<ModrinthResource> SearchResources(
         string query,
-        ModrinthResourceType? resourceType = default,
-        string version = default)
+        ModrinthResourceType? resourceType = null,
+        string? version = null)
     {
         var stringBuilder = new StringBuilder(Host);
         stringBuilder.Append($"search?query={query}");
@@ -29,42 +30,79 @@ public class ModrinthClient
                 _ => "mod"
             }}\"]");
 
-        if (version != null) facets.Add($"\"[versions:{version}\"]");
-        if (facets.Any()) stringBuilder.Append($"&facets=[{string.Join(',', facets)}]");
+        if (version != null)
+            facets.Add($"\"[versions:{version}\"]");
+
+        if (facets.Any())
+            stringBuilder.Append($"&facets=[{string.Join(',', facets)}]");
 
         using var responseMessage = HttpUtils.HttpGet(stringBuilder.ToString());
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        return JsonNode.Parse(responseMessage.Content.ReadAsString())["hits"].Deserialize<IEnumerable<ModrinthResource>>();
+        // Parse JSON
+        return responseJson
+            .ToJsonNode()?["hits"]?
+            .Deserialize<IEnumerable<ModrinthResource>>()
+            ?? throw new Exception("Failed to deserialize JSON response");
     }
 
     public string GetResourceDescription(string id)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"project/{id}");
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        return JsonNode.Parse(responseMessage.Content.ReadAsString())["body"].GetValue<string>();
+        return responseJson.ToJsonNode()?["body"]?
+            .GetValue<string>()
+            ?? throw new Exception("Failed to deserialize JSON response");
     }
 
     public IEnumerable<ModrinthFile> GetProjectVersions(string id)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"project/{id}/version");
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        foreach (var file in JsonNode.Parse(responseMessage.Content.ReadAsString()).AsArray())
+        var jsonArray = responseJson
+            .ToJsonNode()?["versions"]?
+            .AsArray()
+            ?? throw new Exception("Failed to deserialize JSON response");
+
+        foreach (var file in jsonArray)
+        {
+            if (file is null)
+                continue;
+
+            string? url = file["files"]?[0]?["url"]?.GetValue<string>();
+            string? fileName = file["files"]?[0]?["filename"]?.GetValue<string>();
+            string? mcVersion = file["game_versions"]?[0]?.GetValue<string>();
+
+            IEnumerable<string>? loaders = file["loaders"]?
+                .AsArray()
+                .WhereNotNull()
+                .Select(x => x.GetValue<string>());
+
+            if (url is null || fileName is null || mcVersion is null || loaders is null)
+                throw new Exception("Failed to deseralize JSON response"); // QUESTION: Maybe just skip this file?
+
             yield return new ModrinthFile
             {
-                Url = file["files"][0]["url"].GetValue<string>(),
-                FileName = file["files"][0]["filename"].GetValue<string>(),
-                McVersion = file["game_versions"][0].GetValue<string>(),
-                Loaders = string.Join(' ', file["loaders"].AsArray().Select(x => x.GetValue<string>()))
+                Url = url,
+                FileName = fileName,
+                McVersion = mcVersion,
+                Loaders = string.Join(' ', loaders)
             };
+        }
     }
 
     public string GetRawJsonSearchResources(
         string query,
         ModrinthResourceType? resourceType = default,
-        string version = default)
+        string? version = null)
     {
         var stringBuilder = new StringBuilder(Host);
         stringBuilder.Append($"search?query={query}");

@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ public class CurseForgeClient
     public IEnumerable<CurseResource> SearchResources(
         string searchFilter,
         CurseResourceType? resourceType = default,
-        string version = default)
+        string? version = null)
     {
         var stringBuilder = new StringBuilder(Host);
         stringBuilder.Append($"mods/search?gameId={GameId}");
@@ -35,17 +36,30 @@ public class CurseForgeClient
         stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
 
         using var responseMessage = HttpUtils.HttpGet(stringBuilder.ToString(), Header);
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"].AsArray().Select(ParseFromJsonNode);
+        return JsonNode.Parse(responseJson)?
+            ["data"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x => ParseFromJsonNode(x))
+            ?? throw new Exception("Error in parsing JSON response");
     }
 
     public string GetCurseFileDownloadUrl(CurseFile file)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{file.ModId}/files/{file.FileId}", Header);
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"]["downloadUrl"].GetValue<string>();
+        return JsonNode.Parse(responseJson)?
+            ["data"]?
+            ["downloadUrl"]?
+            .GetValue<string>()
+            ?? throw new Exception("Error in parsing JSON response");
     }
 
     public void GetFeaturedResources(out IEnumerable<CurseResource> mcMods, out IEnumerable<CurseResource> modPacks)
@@ -55,39 +69,64 @@ public class CurseForgeClient
             JsonSerializer.Serialize(new { gameId = 432 }),
             Header);
 
-        responseMessage.EnsureSuccessStatusCode();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
 
-        var json = JsonNode.Parse(responseMessage.Content.ReadAsString())["data"];
+        var json = JsonNode.Parse(responseJson)?["data"]
+            ?? throw new Exception("Error in parsing JSON response");
+        var featured = json["featured"]?.AsArray().WhereNotNull();
+        var popular = json["popular"]?.AsArray().WhereNotNull();
 
-        var _mcMods = new List<CurseResource>();
-        var _modPacks = new List<CurseResource>();
+        var resources = new List<JsonNode>();
+        if (featured != null)
+            resources.AddRange(featured);
+        if (popular != null)
+            resources.AddRange(popular);
 
-        var resources = json["featured"].AsArray().Union(json["popular"].AsArray());
+        var mcModsList = new List<CurseResource>();
+        var modPacksList = new List<CurseResource>();
+        mcMods = mcModsList;
+        modPacks = modPacksList;
 
         foreach (var node in resources)
         {
-            var classId = node["classId"].GetValue<int>();
+            if (node["classId"] is not JsonNode classIdNode)
+                continue;
 
+            int classId = classIdNode.GetValue<int>();
             if (classId.Equals((int)CurseResourceType.ModPack))
-                _modPacks.Add(ParseFromJsonNode(node));
+                modPacksList.Add(ParseFromJsonNode(node));
             else if (classId.Equals((int)CurseResourceType.McMod))
-                _mcMods.Add(ParseFromJsonNode(node));
+                mcModsList.Add(ParseFromJsonNode(node));
         }
-
-        mcMods = _mcMods;
-        modPacks = _modPacks;
     }
 
     public string GetResourceDescription(int resourceId)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}/description", Header);
-        return JsonNode.Parse(responseMessage.Content.ReadAsString())["data"].GetValue<string>();
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
+
+        return JsonNode.Parse(responseJson)?
+            ["data"]?
+            .GetValue<string>()
+            ?? throw new Exception("Error in parsing JSON response");
     }
 
     public CurseResource GetResource(int resourceId)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}", Header);
-        return ParseFromJsonNode(JsonNode.Parse(responseMessage.Content.ReadAsString())["data"]);
+        string responseJson = responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsString();
+
+        var node = JsonNode.Parse(responseJson)?
+            ["data"]
+            ?? throw new Exception("Error in parsing JSON response");
+
+        return ParseFromJsonNode(node);
     }
 
     public string GetRawJsonSearchResources(string searchFilter, CurseResourceType? resourceType = default)
@@ -116,19 +155,71 @@ public class CurseForgeClient
 
     private CurseResource ParseFromJsonNode(JsonNode jsonNode)
     {
-        var curseResource = jsonNode.Deserialize<CurseResource>();
+        var id = jsonNode["id"]?.GetValue<int>();
+        var classId = jsonNode["classId"]?.GetValue<int>();
+        var name = jsonNode["name"]?.GetValue<string>();
+        var summary = jsonNode["summary"]?.GetValue<string>();
+        var downloadCount = jsonNode["downloadCount"]?.GetValue<int>();
+        var dateModified = jsonNode["dateModified"]?.GetValue<DateTime>();
+        var latestFilesIndexes = jsonNode["latestFilesIndexes"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x => JsonSerializer.Deserialize<CurseFile>(x.GetValue<string>()))
+            .WhereNotNull();
+        var categories = jsonNode["categories"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x => x["name"]?.GetValue<string>())
+            .WhereNotNull();
+        var authors = jsonNode["authors"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x => x["name"]?.GetValue<string>())
+            .WhereNotNull();
+        var screenshotUrls = jsonNode["screenshots"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x => x["url"]?.GetValue<string>())
+            .WhereNotNull();
+        var websiteUrl = jsonNode["links"]?["websiteUrl"]?.GetValue<string>();
+        var iconurl = jsonNode["logo"]?["url"]?.GetValue<string>();
 
-        curseResource.WebLink = jsonNode["links"]?["websiteUrl"]?.GetValue<string>();
-        curseResource.IconUrl = jsonNode["logo"]?["url"]?.GetValue<string>();
-        curseResource.Authors = jsonNode["authors"]?.AsArray().Select(x => x["name"].GetValue<string>());
-        curseResource.ScreenshotUrls = jsonNode["screenshots"]?.AsArray().Select(x => x["url"].GetValue<string>());
-        curseResource.Categories = jsonNode["categories"]?.AsArray().Select(x => x["name"].GetValue<string>());
+        if (id is null
+            || classId is null
+            || name is null
+            || summary is null
+            || downloadCount is null
+            || dateModified is null
+            || latestFilesIndexes is null
+            || categories is null
+            || authors is null
+            || screenshotUrls is null
+            || websiteUrl is null
+            || iconurl is null
+        )
+            throw new Exception("Error in parsing JSON response");
+
+        // Create CurseResource object
+        var curseResource = new CurseResource
+        {
+            Id = id.Value,
+            ClassId = classId.Value,
+            Name = name,
+            Summary = summary,
+            DownloadCount = downloadCount.Value,
+            DateModified = dateModified.Value,
+            Files = latestFilesIndexes,
+            Categories = categories,
+            Authors = authors,
+            ScreenshotUrls = screenshotUrls,
+            WebsiteUrl = websiteUrl,
+            IconUrl = iconurl
+        };
         curseResource.Files = curseResource.Files.Select(x =>
         {
             x.ModId = curseResource.Id;
             return x;
         });
-
         return curseResource;
     }
 }

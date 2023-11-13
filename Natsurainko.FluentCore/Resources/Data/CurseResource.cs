@@ -33,7 +33,7 @@ public record CurseResource
 
     public required IEnumerable<string> ScreenshotUrls { get; set; }
 
-    public required string WebLink { get; set; }
+    public required string WebsiteUrl { get; set; }
 
     public required string IconUrl { get; set; }
 }
