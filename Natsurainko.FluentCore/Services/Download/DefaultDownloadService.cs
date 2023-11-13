@@ -1,12 +1,9 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
-using Nrk.FluentCore.Classes.Datas.Launch;
-using Nrk.FluentCore.Classes.Datas.Parse;
-using Nrk.FluentCore.DefaultComponents.Download;
-using Nrk.FluentCore.DefaultComponents.Parse;
-using Nrk.FluentCore.Interfaces.ServiceInterfaces;
+﻿using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using Nrk.FluentCore.Management.Parsing;
+using Nrk.FluentCore.Resources;
 
 namespace Nrk.FluentCore.Services.Download;
 

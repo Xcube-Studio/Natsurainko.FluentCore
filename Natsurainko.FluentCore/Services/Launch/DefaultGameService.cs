@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Launch;
-using Nrk.FluentCore.DefaultComponents.Launch;
-using Nrk.FluentCore.Interfaces.ServiceInterfaces;
+﻿using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;

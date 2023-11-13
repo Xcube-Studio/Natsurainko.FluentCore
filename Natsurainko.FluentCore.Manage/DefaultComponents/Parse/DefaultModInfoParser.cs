@@ -1,5 +1,5 @@
 ﻿using Nrk.FluentCore.Classes.Datas;
-using Nrk.FluentCore.Classes.Enums;
+using Nrk.FluentCore.GameResources.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;

@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Datas.Download;
-using Nrk.FluentCore.Interfaces;
+﻿using Nrk.FluentCore.Resources;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -14,20 +13,29 @@ using Timer = System.Timers.Timer;
 
 namespace Nrk.FluentCore.Utils;
 
+#nullable disable
+// TODO: refactor downloading system later
+
+// TOOD: use internal
 public static class HttpUtils
 {
-    public static DownloadSetting DownloadSetting { get; set; } = new()
-    {
-        EnableLargeFileMultiPartDownload = true,
-        FileSizeThreshold = 1024 * 1024 * 3,
-        MultiPartsCount = 8,
-        MultiThreadsCount = 64
-    };
+    public static DownloadSetting DownloadSetting { get; set; } =
+        new()
+        {
+            EnableLargeFileMultiPartDownload = true,
+            FileSizeThreshold = 1024 * 1024 * 3,
+            MultiPartsCount = 8,
+            MultiThreadsCount = 64
+        };
 
     public static readonly HttpClient HttpClient = new();
     public static readonly MemoryPool<byte> MemoryPool = MemoryPool<byte>.Shared;
 
-    public static HttpResponseMessage HttpPost(string url, string content, Dictionary<string, string> headers, string contentType = "application/json")
+    public static HttpResponseMessage HttpPost(
+        string url,
+        string content,
+        Dictionary<string, string> headers,
+        string contentType = "application/json")
     {
         var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
         using var httpContent = new StringContent(content);
@@ -53,11 +61,18 @@ public static class HttpUtils
         return HttpClient.Send(requestMessage);
     }
 
-    public static HttpResponseMessage HttpGet(string url, Tuple<string, string> authorization = default, HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
+    public static HttpResponseMessage HttpGet(
+        string url,
+        Tuple<string, string> authorization = default,
+        HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
     {
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
-        if (authorization != null) requestMessage.Headers.Authorization = new AuthenticationHeaderValue(authorization.Item1, authorization.Item2);
+        if (authorization != null)
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue(
+                authorization.Item1,
+                authorization.Item2
+            );
 
         var responseMessage = HttpClient.Send(requestMessage, httpCompletionOption, CancellationToken.None);
 
@@ -74,7 +89,10 @@ public static class HttpUtils
         return responseMessage;
     }
 
-    public static HttpResponseMessage HttpGet(string url, Dictionary<string, string> headers, HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
+    public static HttpResponseMessage HttpGet(
+        string url,
+        Dictionary<string, string> headers,
+        HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
     {
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
 
@@ -116,7 +134,11 @@ public static class HttpUtils
         Timer timer = default;
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, downloadElement.Url);
-        using var responseMessage = await HttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+        using var responseMessage = await HttpClient.SendAsync(
+            requestMessage,
+            HttpCompletionOption.ResponseHeadersRead,
+            tokenSource.Token
+        );
 
         if (responseMessage.StatusCode.Equals(HttpStatusCode.Found))
         {
@@ -124,17 +146,20 @@ public static class HttpUtils
             return await DownloadElementAsync(downloadElement, downloadSetting, tokenSource);
         }
 
-        if (perSecondProgressChangedAction != null) timer = new Timer(1000);
+        if (perSecondProgressChangedAction != null)
+            timer = new Timer(1000);
 
         responseMessage.EnsureSuccessStatusCode();
 
-        if (settings.EnableLargeFileMultiPartDownload &&
-            responseMessage.Content.Headers.ContentLength.Value > settings.FileSizeThreshold)
+        if (settings.EnableLargeFileMultiPartDownload
+            && responseMessage.Content.Headers.ContentLength.Value > settings.FileSizeThreshold
+            )
             return await TryMultiPartDownloadFileAsync(
-                responseMessage,
-                settings,
-                downloadElement.AbsolutePath,
-                tokenSource)
+                    responseMessage,
+                    settings,
+                    downloadElement.AbsolutePath,
+                    tokenSource
+                )
                 .ContinueWith(task =>
                 {
                     if (task.IsFaulted)
@@ -148,22 +173,30 @@ public static class HttpUtils
                     return new DownloadResult
                     {
                         IsFaulted = responseMessage.Content.Headers.ContentLength.Value != task.Result,
-                        Exception = responseMessage.Content.Headers.ContentLength.Value != task.Result
-                            ? new Exception("文件下载不完整") : null,
+                        Exception =
+                            responseMessage.Content.Headers.ContentLength.Value != task.Result
+                                ? new Exception("文件下载不完整")
+                                : null,
                         DownloadElement = downloadElement
                     };
                 });
         return await WriteFileFromHttpResponseAsync(
-            responseMessage,
-            downloadElement.AbsolutePath,
-            tokenSource,
-            perSecondProgressChangedAction != null ? (timer, perSecondProgressChangedAction, responseMessage.Content.Headers.ContentLength) : null)
+                responseMessage,
+                downloadElement.AbsolutePath,
+                tokenSource,
+                perSecondProgressChangedAction != null
+                    ? (timer, perSecondProgressChangedAction, responseMessage.Content.Headers.ContentLength)
+                    : null
+            )
             .ContinueWith(task =>
             {
                 if (timer != null)
                 {
-                    perSecondProgressChangedAction(responseMessage.Content.Headers.ContentLength != null ?
-                        task.Result / (double)responseMessage.Content.Headers.ContentLength : 0);
+                    perSecondProgressChangedAction(
+                        responseMessage.Content.Headers.ContentLength != null
+                            ? task.Result / (double)responseMessage.Content.Headers.ContentLength
+                            : 0
+                    );
 
                     timer.Stop();
                     timer.Dispose();
@@ -188,21 +221,24 @@ public static class HttpUtils
                 return new DownloadResult
                 {
                     IsFaulted = responseMessage.Content.Headers.ContentLength.Value != task.Result,
-                    Exception = responseMessage.Content.Headers.ContentLength.Value != task.Result
-                            ? new Exception("文件下载不完整") : null,
+                    Exception =
+                        responseMessage.Content.Headers.ContentLength.Value != task.Result
+                            ? new Exception("文件下载不完整")
+                            : null,
                     DownloadElement = downloadElement
                 };
             });
     }
 
-    private async static Task<long> WriteFileFromHttpResponseAsync(
+    private static async Task<long> WriteFileFromHttpResponseAsync(
         HttpResponseMessage responseMessage,
         string absolutePath,
         CancellationTokenSource tokenSource,
         (Timer, Action<double> perSecondProgressChangedAction, long?)? perSecondProgressChange = default)
     {
         var parentFolder = Path.GetDirectoryName(absolutePath);
-        if (!Directory.Exists(parentFolder)) Directory.CreateDirectory(parentFolder);
+        if (!Directory.Exists(parentFolder))
+            Directory.CreateDirectory(parentFolder);
 
         using var stream = await responseMessage.Content.ReadAsStreamAsync();
         using var fileStream = File.Create(absolutePath);
@@ -233,10 +269,17 @@ public static class HttpUtils
         string absolutePath,
         CancellationTokenSource tokenSource)
     {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, responseMessage.RequestMessage.RequestUri.AbsoluteUri);
+        var requestMessage = new HttpRequestMessage(
+            HttpMethod.Get,
+            responseMessage.RequestMessage.RequestUri.AbsoluteUri
+        );
         requestMessage.Headers.Range = new RangeHeaderValue(0, 1);
 
-        using var httpResponse = await HttpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
+        using var httpResponse = await HttpClient.SendAsync(
+            requestMessage,
+            HttpCompletionOption.ResponseHeadersRead,
+            tokenSource.Token
+        );
 
         if (!httpResponse.IsSuccessStatusCode || httpResponse.Content.Headers.ContentLength.Value != 2)
             return await WriteFileFromHttpResponseAsync(responseMessage, absolutePath, tokenSource);
@@ -250,47 +293,61 @@ public static class HttpUtils
         while (totalSize > 0)
         {
             bool enough = totalSize - singleSize > 1024 * 10;
-
+            long start = enough ? totalSize - singleSize : 0;
             var range = new DownloadRange
             {
+                Start = start,
                 End = totalSize,
-                Start = enough ? totalSize - singleSize : 0
+                TempFileAbsolutePath = Path.Combine(folder, $"{start}-{totalSize}-" + Path.GetFileName(absolutePath))
             };
 
-            range.TempFileAbsolutePath = Path.Combine(folder, $"{range.Start}-{range.End}-" + Path.GetFileName(absolutePath));
             rangesList.Add(range);
 
-            if (!enough) break;
+            if (!enough)
+                break;
 
             totalSize -= singleSize;
         }
 
-        var transformBlock = new TransformBlock<DownloadRange, (HttpResponseMessage, DownloadRange)>(async range =>
-        {
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Get, responseMessage.RequestMessage.RequestUri);
-            httpRequest.Headers.Range = new RangeHeaderValue(range.Start, range.End);
+        var transformBlock = new TransformBlock<DownloadRange, (HttpResponseMessage, DownloadRange)>(
+            async range =>
+            {
+                using var httpRequest = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    responseMessage.RequestMessage.RequestUri
+                );
+                httpRequest.Headers.Range = new RangeHeaderValue(range.Start, range.End);
 
-            var message = await HttpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, tokenSource.Token);
-            return (message, range);
-        }, new ExecutionDataflowBlockOptions
-        {
-            BoundedCapacity = downloadSetting.MultiPartsCount,
-            MaxDegreeOfParallelism = downloadSetting.MultiPartsCount,
-            CancellationToken = tokenSource.Token
-        });
-
-        var actionBlock = new ActionBlock<(HttpResponseMessage, DownloadRange)>
-            (async t => await WriteFileFromHttpResponseAsync(t.Item1, t.Item2.TempFileAbsolutePath, tokenSource),
+                var message = await HttpClient.SendAsync(
+                    httpRequest,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    tokenSource.Token
+                );
+                return (message, range);
+            },
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = downloadSetting.MultiPartsCount,
                 MaxDegreeOfParallelism = downloadSetting.MultiPartsCount,
                 CancellationToken = tokenSource.Token
-            });
+            }
+        );
+
+        var actionBlock = new ActionBlock<(HttpResponseMessage, DownloadRange)>(
+            async t => await WriteFileFromHttpResponseAsync(t.Item1, t.Item2.TempFileAbsolutePath, tokenSource),
+            new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = downloadSetting.MultiPartsCount,
+                MaxDegreeOfParallelism = downloadSetting.MultiPartsCount,
+                CancellationToken = tokenSource.Token
+            }
+        );
 
         var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
-        var transformManyBlock = new TransformManyBlock<IEnumerable<DownloadRange>, DownloadRange>(chunk => chunk,
-            new ExecutionDataflowBlockOptions());
+        var transformManyBlock = new TransformManyBlock<IEnumerable<DownloadRange>, DownloadRange>(
+            chunk => chunk,
+            new ExecutionDataflowBlockOptions()
+        );
 
         transformManyBlock.LinkTo(transformBlock, linkOptions);
         transformBlock.LinkTo(actionBlock, linkOptions);

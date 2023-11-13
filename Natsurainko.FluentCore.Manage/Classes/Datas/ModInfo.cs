@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Classes.Enums;
+﻿using Nrk.FluentCore.GameResources.ModLoaders;
 
 namespace Nrk.FluentCore.Classes.Datas;
 
