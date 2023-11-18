@@ -17,7 +17,7 @@ internal static class JsonNodeUtils
         JsonNode? jsonNode = null;
         try
         {
-            JsonNode.Parse(File.ReadAllText(filePath));
+            jsonNode = JsonNode.Parse(File.ReadAllText(filePath));
         }
         catch (JsonException) { }
 
