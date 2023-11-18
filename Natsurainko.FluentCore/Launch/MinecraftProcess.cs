@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Authentication;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -51,6 +52,12 @@ public class MinecraftProcess : IDisposable
     /// State of this launch session
     /// </summary>
     public MinecraftProcessState State { get; private set; }
+
+    /// <summary>
+    /// Arguments passed when the Minecraft process is started. 
+    /// Can be updated before calling <see cref="Start"/>
+    /// </summary>
+    public Collection<string> ArgumentList => _process.StartInfo.ArgumentList;
 
     private Process _process;
 
