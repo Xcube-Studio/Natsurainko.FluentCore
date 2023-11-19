@@ -124,6 +124,8 @@ public class MinecraftProcess : IDisposable
     public void Start()
     {
         _process.Start();
+        _process.BeginOutputReadLine();
+        _process.BeginErrorReadLine();
         State = MinecraftProcessState.Running;
         Started?.Invoke(this, EventArgs.Empty);
     }
