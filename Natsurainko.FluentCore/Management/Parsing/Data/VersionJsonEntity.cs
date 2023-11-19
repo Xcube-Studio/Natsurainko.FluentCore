@@ -16,22 +16,22 @@ public record VersionJsonEntity
     public required string MainClass { get; set; }
 
     [JsonPropertyName("minecraftArguments")]
-    public required string MinecraftArguments { get; set; }
+    public string? MinecraftArguments { get; set; }
 
     [JsonPropertyName("inheritsFrom")]
-    public required string InheritsFrom { get; set; }
+    public string? InheritsFrom { get; set; }
 
     [JsonPropertyName("type")]
-    public required string Type { get; set; }
+    public string? Type { get; set; }
 
     [JsonPropertyName("assets")]
-    public required string Assets { get; set; }
+    public string? Assets { get; set; }
 
     [JsonPropertyName("arguments")]
-    public required ArgumentsJsonNode Arguments { get; set; }
+    public ArgumentsJsonNode? Arguments { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public required AssstIndexJsonNode AssetIndex { get; set; }
+    public AssstIndexJsonNode? AssetIndex { get; set; }
 }
 
 /// <summary>
@@ -40,10 +40,10 @@ public record VersionJsonEntity
 public class ArgumentsJsonNode
 {
     [JsonPropertyName("game")]
-    public required IEnumerable<JsonElement> Game { get; set; }
+    public IEnumerable<JsonElement>? Game { get; set; }
 
     [JsonPropertyName("jvm")]
-    public required IEnumerable<JsonElement> Jvm { get; set; }
+    public IEnumerable<JsonElement>? Jvm { get; set; }
 }
 
 /// <summary>
