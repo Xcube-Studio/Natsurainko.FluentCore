@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace Nrk.FluentCore.Services.Launch;
 
+#nullable disable // Will be refactored in future updates
+
 /// <summary>
 /// 游戏服务的默认实现（IoC适应）
 /// </summary>
