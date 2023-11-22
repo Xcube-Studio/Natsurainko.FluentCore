@@ -22,5 +22,5 @@ public class RuleModel
     public required string Action { get; set; }
 
     [JsonPropertyName("os")]
-    public required Dictionary<string, string> System { get; set; }
+    public Dictionary<string, string>? System { get; set; }
 }

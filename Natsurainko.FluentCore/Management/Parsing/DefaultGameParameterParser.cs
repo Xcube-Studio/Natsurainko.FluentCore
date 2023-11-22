@@ -27,7 +27,11 @@ public static class DefaultGameParameterParser
         if (jsonGame is null)
             yield break;
 
-        var list = StringExtensions.ArgumnetsGroup(jsonGame.AsArray().WhereNotNull().Select(x => x.GetValue<string>()));
+        var list = StringExtensions.ArgumnetsGroup(jsonGame.AsArray()
+            .Where(x => x is JsonValue)
+            .WhereNotNull()
+            .Select(x => x.GetValue<string>()));
+
         foreach (var item in list)
             yield return item;
     }

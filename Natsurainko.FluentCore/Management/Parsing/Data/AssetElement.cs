@@ -30,5 +30,5 @@ public record AssetElement : IDownloadElement
     /// <summary>
     /// 校验码
     /// </summary>
-    public required string Checksum { get; set; }
+    public string? Checksum { get; set; }
 }
