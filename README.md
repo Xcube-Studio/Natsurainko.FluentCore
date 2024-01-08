@@ -1,124 +1,67 @@
-# Natsurainko.FluentCore
+# FluentCore 📜
 ![](https://img.shields.io/badge/license-MIT-green)
 ![](https://img.shields.io/github/repo-size/Xcube-Studio/Natsurainko.FluentCore)
 ![](https://img.shields.io/github/stars/Xcube-Studio/Natsurainko.FluentCore)
 ![](https://img.shields.io/github/commit-activity/y/Xcube-Studio/Natsurainko.FluentCore)
 
-一个高效的模块化的 Minecraft 启动核心
----------------------------------------------------------
+基于 .NET 8 的跨平台的模块化 Minecraft 启动核心  
+提供简单的模块化调用，以及更面向 Mvvm 模式的服务调用  
+**现在正用于 [Fluent Launcher](https://github.com/Xcube-Studio/Natsurainko.FluentLauncher) 的开发中**
 
-### 简介
-一个由C#编写的跨平台模块化 Minecraft 启动核心
+>
+> 需要注意的是: 目前的 v3 版本与先前的旧版本完全无法兼容，如果已经使用了旧的 v2 版本，请不要更新  
+> 且新的 v3 版本暂时没用对启动过程的简单封装，必须创建 ServiceProvider 进行调用，这一问题在后续会改进
+> 也因此新的 v3 版本还没有更新过 nuget包 源
+>
 
-+ 支持桌面平台的跨平台调用 (Windows/Linux/Mac上的调试均已通过)
-+ Minecraft游戏核心的查找
-+ Minecraft的参数生成、启动封装
-+ 对离线、微软、外置登录验证的支持
-+ 支持多线程高速补全Assets、Libraries等游戏资源
-+ 支持自动安装Forge、Fabric、OptiFine加载器
-+ 支持对CurseForge的api的封装
-+ 支持从[Bmclapi、Mcbbs](https://bmclapidoc.bangbang93.com/)下载源进行文件补全
-  + 在此感谢bangbang93提供镜像站服务 如果您支持我们 可以 [赞助Bmclapi](https://afdian.net/@bangbang93)
+## 未来路线计划 📝
 
-本项目依赖框架: .NET Standard 2.0 / .NET 6
+| 功能                                     | 状态               |
+| ---------------------------------------- | ------------------ |
+| Native AOT 支持 (需要讨论?)              | [ ]                |
+| 完整的 Nullable 支持                     | [ ]                |
+| 完整的启动过程封装                       | [ ]                |
 
-声明
-+ BMCLAPI是@bangbang93开发的BMCL的一部分，用于解决国内线路对Forge和Minecraft官方使用的Amazon S3 速度缓慢的问题。BMCLAPI是对外开放的，所有需要Minecraft资源的启动器均可调用。
-+ 感谢开发过程中大佬[laolarou726](https://github.com/laolarou726)给出的建议和指导 不妨也看看它的启动核心项目[Projbobcat](https://github.com/Corona-Studio/ProjBobcat)
+## 功能列表 ✨
 
-> 您发现了我们项目中的bug? 对我们的项目中有不满意的地方? <br/>
-> 或是您愿意加入我们，与我们一同开发？ <br/>
-> 联系: a-275@qq.com (作者本人邮箱)
++ 基本功能
+  + [x] 查找 .minecraft 中的游戏核心
+  + [x] 创建、启动、管理 Minecraft 进程 
+  + [x] 多线程高速补全游戏资源
+  + [x] 查找已安装的 Java 运行时 (仅 Windows 平台支持) 
+  + [x] 支持第三方下载镜像源 [Bmclapi、Mcbbs](https://bmclapidoc.bangbang93.com/)
++ 多种验证方案的支持
+  + [x] 微软验证
+  + [x] Yggdrasil 验证 (外置验证)
+  + [x] 离线验证
+  + [ ] 统一通行证验证 (`需要讨论?`)
++ 多种加载器安装器的支持
+  + [x] Forge 安装器 (NeoForge 暂用)
+  + [x] Fabric 安装器
+  + [x] OptiFine 安装器
+  + [x] Quilt 安装器
+  + [ ] LiteLoder (`已过时而未支持`)
++ 第三方资源下载的支持
+  + [x] 对 CurseForge Api 的封装
+  + [x] 对 Modrinth Api 的封装
 
-### 安装
+## 与我们联系 ☕️
 
-+ 在Visual Studio的Nuget包管理器中搜索 Natsurainko.FluentCore 并安装
-+ 直接下载本仓库Release中的.nupkg文件进行安装
-+ 直接下载本仓库Release中的.dll文件导入项目
+Xcube Studio 开发群(qq): 1138713376  
+Natsurainko 的邮箱: a-275@qq.com  
 
-### 用法
-#### 初始化启动核心并启动游戏
-引用
-``` c#
-using Natsurainko.FluentCore.Class.Model.Launch;
-using Natsurainko.FluentCore.Module.Authenticator;
-using Natsurainko.FluentCore.Module.Launcher;
-using Natsurainko.FluentCore.Wrapper;
-using System;
-```
-``` c#
-string javaPath = Console.ReadLine();
-string gameFolder = Console.ReadLine();
-string core = Console.ReadLine();
-string userName = Console.ReadLine();
+如果有任何项目代码的问题还是建议留 issues，因为目前作者学业压力较大，没法及时处理加群请求之类的
 
-var settings = new LaunchSetting(new JvmSetting(javaPath)); // 初始化启动配置
-var authenticator = new OfflineAuthenticator(userName); // 初始化离线账户验证器
-var locator = new GameCoreLocator(gameFolder); // 初始化核心定位器
+## 引用及鸣谢 🎉
 
-var launcher = new MinecraftLauncher(settings, authenticator, locator); // 初始化启动
-using var response = launcher.LaunchMinecraft(core); // 启动游戏
+#### 引用
++ 本篇 readme 模板引用自 [readme-template](https://github.com/iuricode/readme-template)  
 
-if (response.State == LaunchState.Succeess) // 判断启动状态是否成功
-    response.WaitForExit(); // 若成功就等待游戏进程退出
+#### 鸣谢
++ 首先感谢各位贡献者的共同努力  
++ 感谢bangbang93提供镜像站服务 如果支持他们的服务话 可以[赞助Bmclapi](https://afdian.net/@bangbang93)  
++ 也感谢开发过程中大佬[laolarou726](https://github.com/laolarou726)给出的建议和指导 不妨也看看它的启动核心项目[Projbobcat](https://github.com/Corona-Studio/ProjBobcat)
 
-if (response.Exception != null) // 判断启动过程中是否发生异常
-    Console.WriteLine(response.Exception); // 输出异常
-```
+## 使用示例 
 
-> 详细的启动过程请翻阅 Demo
-#### 初始化微软账户验证器 并调用系统默认浏览器登录
-引用
-``` c#
-using Natsurainko.FluentCore.Extension.Windows.Module.Authenticator;
-using Natsurainko.FluentCore.Module.Authenticator;
-```
-``` c#
-var microsoftAuthenticator = new MicrosoftAuthenticator(); // 初始化一个微软账户验证器
-// 如果你拥有 Azure 创建的应用，你可以使用 new MicrosoftAuthenticator(string clientId, string redirectUri) 来替代官方的api
-
-await microsoftAuthenticator.GetAccessCode(); // 调用系统默认浏览器取回验证令牌 需要 Natsurainko.FluentCore 的 Windows 扩展
-var account = await microsoftAuthenticator.AuthenticateAsync(); // 验证账户
-
-// 将验证得到的账户 添加到启动 方法 1
-// var settings = new LaunchSetting(new JvmSetting(javaPath));
-// settings.Account = account;
-// var launcher = new MinecraftLauncher(settings, locator);
-
-// 将验证得到的账户 添加到启动 方法 2
-// 采用方法二则不需要在 await microsoftAuthenticator.GetAccessCode() 之后再添加 var account = await microsoftAuthenticator.AuthenticateAsync()
-// var launcher = new MinecraftLauncher(settings, microsoftAuthenticator, locator);
-```
-
-#### 初始化 Yggdrasil 账户验证器 并采用外置登录
-引用
-``` c#
-using Natsurainko.FluentCore.Class.Model.Auth;
-using Natsurainko.FluentCore.Class.Model.Auth.Yggdrasil;
-using Natsurainko.FluentCore.Service;
-using Natsurainko.Toolkits.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-```
-``` c#
-string email = Console.ReadLine(); // Yggdrasil 账户邮箱
-string password = Console.ReadLine(); // Yggdrasil 账户密码
-string yggdrasilServerUrl = Console.ReadLine(); // 外置登录 api 服务地址
-string authlibPath = Console.ReadLine(); // authlib-injector-1.1.xx.jar 文件路径
-
-var authenticator = new YggdrasilAuthenticator(
-    YggdrasilAuthenticatorMethod.Login,
-    email: email,
-    password: password,
-    yggdrasilServerUrl: $"{yggdrasilServerUrl}/authserver");
-
-// 获取外置登录 api 服务密匙
-string base64 = (await (await HttpWrapper.HttpGetAsync(yggdrasilServerUrl)).Content.ReadAsStringAsync()).ConvertToBase64(); // 需要 Natsurainko.Toolkits
-
-var args = DefaultSettings.DefaultAdvancedArguments.ToList();
-args.Add($"-javaagent:{authlibPath.ToPath()}={yggdrasilServerUrl}");
-args.Add($"-Dauthlibinjector.yggdrasil.prefetched={base64}");
-
-// launchSetting.JvmSetting.AdvancedArguments = args; 设置高级启动参数
-```
+后面等完善了再贴出来罢
