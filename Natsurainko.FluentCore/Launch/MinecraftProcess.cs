@@ -59,7 +59,7 @@ public class MinecraftProcess : IDisposable
     /// </summary>
     public Collection<string> ArgumentList => _process.StartInfo.ArgumentList;
 
-    private Process _process;
+    internal Process _process;
 
     #region Events for _process
 
