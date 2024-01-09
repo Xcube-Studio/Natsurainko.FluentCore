@@ -271,15 +271,10 @@ public enum MinecraftSessionState
     GameCrashed = 10 // Game crashed (exit code != 0)
 }
 
-public class MinecraftSessionStateChagnedEventArgs : EventArgs
+public class MinecraftSessionStateChagnedEventArgs
+    (MinecraftSessionState oldState, MinecraftSessionState newState) : EventArgs
 {
-    public MinecraftSessionState OldState { get; }
+    public MinecraftSessionState OldState { get; } = oldState;
 
-    public MinecraftSessionState NewState { get; }
-
-    public MinecraftSessionStateChagnedEventArgs(MinecraftSessionState oldState, MinecraftSessionState newState)
-    {
-        OldState = oldState;
-        NewState = newState;
-    }
+    public MinecraftSessionState NewState { get; } = newState;
 }
