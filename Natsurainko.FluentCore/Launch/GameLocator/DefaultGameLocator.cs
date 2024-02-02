@@ -11,17 +11,17 @@ namespace Nrk.FluentCore.Launch;
 /// <summary>
 /// 游戏定位器的默认实现
 /// </summary>
-public class DefaultGameLocator : BaseGameLocator
+/// <param name="folder">.minecraft 目录绝对路径</param>
+/// <exception cref="ArgumentNullException"></exception>
+public class DefaultGameLocator(string folder) : IGameLocator
 {
-    /// <param name="folder">.minecraft 目录绝对路径</param>
-    /// <exception cref="ArgumentNullException"></exception>
-    public DefaultGameLocator(string folder) : base(folder) { }
+    public string MinecraftFolderPath { get; set; } = folder ?? throw new ArgumentNullException(nameof(folder));
 
     /// <param name="directory">.minecraft 目录 <see cref="DirectoryInfo"/> 对象</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public DefaultGameLocator(DirectoryInfo directory) : base(directory.FullName) { }
+    public DefaultGameLocator(DirectoryInfo directory) : this(directory.FullName) { }
 
-    public override IEnumerable<GameInfo> EnumerateGames()
+    public IEnumerable<GameInfo> EnumerateGames()
     {
         var versionsDirectory = new DirectoryInfo(Path.Combine(MinecraftFolderPath, "versions"));
 
@@ -86,7 +86,7 @@ public class DefaultGameLocator : BaseGameLocator
         }
     }
 
-    public override IReadOnlyList<GameInfo> GetGames(out IReadOnlyList<string> errorGameNames)
+    public IReadOnlyList<GameInfo> GetGames(out IReadOnlyList<string> errorGameNames)
     {
         var games = new List<GameInfo>();
         var errorGames = new List<string>();
@@ -161,7 +161,7 @@ public class DefaultGameLocator : BaseGameLocator
         return games;
     }
 
-    public override GameInfo? GetGame(string absoluteId)
+    public GameInfo? GetGame(string absoluteId)
     {
         var jsonFile = new FileInfo(Path.Combine(MinecraftFolderPath, "versions", absoluteId, absoluteId + ".json"));
 
@@ -251,4 +251,7 @@ public class DefaultGameLocator : BaseGameLocator
                 gameInfo.AbsoluteVersion = clientVersion.GetValue<string>();
         }
     }
+
+    protected virtual string GetName(GameInfo gameInfo, VersionJsonEntity jsonEntity)
+        => jsonEntity.Id;
 }

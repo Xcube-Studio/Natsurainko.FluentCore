@@ -8,7 +8,7 @@ namespace Nrk.FluentCore.Services;
 /// </summary>
 public interface IFluentCoreSettingsService
 {
-    public string ActiveMinecraftFolder { get; set; }
+    public string? ActiveMinecraftFolder { get; set; }
 
     public ObservableCollection<string> MinecraftFolders { get; }
 
@@ -18,7 +18,7 @@ public interface IFluentCoreSettingsService
 
     public int JavaMemory { get; set; }
 
-    public GameInfo ActiveGameInfo { get; set; }
+    public GameInfo? ActiveGameInfo { get; set; }
 
     public bool EnableDemoUser { get; set; }
 }
