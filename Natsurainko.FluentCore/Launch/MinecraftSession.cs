@@ -213,13 +213,6 @@ public class MinecraftSession
                 SingleFileDownloaded?.Invoke(resourcesDownloader, e);
             resourcesDownloader.DownloadElementsPosted += (_, count) =>
                 DownloadElementsPosted?.Invoke(resourcesDownloader, count);
-            // TODO: subscribe events in view model
-            //resourcesDownloader.SingleFileDownloaded += (_, _) => App.DispatcherQueue.TryEnqueue(launchProcess.UpdateDownloadProgress);
-            //resourcesDownloader.DownloadElementsPosted += (_, count) => App.DispatcherQueue.TryEnqueue(() =>
-            //{
-            //    launchProcess.StepItems[2].TaskNumber = count;
-            //    launchProcess.UpdateLaunchProgress();
-            //});
 
             resourcesDownloader.Download();
             if (resourcesDownloader.ErrorDownload.Count > 0)

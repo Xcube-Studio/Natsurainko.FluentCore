@@ -1,7 +1,6 @@
 ﻿using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace Nrk.FluentCore.Services.Launch;
 

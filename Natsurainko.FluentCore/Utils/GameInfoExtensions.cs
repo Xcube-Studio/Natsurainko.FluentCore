@@ -108,7 +108,8 @@ public static class GameInfoExtensions
                 length += new FileInfo(library.AbsolutePath).Length;
         }
 
-        if (File.Exists(gameInfo.AssetsIndexJsonPath))
+        var assetsIndexJsonPath = gameInfo.IsInheritedFrom ? gameInfo.InheritsFrom.AssetsIndexJsonPath : gameInfo.AssetsIndexJsonPath;
+        if (File.Exists(assetsIndexJsonPath))
         {
             foreach (var asset in assetParser.EnumerateAssets())
             {
@@ -118,7 +119,7 @@ public static class GameInfoExtensions
                     length += new FileInfo(asset.AbsolutePath).Length;
             }
 
-            length += new FileInfo(gameInfo.AssetsIndexJsonPath).Length;
+            length += new FileInfo(assetsIndexJsonPath).Length;
         }
 
         if (File.Exists(gameInfo.JarPath))

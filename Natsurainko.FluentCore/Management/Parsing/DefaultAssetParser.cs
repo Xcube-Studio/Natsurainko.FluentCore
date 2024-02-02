@@ -47,12 +47,14 @@ public class DefaultAssetParser : BaseAssetParser
 
     public override IEnumerable<AssetElement> EnumerateAssets()
     {
-        if (string.IsNullOrEmpty(_gameInfo.AssetsIndexJsonPath))
+        var assetsIndexJsonPath = _gameInfo.IsInheritedFrom ? _gameInfo.InheritsFrom.AssetsIndexJsonPath : _gameInfo.AssetsIndexJsonPath;
+
+        if (string.IsNullOrEmpty(assetsIndexJsonPath))
             yield break; //未找到 assets\indexes\assetindex.json
 
         // Parse assetindex.json
         var assets = JsonNode
-            .Parse(File.ReadAllText(_gameInfo.AssetsIndexJsonPath))
+            .Parse(File.ReadAllText(assetsIndexJsonPath))
             ?["objects"].Deserialize<Dictionary<string, AssetJsonNode>>();
 
         if (assets is null)
