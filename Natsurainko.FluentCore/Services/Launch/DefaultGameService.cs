@@ -1,110 +1,138 @@
 ﻿using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace Nrk.FluentCore.Services.Launch;
 
-#nullable disable // Will be refactored in future updates
-
-/// <summary>
-/// 游戏服务的默认实现（IoC适应）
-/// </summary>
-public class DefaultGameService
+public class DefaultGameService : IGameService
 {
-    public ReadOnlyObservableCollection<GameInfo> GameInfos { get; protected set; }
+    #region Games 
 
-    protected ObservableCollection<GameInfo> _gameInfos;
-
-    public ReadOnlyObservableCollection<string> MinecraftFolders { get; protected set; }
-
-    protected ObservableCollection<string> _minecraftFolders;
-
-    public string ActiveMinecraftFolder { get; protected set; }
-
-    public GameInfo ActiveGameInfo { get; protected set; }
-
-    protected DefaultGameLocator _locator;
-    //protected FileSystemWatcher _versionsFolderWatcher; TODO: 文件监控实时更新GameInfos
-    protected IFluentCoreSettingsService _settingsService;
-
-    /// <summary>
-    /// 以供完全自定义构造函数和重写该类
-    /// </summary>
-    public DefaultGameService()
+    protected GameInfo? _activeGame;
+    public GameInfo? ActiveGame
     {
+        get => _activeGame;
+        protected set
+        {
+            if (_activeGame != value)
+                WhenActiveGameChanged(_activeGame, value);
 
+            _activeGame = value;
+        }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="settingsService">实际使用时请使用具体的继承类型替代之</param>
+    protected ObservableCollection<GameInfo> _games;
+    public ReadOnlyObservableCollection<GameInfo> Games { get; }
+
+    #endregion
+
+    #region Folders
+
+    public string? _activeMinecraftFolder;
+    public string? ActiveMinecraftFolder
+    {
+        get => _activeMinecraftFolder;
+        protected set
+        {
+            if (_activeMinecraftFolder != value)
+                WhenActiveMinecraftFolderChanged(_activeMinecraftFolder, value);
+
+            _activeMinecraftFolder = value;
+        }
+    }
+
+    protected ObservableCollection<string> _minecraftFolders;
+    public ReadOnlyObservableCollection<string> MinecraftFolders { get; }
+
+    #endregion
+
+    protected DefaultGameLocator? _locator;
+    protected IFluentCoreSettingsService _settingsService;
+
     public DefaultGameService(IFluentCoreSettingsService settingsService)
     {
         _settingsService = settingsService;
-        _minecraftFolders = settingsService.MinecraftFolders ?? new();
-        _gameInfos = new();
 
-        GameInfos = new(_gameInfos);
+        _minecraftFolders = settingsService.MinecraftFolders ?? [];
+        _games= [];
+
+        Games = new(_games);
         MinecraftFolders = new(_minecraftFolders);
 
-        if (!string.IsNullOrEmpty(_settingsService.ActiveMinecraftFolder) && MinecraftFolders.Contains(_settingsService.ActiveMinecraftFolder))
-            ActivateMinecraftFolder(_settingsService.ActiveMinecraftFolder);
-        else ActiveMinecraftFolder = null;
+        ActivateMinecraftFolder(
+            !string.IsNullOrEmpty(_settingsService.ActiveMinecraftFolder) 
+            && MinecraftFolders.Contains(_settingsService.ActiveMinecraftFolder) 
+            ? _settingsService.ActiveMinecraftFolder
+            : null);
     }
 
-    public virtual void ActivateMinecraftFolder(string folder)
+    public virtual void WhenActiveGameChanged(GameInfo? oldGame, GameInfo? newGame) 
     {
-        if (!_minecraftFolders.Contains(folder))
+        _settingsService.ActiveGameInfo = newGame;
+    }
+
+    public virtual void WhenActiveMinecraftFolderChanged(string? oldFolder, string? newFolder) 
+    {
+        _settingsService.ActiveMinecraftFolder = newFolder;
+
+        if (newFolder == null)
+        {
+            _games.Clear();
+            return;
+        }
+
+        _locator = new DefaultGameLocator(newFolder);
+
+        //_versionsFolderWatcher?.Dispose(); 
+        //_versionsFolderWatcher = new FileSystemWatcher(ActiveMinecraftFolder);
+
+        RefreshGames();
+    }
+
+    public virtual void ActivateMinecraftFolder(string? folder)
+    {
+        if (folder != null && !_minecraftFolders.Contains(folder))
             throw new ArgumentException("Not an folder managed by GameService", nameof(folder));
 
-        if (ActiveMinecraftFolder != folder)
-        {
-            ActiveMinecraftFolder = folder;
-            _settingsService.ActiveMinecraftFolder = folder;
-
-            InitFolder();
-        }
+        ActiveMinecraftFolder = folder;
     }
 
-    public virtual void ActivateGameInfo(GameInfo gameInfo)
+    public virtual void ActivateGame(GameInfo? gameInfo)
     {
-        if (!_gameInfos.Contains(gameInfo))
+        if (gameInfo != null && !_games.Contains(gameInfo))
             throw new ArgumentException("Not an game managed by GameService", nameof(gameInfo));
 
-        if (ActiveGameInfo != gameInfo)
-        {
-            ActiveGameInfo = gameInfo;
-            _settingsService.ActiveGameInfo = gameInfo;
-        }
+        ActiveGame = gameInfo;
     }
 
-    protected virtual void InitFolder()
+    public virtual void RefreshGames()
     {
-        //_versionsFolderWatcher?.Dispose();
+        _games.Clear();
 
-        _locator = new DefaultGameLocator(ActiveMinecraftFolder);
-        RefreshGames();
-
-        //_versionsFolderWatcher = new FileSystemWatcher(ActiveMinecraftFolder);
-    }
-
-    protected virtual void RefreshGames()
-    {
-        _gameInfos.Clear();
+        if (_locator == null)
+            throw new InvalidOperationException();
 
         foreach (var game in _locator.EnumerateGames())
-            _gameInfos.Add(game);
+            _games.Add(game);
 
-        if (_settingsService.ActiveGameInfo != null && _gameInfos.Contains(_settingsService.ActiveGameInfo))
-            ActivateGameInfo(_settingsService.ActiveGameInfo);
-        else
-        {
-            _settingsService.ActiveGameInfo = null;
+        GameInfo? gameInfo = _settingsService.ActiveGameInfo != null && _games.Contains(_settingsService.ActiveGameInfo) 
+            ? _settingsService.ActiveGameInfo
+            : _games.Count > 0 ? _games[0] : null;
 
-            if (_gameInfos.Any())
-                ActivateGameInfo(_gameInfos.First());
-        }
+        ActivateGame(gameInfo);
+    }
+
+    public virtual void AddMinecraftFolder(string folder)
+    {
+        _minecraftFolders.Add(folder);
+        ActivateMinecraftFolder(folder);
+    }
+
+    public void RemoveMinecraftFolder(string folder)
+    {
+        _minecraftFolders.Remove(folder);
+
+        if (ActiveMinecraftFolder == folder)
+            ActivateMinecraftFolder(MinecraftFolders.Count > 0 ? MinecraftFolders[0] : null);
     }
 }

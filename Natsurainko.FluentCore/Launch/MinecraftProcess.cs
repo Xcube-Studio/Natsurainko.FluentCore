@@ -1,9 +1,6 @@
-﻿using Nrk.FluentCore.Authentication;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Nrk.FluentCore.Launch;
 
@@ -57,9 +54,9 @@ public class MinecraftProcess : IDisposable
     /// Arguments passed when the Minecraft process is started. 
     /// Can be updated before calling <see cref="Start"/>
     /// </summary>
-    public Collection<string> ArgumentList => _process.StartInfo.ArgumentList;
+    public IEnumerable<string> ArgumentList { get; init; }
 
-    private Process _process;
+    internal Process _process;
 
     #region Events for _process
 
@@ -98,6 +95,8 @@ public class MinecraftProcess : IDisposable
     public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs)
     {
         JavaPath = javaPath;
+        ArgumentList = launchArgs;
+
         _process = new Process
         {
             StartInfo = new ProcessStartInfo(javaPath)

@@ -24,11 +24,11 @@ public class DefaultDownloadService
     }
 
     public virtual DefaultResourcesDownloader CreateResourcesDownloader(GameInfo gameInfo,
-        IEnumerable<LibraryElement> libraryElements = default,
-        IEnumerable<AssetElement> assetElements = default,
-        DownloadMirrorSource downloadMirrorSource = default)
+        IEnumerable<LibraryElement>? libraryElements = default,
+        IEnumerable<AssetElement>? assetElements = default,
+        DownloadMirrorSource? downloadMirrorSource = default)
     {
-        List<LibraryElement> libraries = libraryElements?.ToList() ?? new();
+        List<LibraryElement> libraries = libraryElements?.ToList() ?? [];
 
         if (libraryElements == null)
         {
