@@ -15,9 +15,9 @@ public record CurseFile
     public required string FileName { get; set; }
 
     [JsonPropertyName("modLoader")]
-    public required ModLoaderType ModLoaderType { get; set; }
+    public ModLoaderType ModLoaderType { get; set; }
 
-    public required int ModId { get; set; }
+    public int ModId { get; set; }
 
     public string DisplayDescription => $"{ModLoaderType} {McVersion}";
 }

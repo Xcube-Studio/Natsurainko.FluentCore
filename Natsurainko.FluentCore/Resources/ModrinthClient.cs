@@ -67,9 +67,7 @@ public class ModrinthClient
             .EnsureSuccessStatusCode().Content
             .ReadAsString();
 
-        var jsonArray = responseJson
-            .ToJsonNode()?["versions"]?
-            .AsArray()
+        var jsonArray = JsonNode.Parse(responseJson)?.AsArray()
             ?? throw new Exception("Failed to deserialize JSON response");
 
         foreach (var file in jsonArray)

@@ -161,11 +161,6 @@ public class CurseForgeClient
         var summary = jsonNode["summary"]?.GetValue<string>();
         var downloadCount = jsonNode["downloadCount"]?.GetValue<int>();
         var dateModified = jsonNode["dateModified"]?.GetValue<DateTime>();
-        var latestFilesIndexes = jsonNode["latestFilesIndexes"]?
-            .AsArray()
-            .WhereNotNull()
-            .Select(x => JsonSerializer.Deserialize<CurseFile>(x.GetValue<string>()))
-            .WhereNotNull();
         var categories = jsonNode["categories"]?
             .AsArray()
             .WhereNotNull()
@@ -180,6 +175,16 @@ public class CurseForgeClient
             .AsArray()
             .WhereNotNull()
             .Select(x => x["url"]?.GetValue<string>())
+            .WhereNotNull();
+        var latestFilesIndexes = jsonNode["latestFilesIndexes"]?
+            .AsArray()
+            .WhereNotNull()
+            .Select(x =>
+            {
+                var file = x.Deserialize<CurseFile>() ?? throw new InvalidOperationException();
+                file.ModId = id.GetValueOrDefault();
+                return file;
+            })
             .WhereNotNull();
         var websiteUrl = jsonNode["links"]?["websiteUrl"]?.GetValue<string>();
         var iconurl = jsonNode["logo"]?["url"]?.GetValue<string>();
