@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Nrk.FluentCore.Services.Launch
+﻿namespace Nrk.FluentCore.Services.Launch
 {
     internal interface ILaunchService
     {

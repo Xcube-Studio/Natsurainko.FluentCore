@@ -140,10 +140,10 @@ public class MinecraftSession
             // Updates session state when the game process exits
             _mcProcess.Exited += (_, e) =>
             {
-                State = e.ExitCode == 0 
-                    ? MinecraftSessionState.GameExited 
-                    : _killRequested 
-                        ? MinecraftSessionState.Killed 
+                State = e.ExitCode == 0
+                    ? MinecraftSessionState.GameExited
+                    : _killRequested
+                        ? MinecraftSessionState.Killed
                         : MinecraftSessionState.GameCrashed;
 
                 _mcProcess.Dispose(); // Release resources used by the Minecraft process when it exits. Exit code is reflected by the MinecraftSessionState.

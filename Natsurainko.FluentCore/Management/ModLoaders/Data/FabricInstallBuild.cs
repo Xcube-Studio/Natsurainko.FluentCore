@@ -38,7 +38,7 @@ public record FabricMavenItem
 {
     [JsonPropertyName("separator")]
     public string Separator { get; set; }
-            
+
     [JsonPropertyName("maven")]
     public required string Maven { get; set; }
 

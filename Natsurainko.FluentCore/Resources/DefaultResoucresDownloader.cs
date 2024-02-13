@@ -1,11 +1,11 @@
 ﻿using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
-using Nrk.FluentCore.Management.Parsing;
 
 namespace Nrk.FluentCore.Resources;
 

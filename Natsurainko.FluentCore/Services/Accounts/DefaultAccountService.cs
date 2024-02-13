@@ -9,16 +9,16 @@ namespace Nrk.FluentCore.Services.Accounts;
 public class DefaultAccountService : IAccountService
 {
     protected Account? _activeAccount;
-    public Account? ActiveAccount 
-    { 
-        get => _activeAccount; 
-        protected set 
+    public Account? ActiveAccount
+    {
+        get => _activeAccount;
+        protected set
         {
             if (_activeAccount != value)
                 WhenActiveAccountChanged(_activeAccount, value);
 
             _activeAccount = value;
-        } 
+        }
     }
 
     public ReadOnlyObservableCollection<Account> Accounts { get; }
@@ -26,7 +26,7 @@ public class DefaultAccountService : IAccountService
 
     public DefaultAccountService()
     {
-        _accounts = new (InitializeAccountCollection());
+        _accounts = new(InitializeAccountCollection());
         Accounts = new ReadOnlyObservableCollection<Account>(_accounts);
     }
 
@@ -47,7 +47,7 @@ public class DefaultAccountService : IAccountService
 
     public void AddAccount(Account account)
     {
-        if (Accounts.Where(x => x.Uuid.Equals(account.Uuid) && x.Type.Equals(account.Type)).Any()) 
+        if (Accounts.Where(x => x.Uuid.Equals(account.Uuid) && x.Type.Equals(account.Type)).Any())
             throw new Exception("不可以存在两个账户类型和 Uuid 均相同的账户");
 
         _accounts.Add(account);

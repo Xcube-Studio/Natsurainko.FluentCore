@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Nrk.FluentCore.Environment;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using Nrk.FluentCore.Environment;
 
 namespace Nrk.FluentCore.Utils;
 

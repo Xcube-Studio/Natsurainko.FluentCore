@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Authentication;
-using Nrk.FluentCore.Utils;
+﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Diagnostics;
 using System.Linq;

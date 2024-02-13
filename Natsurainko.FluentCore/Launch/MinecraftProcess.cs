@@ -69,7 +69,7 @@ public class MinecraftProcess : IDisposable
     /// Raised when Minecraft is started
     /// </summary>
     public event EventHandler? Started;
-    
+
     // Forwarded from _process
     public event DataReceivedEventHandler? OutputDataReceived
     {

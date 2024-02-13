@@ -18,8 +18,8 @@ public class DefaultLaunchService : ILaunchService
     public event EventHandler<MinecraftSession>? SessionCreated;
 
     public DefaultLaunchService(
-        IFluentCoreSettingsService settingsService, 
-        IAccountService accountService, 
+        IFluentCoreSettingsService settingsService,
+        IAccountService accountService,
         IGameService gameService)
     {
         _settingsService = settingsService;

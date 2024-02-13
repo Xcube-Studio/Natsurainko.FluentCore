@@ -54,24 +54,24 @@ public class DefaultGameService : IGameService
         _settingsService = settingsService;
 
         _minecraftFolders = settingsService.MinecraftFolders ?? [];
-        _games= [];
+        _games = [];
 
         Games = new(_games);
         MinecraftFolders = new(_minecraftFolders);
 
         ActivateMinecraftFolder(
-            !string.IsNullOrEmpty(_settingsService.ActiveMinecraftFolder) 
-            && MinecraftFolders.Contains(_settingsService.ActiveMinecraftFolder) 
+            !string.IsNullOrEmpty(_settingsService.ActiveMinecraftFolder)
+            && MinecraftFolders.Contains(_settingsService.ActiveMinecraftFolder)
             ? _settingsService.ActiveMinecraftFolder
             : null);
     }
 
-    public virtual void WhenActiveGameChanged(GameInfo? oldGame, GameInfo? newGame) 
+    public virtual void WhenActiveGameChanged(GameInfo? oldGame, GameInfo? newGame)
     {
         _settingsService.ActiveGameInfo = newGame;
     }
 
-    public virtual void WhenActiveMinecraftFolderChanged(string? oldFolder, string? newFolder) 
+    public virtual void WhenActiveMinecraftFolderChanged(string? oldFolder, string? newFolder)
     {
         _settingsService.ActiveMinecraftFolder = newFolder;
 
@@ -115,7 +115,7 @@ public class DefaultGameService : IGameService
         foreach (var game in _locator.EnumerateGames())
             _games.Add(game);
 
-        GameInfo? gameInfo = _settingsService.ActiveGameInfo != null && _games.Contains(_settingsService.ActiveGameInfo) 
+        GameInfo? gameInfo = _settingsService.ActiveGameInfo != null && _games.Contains(_settingsService.ActiveGameInfo)
             ? _settingsService.ActiveGameInfo
             : _games.Count > 0 ? _games[0] : null;
 

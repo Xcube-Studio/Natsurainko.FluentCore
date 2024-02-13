@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Management.ModLoaders;
+using Nrk.FluentCore.Management.Parsing;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Nrk.FluentCore.Management.Parsing;
-using Nrk.FluentCore.Management.ModLoaders;
-using Nrk.FluentCore.Launch;
 
 namespace Nrk.FluentCore.Utils;
 
