@@ -30,7 +30,7 @@ public record QuiltLauncherMeta
 public record QuiltMavenItem
 {
     [JsonPropertyName("separator")]
-    public required string Separator { get; set; }
+    public string? Separator { get; set; }
 
     [JsonPropertyName("maven")]
     public required string Maven { get; set; }

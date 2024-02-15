@@ -47,14 +47,10 @@ public class QuiltInstaller : ModLoaderInstallerBase
         var responseMessage = HttpUtils.HttpGet(
             $"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json"
         );
-        var node = JsonNode.Parse(responseMessage.Content.ReadAsString());
-        if (node is null)
-            throw new Exception("Version info is null");
-
+        var node = JsonNode.Parse(responseMessage.Content.ReadAsString()) ?? throw new Exception("Version info is null");
         versionInfoJson = node;
-        var lib = versionInfoJson["libraries"]?.AsArray();
-        if (lib is null)
-            throw new Exception("Version info libraries not exist");
+
+        var lib = (versionInfoJson["libraries"]?.AsArray()) ?? throw new Exception("Version info libraries not exist");
 
         libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
             lib,
