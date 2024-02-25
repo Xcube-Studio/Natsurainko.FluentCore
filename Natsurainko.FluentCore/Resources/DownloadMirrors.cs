@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Nrk.FluentCore.Resources;
 
@@ -28,6 +29,7 @@ public static class DownloadMirrors
         }
     };
 
+    [Obsolete("mcbbs 论坛已关站，随之的服务均不可用")]
     public readonly static DownloadMirrorSource Mcbbs = new()
     {
         Name = "Mcbbs",

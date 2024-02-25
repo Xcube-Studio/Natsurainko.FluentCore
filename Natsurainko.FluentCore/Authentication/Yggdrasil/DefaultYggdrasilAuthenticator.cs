@@ -76,6 +76,7 @@ public class DefaultYggdrasilAuthenticator : IAuthenticator<YggdrasilAccount>
                     Name: profile.Name,
                     Uuid: Guid.Parse(profile.Id),
                     AccessToken: model.AccessToken,
+                    ClientToken: _clientToken,
                     YggdrasilServerUrl: _yggdrasilServerUrl
                 );
             })

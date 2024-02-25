@@ -36,7 +36,7 @@ public record MicrosoftAccount(
 /// 外置账户
 /// </summary>
 /// <param name="YggdrasilServerUrl">外置验证服务器Url</param>
-public record YggdrasilAccount(string Name, Guid Uuid, string AccessToken, string YggdrasilServerUrl)
+public record YggdrasilAccount(string Name, Guid Uuid, string AccessToken, string ClientToken, string YggdrasilServerUrl)
     : Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Yggdrasil;
