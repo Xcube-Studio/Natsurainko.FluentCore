@@ -42,7 +42,8 @@ public class DefaultDownloadService
         {
             var assetParser = new DefaultAssetParser(gameInfo);
             var assetElement = assetParser.GetAssetIndexJson();
-            if (downloadMirrorSource != null) assetElement.Url.ReplaceFromDictionary(downloadMirrorSource.AssetsReplaceUrl);
+            if (downloadMirrorSource != null)
+                assetElement.Url?.ReplaceFromDictionary(downloadMirrorSource.AssetsReplaceUrl);
 
             if (!assetElement.VerifyFile())
             {

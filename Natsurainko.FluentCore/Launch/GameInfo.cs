@@ -31,7 +31,7 @@ public record GameInfo
     /// <summary>
     /// 游戏核心的类型，可取的值 "release","snapshot","old_beta","old_alpha"
     /// </summary>
-    public required string Type { get; set; }
+    public string? Type { get; set; }
 
     /// <summary>
     /// 游戏是否为原版

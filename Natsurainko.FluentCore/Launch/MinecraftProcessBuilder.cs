@@ -127,7 +127,7 @@ public class MinecraftProcessBuilder
             { "${user_type}" , _account.Type.Equals(AccountType.Microsoft) ? "MSA" : "Mojang" },
             { "${user_properties}" , "{}" },
             { "${version_name}" , GameInfo.AbsoluteId },
-            { "${version_type}" , GameInfo.Type },
+            { "${version_type}" , GameInfo.Type ?? "" },
             { "${game_assets}" , _assetsFolder.ToPathParameter() },
             { "${assets_root}" , _assetsFolder.ToPathParameter() },
             { "${game_directory}" , _gameDirectory.ToPathParameter() },

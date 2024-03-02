@@ -13,7 +13,7 @@ public class DownloadElement : IDownloadElement
     /// <summary>
     /// 下载地址
     /// </summary>
-    public required string Url { get; set; }
+    public string? Url { get; set; }
 
     /// <summary>
     /// 校验码
