@@ -11,19 +11,19 @@ namespace Nrk.FluentCore.Resources;
 
 public class DefaultResourcesDownloader : BaseResourcesDownloader
 {
-    protected DownloadMirrorSource _downloadMirrorSource;
+    protected DownloadMirrorSource? _downloadMirrorSource;
     protected bool _enableUseDownloadSource;
 
     protected readonly DownloadSetting _downloadSetting = HttpUtils.DownloadSetting;
     protected readonly List<DownloadResult> _errorDownload = new();
 
-    public event EventHandler<int> DownloadElementsPosted;
+    public event EventHandler<int>? DownloadElementsPosted;
 
     public IReadOnlyList<DownloadResult> ErrorDownload => _errorDownload;
 
     public DefaultResourcesDownloader(GameInfo gameInfo) : base(gameInfo) { }
 
-    public override void Download(CancellationTokenSource tokenSource = default)
+    public override void Download(CancellationTokenSource? tokenSource = default)
     {
         tokenSource ??= new CancellationTokenSource();
 
@@ -35,7 +35,7 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
             if (string.IsNullOrEmpty(e.Url))
                 return e;
 
-            if (_enableUseDownloadSource)
+            if (_enableUseDownloadSource && _downloadMirrorSource is not null)
             {
                 if (e is LibraryElement library)
                     e.Url = e.Url.ReplaceFromDictionary(_downloadMirrorSource.LibrariesReplaceUrl);
@@ -109,12 +109,14 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
 
         transformManyBlock.Complete();
 
+        if(filteredLibraries is null || filteredAssets is null)
+            throw new Exception("filteredLibraries or filteredAssets is null");
         DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);
 
         actionBlock.Completion.Wait();
 
 
-        foreach (var downloadResult in _errorDownload.Where(x => !x.DownloadElement.VerifyFile()).ToList())
+        foreach (var downloadResult in _errorDownload.Where(x => x.DownloadElement is not null && !x.DownloadElement.VerifyFile()).ToList())
             _errorDownload.Remove(downloadResult);
     }
 

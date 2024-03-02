@@ -12,15 +12,15 @@ namespace Nrk.FluentCore.Resources;
 public abstract class BaseResourcesDownloader : IResourcesDownloader
 {
     protected readonly GameInfo _gameInfo;
-    protected IEnumerable<AssetElement> _assetElements;
-    protected IEnumerable<LibraryElement> _libraryElements;
+    protected IEnumerable<AssetElement>? _assetElements;
+    protected IEnumerable<LibraryElement>? _libraryElements;
 
     public BaseResourcesDownloader(GameInfo gameInfo)
     {
         _gameInfo = gameInfo;
     }
 
-    public event EventHandler SingleFileDownloaded;
+    public event EventHandler? SingleFileDownloaded;
 
     /// <summary>
     /// 设置要下载的依赖资源
@@ -38,7 +38,7 @@ public abstract class BaseResourcesDownloader : IResourcesDownloader
     /// 下载并等待结束
     /// </summary>
     /// <param name="tokenSource"></param>
-    public abstract void Download(CancellationTokenSource tokenSource = default);
+    public abstract void Download(CancellationTokenSource? tokenSource = default);
 
     protected virtual void OnSingleFileDownloaded() => SingleFileDownloaded?.Invoke(this, EventArgs.Empty);
 }
