@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Resources;
 
-public record CurseFile
+public record CurseForgeFile
 {
     [JsonPropertyName("fileId")]
     public required int FileId { get; set; }

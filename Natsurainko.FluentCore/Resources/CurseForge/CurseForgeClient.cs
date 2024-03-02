@@ -20,9 +20,9 @@ public class CurseForgeClient
 
     private Dictionary<string, string> Header => new() { { "x-api-key", ApiKey } };
 
-    public IEnumerable<CurseResource> SearchResources(
+    public IEnumerable<CurseForgeResource> SearchResources(
         string searchFilter,
-        CurseResourceType? resourceType = default,
+        CurseForgeResourceType? resourceType = default,
         string? version = null)
     {
         var stringBuilder = new StringBuilder(Host);
@@ -48,7 +48,7 @@ public class CurseForgeClient
             ?? throw new Exception("Error in parsing JSON response");
     }
 
-    public string GetCurseFileDownloadUrl(CurseFile file)
+    public string GetCurseFileDownloadUrl(CurseForgeFile file)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{file.ModId}/files/{file.FileId}", Header);
         string responseJson = responseMessage
@@ -62,7 +62,7 @@ public class CurseForgeClient
             ?? throw new Exception("Error in parsing JSON response");
     }
 
-    public void GetFeaturedResources(out IEnumerable<CurseResource> mcMods, out IEnumerable<CurseResource> modPacks)
+    public void GetFeaturedResources(out IEnumerable<CurseForgeResource> mcMods, out IEnumerable<CurseForgeResource> modPacks)
     {
         using var responseMessage = HttpUtils.HttpPost(
             Host + "mods/featured",
@@ -84,8 +84,8 @@ public class CurseForgeClient
         if (popular != null)
             resources.AddRange(popular);
 
-        var mcModsList = new List<CurseResource>();
-        var modPacksList = new List<CurseResource>();
+        var mcModsList = new List<CurseForgeResource>();
+        var modPacksList = new List<CurseForgeResource>();
         mcMods = mcModsList;
         modPacks = modPacksList;
 
@@ -95,9 +95,9 @@ public class CurseForgeClient
                 continue;
 
             int classId = classIdNode.GetValue<int>();
-            if (classId.Equals((int)CurseResourceType.ModPack))
+            if (classId.Equals((int)CurseForgeResourceType.ModPack))
                 modPacksList.Add(ParseFromJsonNode(node));
-            else if (classId.Equals((int)CurseResourceType.McMod))
+            else if (classId.Equals((int)CurseForgeResourceType.McMod))
                 mcModsList.Add(ParseFromJsonNode(node));
         }
     }
@@ -115,7 +115,7 @@ public class CurseForgeClient
             ?? throw new Exception("Error in parsing JSON response");
     }
 
-    public CurseResource GetResource(int resourceId)
+    public CurseForgeResource GetResource(int resourceId)
     {
         using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}", Header);
         string responseJson = responseMessage
@@ -129,7 +129,7 @@ public class CurseForgeClient
         return ParseFromJsonNode(node);
     }
 
-    public string GetRawJsonSearchResources(string searchFilter, CurseResourceType? resourceType = default)
+    public string GetRawJsonSearchResources(string searchFilter, CurseForgeResourceType? resourceType = default)
     {
         var stringBuilder = new StringBuilder(Host);
         stringBuilder.Append($"mods/search?gameId={GameId}");
@@ -153,7 +153,7 @@ public class CurseForgeClient
         return responseMessage.Content.ReadAsString();
     }
 
-    private CurseResource ParseFromJsonNode(JsonNode jsonNode)
+    private CurseForgeResource ParseFromJsonNode(JsonNode jsonNode)
     {
         var id = jsonNode["id"]?.GetValue<int>();
         var classId = jsonNode["classId"]?.GetValue<int>();
@@ -181,7 +181,7 @@ public class CurseForgeClient
             .WhereNotNull()
             .Select(x =>
             {
-                var file = x.Deserialize<CurseFile>() ?? throw new InvalidOperationException();
+                var file = x.Deserialize<CurseForgeFile>() ?? throw new InvalidOperationException();
                 file.ModId = id.GetValueOrDefault();
                 return file;
             })
@@ -204,8 +204,8 @@ public class CurseForgeClient
         )
             throw new Exception("Error in parsing JSON response");
 
-        // Create CurseResource object
-        var curseResource = new CurseResource
+        // Create CurseForgeResource object
+        var curseResource = new CurseForgeResource
         {
             Id = id.Value,
             ClassId = classId.Value,
