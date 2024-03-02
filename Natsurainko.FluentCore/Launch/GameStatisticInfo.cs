@@ -26,5 +26,5 @@ public record GameStatisticInfo
     /// <summary>
     /// 加载器
     /// </summary>
-    public IEnumerable<ModLoaderInfo> ModLoaders { get; set; }
+    public IEnumerable<ModLoaderInfo>? ModLoaders { get; set; }
 }

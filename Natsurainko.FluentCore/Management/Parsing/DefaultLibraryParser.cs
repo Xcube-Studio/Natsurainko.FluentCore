@@ -169,14 +169,14 @@ public class DefaultLibraryParser : BaseLibraryParser
             if (libraryJsonNode.Natives != null)
             {
                 var nativeName = libraryJsonNode.Natives[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
-                libraryElement.Checksum = libraryJsonNode.Downloads?.Classifiers[nativeName].Sha1;
-                libraryElement.Url = libraryJsonNode.Downloads?.Classifiers[nativeName].Url;
+                libraryElement.Checksum = libraryJsonNode.Downloads?.Classifiers?[nativeName].Sha1;
+                libraryElement.Url = libraryJsonNode.Downloads?.Classifiers?[nativeName].Url;
             }
 
             if (jsonNode["name"] is JsonNode node && node.GetValue<string>().Contains("natives"))
             {
-                libraryElement.Checksum = libraryJsonNode.Downloads?.Artifact.Sha1;
-                libraryElement.Url = libraryJsonNode.Downloads?.Artifact.Url;
+                libraryElement.Checksum = libraryJsonNode.Downloads?.Artifact?.Sha1;
+                libraryElement.Url = libraryJsonNode.Downloads?.Artifact?.Url;
             }
             return;
         }

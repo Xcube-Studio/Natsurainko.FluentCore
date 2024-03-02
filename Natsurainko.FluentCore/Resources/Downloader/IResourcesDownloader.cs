@@ -10,5 +10,5 @@ public interface IResourcesDownloader
 {
     public event EventHandler SingleFileDownloaded;
 
-    public void Download(CancellationTokenSource tokenSource = default);
+    public void Download(CancellationTokenSource? tokenSource = default);
 }

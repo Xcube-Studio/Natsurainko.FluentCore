@@ -6,29 +6,29 @@ namespace Nrk.FluentCore.Resources;
 public record DownloadsJsonNode
 {
     [JsonPropertyName("artifact")]
-    public FileJsonNode? Artifact { get; set; }
+    public FileJsonNode? Artifact { get; init; }
 
     [JsonPropertyName("classifiers")]
-    public Dictionary<string, FileJsonNode>? Classifiers { get; set; }
+    public Dictionary<string, FileJsonNode>? Classifiers { get; init; }
 
 }
 
 public record FileJsonNode
 {
     [JsonPropertyName("path")]
-    public string? Path { get; set; }
+    public string? Path { get; init; }
 
     [JsonPropertyName("sha1")]
-    public string? Sha1 { get; set; }
+    public string? Sha1 { get; init; }
 
     [JsonPropertyName("size")]
-    public int? Size { get; set; }
+    public int? Size { get; init; }
 
     [JsonPropertyName("url")]
-    public string? Url { get; set; }
+    public string? Url { get; init; }
 
     //for client-x.xx.xml
     [JsonPropertyName("id")]
-    public string? Id { get; set; }
+    public string? Id { get; init; }
 }
 

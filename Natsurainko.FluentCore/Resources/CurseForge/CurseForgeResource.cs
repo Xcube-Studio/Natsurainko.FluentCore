@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Resources;
 
-public record CurseResource
+public record CurseForgeResource
 {
     [JsonPropertyName("id")]
     public required int Id { get; set; }
@@ -25,7 +25,7 @@ public record CurseResource
     public required DateTime DateModified { get; set; }
 
     [JsonPropertyName("latestFilesIndexes")]
-    public required IEnumerable<CurseFile> Files { get; set; }
+    public required IEnumerable<CurseForgeFile> Files { get; set; }
 
     public required IEnumerable<string> Categories { get; set; }
 

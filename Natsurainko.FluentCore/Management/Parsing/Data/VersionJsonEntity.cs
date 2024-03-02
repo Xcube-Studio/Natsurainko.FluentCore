@@ -22,7 +22,7 @@ public record VersionJsonEntity
     public string? InheritsFrom { get; set; }
 
     [JsonPropertyName("type")]
-    public string? Type { get; set; }
+    public required string Type { get; set; }
 
     [JsonPropertyName("assets")]
     public string? Assets { get; set; }

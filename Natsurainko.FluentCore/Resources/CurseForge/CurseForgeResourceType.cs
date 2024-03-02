@@ -1,6 +1,6 @@
 ﻿namespace Nrk.FluentCore.Resources;
 
-public enum CurseResourceType
+public enum CurseForgeResourceType
 {
     McMod = 6,
     ModPack = 4471,
