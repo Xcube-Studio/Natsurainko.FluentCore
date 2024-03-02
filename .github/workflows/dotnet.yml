@@ -1,36 +1,33 @@
-name: .NET
+name: Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
-
     runs-on: windows-latest
-
     steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Setup dependencies (include FluentCore&Toolkits)
-      run: |
-            cd ..
-            git clone https://github.com/natsurainko/Natsurainko.Toolkits.git
-            dotnet restore ./Natsurainko.Toolkits/Natsurainko.Toolkits/Natsurainko.Toolkits.csproj
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Capture artifacts
-      uses: actions/upload-artifact@main
-      with:
-          name: Resource
-          path: |
-            .\Natsurainko.FluentCore\bin\Debug\net6.0\Natsurainko.FluentCore.dll
-            .\Natsurainko.FluentCore.Extension.Windows\bin\Debug\net6.0-windows\Natsurainko.FluentCore.Extension.Windows.dll
-            .\Natsurainko.FluentCore\bin\Debug\Natsurainko.FluentCore.2.0.4.nupkg
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@main
+      #   with:
+      #     name: Resource
+      #     path: |
+      #       .\Natsurainko.FluentCore\bin\Debug\net6.0\Natsurainko.FluentCore.dll
+      #       .\Natsurainko.FluentCore\bin\Debug\Natsurainko.FluentCore.2.0.4.nupkg
