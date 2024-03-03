@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Launch;
+﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.ObjectModel;
 
@@ -10,7 +11,7 @@ public interface ILaunchService
 
     event EventHandler<MinecraftSession>? SessionCreated;
 
-    void LaunchGame(GameInfo gameInfo);
+    void LaunchGame(GameInfo gameInfo, Account account);
 
-    MinecraftSession CreateMinecraftSessionFromGameInfo(GameInfo gameInfo);
+    MinecraftSession CreateMinecraftSessionFromGameInfo(GameInfo gameInfo, Account account);
 }
