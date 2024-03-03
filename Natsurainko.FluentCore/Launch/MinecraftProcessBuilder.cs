@@ -32,7 +32,10 @@ public class MinecraftProcessBuilder
     private int? _minMemory;
     private int? _maxMemory;
     private bool _enableDemoUser = false;
-    private List<string> _extraArguments = new();
+
+    private List<string> _extraGameArguments = new();
+    private List<string> _extraVmArguments = new();
+    // 不可以将两个参数合并载入，两种参数要分别放在启动参数的对应位置才能被加载
 
     public GameInfo GameInfo { get; init; }
 
@@ -153,13 +156,12 @@ public class MinecraftProcessBuilder
 
         foreach (var arg in DefaultVmParameterParser.GetEnvironmentJVMArguments()) yield return arg;
         foreach (var arg in vmParameters) yield return arg.ReplaceFromDictionary(vmParametersReplace);
+        foreach (var arg in _extraVmArguments) yield return arg;
 
         yield return entity.MainClass;
 
         foreach (var arg in gameParameters) yield return arg.ReplaceFromDictionary(gameParametersReplace);
-
-        foreach (var arg in _extraArguments)
-            yield return arg;
+        foreach (var arg in _extraGameArguments) yield return arg;
 
         if (_enableDemoUser) yield return "--demo";
 
@@ -208,14 +210,24 @@ public class MinecraftProcessBuilder
     }
 
     /// <summary>
-    /// 设置 游戏额外参数 [可选]
+    /// 设置 额外游戏参数 [可选]
     /// </summary>
-    /// <param name="extraVmParameters">额外虚拟机参数</param>
-    /// <param name="extraGameParameters">额外游戏参数</param>
+    /// <param name="args">额外游戏参数</param>
     /// <returns></returns>
-    public MinecraftProcessBuilder AddArguments(IEnumerable<string> args)
+    public MinecraftProcessBuilder AddGameArguments(IEnumerable<string> args)
     {
-        _extraArguments.AddRange(args);
+        _extraGameArguments.AddRange(args);
+        return this;
+    }
+
+    /// <summary>
+    /// 设置 额外虚拟机参数 [可选]
+    /// </summary>
+    /// <param name="args">额外虚拟机参数</param>
+    /// <returns></returns>
+    public MinecraftProcessBuilder AddVmArguments(IEnumerable<string> args)
+    {
+        _extraVmArguments.AddRange(args);
         return this;
     }
 
