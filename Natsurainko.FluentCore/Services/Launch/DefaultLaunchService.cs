@@ -1,5 +1,5 @@
-﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Services.Accounts;
+﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Launch;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +9,6 @@ namespace Nrk.FluentCore.Services.Launch;
 public class DefaultLaunchService : ILaunchService
 {
     protected readonly IFluentCoreSettingsService _settingsService;
-    protected readonly IAccountService _accountService;
     protected readonly IGameService _gameService;
 
     protected readonly List<MinecraftSession> _sessions;
@@ -19,20 +18,18 @@ public class DefaultLaunchService : ILaunchService
 
     public DefaultLaunchService(
         IFluentCoreSettingsService settingsService,
-        IAccountService accountService,
         IGameService gameService)
     {
         _settingsService = settingsService;
-        _accountService = accountService;
         _gameService = gameService;
 
         _sessions = [];
         Sessions = new(_sessions);
     }
 
-    public virtual async void LaunchGame(GameInfo gameInfo)
+    public virtual async void LaunchGame(GameInfo gameInfo, Account account)
     {
-        var session = CreateMinecraftSessionFromGameInfo(gameInfo);
+        var session = CreateMinecraftSessionFromGameInfo(gameInfo, account);
         _sessions.Add(session);
         SessionCreated?.Invoke(this, session);
 
@@ -46,14 +43,11 @@ public class DefaultLaunchService : ILaunchService
         }
     }
 
-    public virtual MinecraftSession CreateMinecraftSessionFromGameInfo(GameInfo gameInfo)
+    public virtual MinecraftSession CreateMinecraftSessionFromGameInfo(GameInfo gameInfo, Account account)
     {
-        if (_accountService.ActiveAccount == null)
-            throw new InvalidOperationException();
-
         return new MinecraftSession() // Launch session
         {
-            Account = _accountService.ActiveAccount,
+            Account = account,
             GameInfo = gameInfo,
             GameDirectory = gameInfo.MinecraftFolderPath,
             JavaPath = _settingsService.ActiveJava,
