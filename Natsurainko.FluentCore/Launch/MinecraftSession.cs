@@ -236,10 +236,10 @@ public class MinecraftSession
             .SetGameDirectory(GameDirectory);
 
         if (ExtraVmParameters != null)
-            builder.AddArguments(ExtraVmParameters);
+            builder.AddVmArguments(ExtraVmParameters);
 
         if (ExtraGameParameters != null)
-            builder.AddArguments(ExtraGameParameters);
+            builder.AddGameArguments(ExtraGameParameters);
 
         return builder.Build();
     }
