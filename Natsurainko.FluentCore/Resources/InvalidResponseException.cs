@@ -15,11 +15,16 @@ public class InvalidResponseException : Exception
     public required string Url { get; init; }
     public string? Response { get; init; }
 
-    public InvalidResponseException(string message) : base(message) { }
     public InvalidResponseException() { }
 
     [SetsRequiredMembers]
-    public InvalidResponseException(string url, string? resposne, string? message = null) : base(message)
+    public InvalidResponseException(
+        string url,
+        string? resposne,
+        string? message = null,
+        Exception? innerException = null
+        )
+        : base(message, innerException)
     {
         Url = url;
         Response = resposne;

@@ -18,8 +18,8 @@ using FeaturedResources = (IEnumerable<CurseForgeResource> Mods, IEnumerable<Cur
 
 public class CurseForgeClient
 {
-    const string BaseUrl = "https://api.curseforge.com/v1/";
-    const int MinecraftGameId = 432;
+    private const string BaseUrl = "https://api.curseforge.com/v1/";
+    private const int MinecraftGameId = 432;
 
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
@@ -35,7 +35,7 @@ public class CurseForgeClient
 
     public async Task<IEnumerable<CurseForgeResource>> GetResourceSearchResultAsync(
         string searchFilter,
-        CurseForgeResourceType? resourceType = default,
+        CurseForgeResourceType? resourceType = null,
         string? version = null)
     {
         // Build URL
