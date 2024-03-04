@@ -71,7 +71,7 @@ public class CurseForgeClient
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
-            throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge");
+            throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge", e);
         }
 
         return resources;
@@ -142,7 +142,7 @@ public class CurseForgeClient
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
-            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge", e);
         }
 
         return (modsList, modpacksList);
@@ -170,7 +170,7 @@ public class CurseForgeClient
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
-            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge", e);
         }
 
         return result;
@@ -199,7 +199,7 @@ public class CurseForgeClient
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
-            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge", e);
         }
 
         return result;
