@@ -33,7 +33,7 @@ public class CurseForgeClient
 
     #region CurseForge APIs
 
-    public async Task<IEnumerable<CurseForgeResource>> GetResourceSearchResultAsync(
+    public async Task<IEnumerable<CurseForgeResource>> SearchResourcesAsync(
         string searchFilter,
         CurseForgeResourceType? resourceType = null,
         string? version = null)
@@ -205,7 +205,7 @@ public class CurseForgeClient
         return result;
     }
 
-    public async Task<string> GetResourceSearchResultJsonAsync(string searchFilter, CurseForgeResourceType? resourceType = default)
+    public async Task<string> GetJsonForResourceSearchAsync(string searchFilter, CurseForgeResourceType? resourceType = default)
     {
         // Build URL
         var stringBuilder = new StringBuilder(BaseUrl)
