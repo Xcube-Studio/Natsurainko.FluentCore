@@ -2,30 +2,94 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace Nrk.FluentCore.Resources;
 
+using FeaturedResources = (IEnumerable<CurseForgeResource> Mods, IEnumerable<CurseForgeResource> Modpacks);
+
 public class CurseForgeClient
 {
-    public const string Host = "https://api.curseforge.com/v1/";
-    public const int MinecraftGameId = 432;
+    const string BaseUrl = "https://api.curseforge.com/v1/";
+    const int MinecraftGameId = 432;
 
-    public required string ApiKey { get; init; }
+    private readonly HttpClient _httpClient;
+    private readonly string _apiKey;
 
-    public required int GameId { get; init; }
+    [Obsolete]
+    public int GameId { get; init; }
 
-    private Dictionary<string, string> Header => new() { { "x-api-key", ApiKey } };
+    [Obsolete]
+    private Dictionary<string, string> Header => new() { { "x-api-key", _apiKey } };
 
+
+    public CurseForgeClient(string apiKey, HttpClient? httpClient = null)
+    {
+        _apiKey = apiKey;
+        _httpClient = httpClient ?? HttpUtils.HttpClient;
+    }
+
+    #region CurseForge APIs
+
+    public async Task<IEnumerable<CurseForgeResource>> GetResourceSearchResultAsync(
+        string searchFilter,
+        CurseForgeResourceType? resourceType = default,
+        string? version = null)
+    {
+        // Build URL
+        var stringBuilder = new StringBuilder(BaseUrl)
+            .Append($"mods/search?gameId={MinecraftGameId}")
+            .Append($"&sortField=Featured")
+            .Append($"&sortOrder=desc");
+
+        if (resourceType is not null)
+            stringBuilder.Append($"&categoryId=0&classId={(int)resourceType}");
+
+        stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
+
+        string url = stringBuilder.ToString();
+
+        // Send request
+        var request = CreateCurseForgeGetRequest(url);
+        using var responseMessage = await _httpClient.SendAsync(request);
+
+        // Parse response
+        var response = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        IEnumerable<CurseForgeResource>? resources = null;
+        try
+        {
+            resources = JsonNode.Parse(response)?["data"]?
+                .AsArray()
+                .WhereNotNull()
+                .Select(x => ParseCurseForgeResource(x))
+                ?? throw new FormatException();
+        }
+        catch (Exception e) when (e is FormatException || e is InvalidOperationException)
+        {
+            throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge");
+        }
+
+        return resources;
+    }
+
+    [Obsolete]
     public IEnumerable<CurseForgeResource> SearchResources(
         string searchFilter,
         CurseForgeResourceType? resourceType = default,
         string? version = null)
     {
-        var stringBuilder = new StringBuilder(Host);
+        var stringBuilder = new StringBuilder(BaseUrl);
         stringBuilder.Append($"mods/search?gameId={GameId}");
         stringBuilder.Append($"&sortField=Featured");
         stringBuilder.Append($"&sortOrder=desc");
@@ -44,13 +108,32 @@ public class CurseForgeClient
             ["data"]?
             .AsArray()
             .WhereNotNull()
-            .Select(x => ParseFromJsonNode(x))
+            .Select(x => ParseCurseForgeResource(x))
             ?? throw new Exception("Error in parsing JSON response");
     }
 
+    public async Task<string> GetFileUrlAsync(CurseForgeFile file)
+    {
+        var url = $"{BaseUrl}mods/{file.ModId}/files/{file.FileId}";
+        var request = CreateCurseForgeGetRequest(url);
+        using var responseMessage = await _httpClient.SendAsync(request);
+
+        // Parse response
+        var response = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        return JsonNode.Parse(response)?
+            ["data"]?
+            ["downloadUrl"]?
+            .GetValue<string>()
+            ?? throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge");
+    }
+
+    [Obsolete]
     public string GetCurseFileDownloadUrl(CurseForgeFile file)
     {
-        using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{file.ModId}/files/{file.FileId}", Header);
+        using var responseMessage = HttpUtils.HttpGet(BaseUrl + $"mods/{file.ModId}/files/{file.FileId}", Header);
         string responseJson = responseMessage
             .EnsureSuccessStatusCode().Content
             .ReadAsString();
@@ -62,10 +145,64 @@ public class CurseForgeClient
             ?? throw new Exception("Error in parsing JSON response");
     }
 
+    public async Task<FeaturedResources> GetFeaturedResourcesAsync()
+    {
+        // Create request
+        string url = $"{BaseUrl}mods/featured";
+        var request = CreateCurseForgeGetRequest(url);
+        request.Content = new StringContent(JsonSerializer.Serialize(new { gameId = MinecraftGameId }));
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        // Send request
+        using var response = await _httpClient.SendAsync(request);
+        var responseJson = await response
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        // Parse response
+        var modsList = new List<CurseForgeResource>();
+        var modpacksList = new List<CurseForgeResource>();
+
+        try
+        {
+            var jsonNode = JsonNode.Parse(responseJson)?["data"]
+                ?? throw new FormatException();
+
+            var featured = jsonNode["featured"]?.AsArray().WhereNotNull();
+            var popular = jsonNode["popular"]?.AsArray().WhereNotNull();
+
+            var resources = new List<JsonNode>();
+            if (featured != null)
+                resources.AddRange(featured);
+            if (popular != null)
+                resources.AddRange(popular);
+
+            // Filter mods and modpacks
+            foreach (var node in resources)
+            {
+                if (node["classId"] is not JsonNode classIdNode)
+                    continue;
+
+                int classId = classIdNode.GetValue<int>();
+                if (classId.Equals((int)CurseForgeResourceType.ModPack))
+                    modpacksList.Add(ParseCurseForgeResource(node));
+                else if (classId.Equals((int)CurseForgeResourceType.McMod))
+                    modsList.Add(ParseCurseForgeResource(node));
+            }
+        }
+        catch (Exception e) when (e is FormatException || e is InvalidOperationException)
+        {
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+        }
+
+        return (modsList, modpacksList);
+    }
+
+    [Obsolete]
     public void GetFeaturedResources(out IEnumerable<CurseForgeResource> mcMods, out IEnumerable<CurseForgeResource> modPacks)
     {
         using var responseMessage = HttpUtils.HttpPost(
-            Host + "mods/featured",
+            BaseUrl + "mods/featured",
             JsonSerializer.Serialize(new { gameId = 432 }),
             Header);
 
@@ -96,15 +233,44 @@ public class CurseForgeClient
 
             int classId = classIdNode.GetValue<int>();
             if (classId.Equals((int)CurseForgeResourceType.ModPack))
-                modPacksList.Add(ParseFromJsonNode(node));
+                modPacksList.Add(ParseCurseForgeResource(node));
             else if (classId.Equals((int)CurseForgeResourceType.McMod))
-                mcModsList.Add(ParseFromJsonNode(node));
+                mcModsList.Add(ParseCurseForgeResource(node));
         }
     }
 
+    public async Task<string> GetResourceDescriptionAsync(int resourceId)
+    {
+        // Create request
+        string url = $"{BaseUrl}mods/{resourceId}/description";
+        var request = CreateCurseForgeGetRequest(url);
+
+        // Send request
+        using var responseMessage = await _httpClient.SendAsync(request);
+        string responseJson = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        // Parse response
+        string? result = null;
+        try
+        {
+            result = JsonNode.Parse(responseJson)?["data"]?
+                .GetValue<string>()
+                ?? throw new FormatException();
+        }
+        catch (Exception e) when (e is FormatException || e is InvalidOperationException)
+        {
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+        }
+
+        return result;
+    }
+
+    [Obsolete]
     public string GetResourceDescription(int resourceId)
     {
-        using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}/description", Header);
+        using var responseMessage = HttpUtils.HttpGet(BaseUrl + $"mods/{resourceId}/description", Header);
         string responseJson = responseMessage
             .EnsureSuccessStatusCode().Content
             .ReadAsString();
@@ -115,9 +281,39 @@ public class CurseForgeClient
             ?? throw new Exception("Error in parsing JSON response");
     }
 
+    public async Task<CurseForgeResource> GetResourceAsync(int resourceId)
+    {
+        // Create request
+        string url = $"{BaseUrl}mods/{resourceId}";
+        var request = CreateCurseForgeGetRequest(url);
+
+        // Send request
+        using var responseMessage = await _httpClient.SendAsync(request);
+        string responseJson = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        // Parse response
+        CurseForgeResource? result = null;
+        try
+        {
+            var node = JsonNode.Parse(responseJson)?["data"]
+                ?? throw new FormatException();
+
+            result = ParseCurseForgeResource(node);
+        }
+        catch (Exception e) when (e is FormatException || e is InvalidOperationException)
+        {
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by CurseForge");
+        }
+
+        return result;
+    }
+
+    [Obsolete]
     public CurseForgeResource GetResource(int resourceId)
     {
-        using var responseMessage = HttpUtils.HttpGet(Host + $"mods/{resourceId}", Header);
+        using var responseMessage = HttpUtils.HttpGet(BaseUrl + $"mods/{resourceId}", Header);
         string responseJson = responseMessage
             .EnsureSuccessStatusCode().Content
             .ReadAsString();
@@ -126,13 +322,38 @@ public class CurseForgeClient
             ["data"]
             ?? throw new Exception("Error in parsing JSON response");
 
-        return ParseFromJsonNode(node);
+        return ParseCurseForgeResource(node);
     }
 
+    public async Task<string> GetResourceSearchResultJsonAsync(string searchFilter, CurseForgeResourceType? resourceType = default)
+    {
+        // Build URL
+        var stringBuilder = new StringBuilder(BaseUrl)
+            .Append($"mods/search?gameId={MinecraftGameId}")
+            .Append($"&sortField=Featured")
+            .Append($"&sortOrder=desc");
+
+        if (resourceType is not null)
+            stringBuilder.Append($"&categoryId=0&classId={(int)resourceType}");
+
+        stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
+
+        string url = stringBuilder.ToString();
+
+        // Send request
+        var request = CreateCurseForgeGetRequest(url);
+        using var responseMessage = await _httpClient.SendAsync(request);
+        
+        return await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+    }
+
+    [Obsolete]
     public string GetRawJsonSearchResources(string searchFilter, CurseForgeResourceType? resourceType = default)
     {
-        var stringBuilder = new StringBuilder(Host);
-        stringBuilder.Append($"mods/search?gameId={GameId}");
+        var stringBuilder = new StringBuilder(BaseUrl);
+        stringBuilder.Append($"mods/search?gameId={MinecraftGameId}");
         stringBuilder.Append($"&sortField=Featured");
         stringBuilder.Append($"&sortOrder=desc");
 
@@ -147,13 +368,33 @@ public class CurseForgeClient
         return responseMessage.Content.ReadAsString();
     }
 
+    public async Task<string> GetRawJsonResourceAsync(int resourceId)
+    {
+        var request = CreateCurseForgeGetRequest($"{BaseUrl}categories?gameId={MinecraftGameId}");
+        using var responseMessage = await _httpClient.SendAsync(request);
+
+        return await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+    }
+
+    [Obsolete]
     public string GetRawJsonCategories()
     {
-        using var responseMessage = HttpUtils.HttpGet(Host + $"categories?gameId={GameId}", Header);
+        using var responseMessage = HttpUtils.HttpGet(BaseUrl + $"categories?gameId={GameId}", Header);
         return responseMessage.Content.ReadAsString();
     }
 
-    private CurseForgeResource ParseFromJsonNode(JsonNode jsonNode)
+    #endregion
+
+    private HttpRequestMessage CreateCurseForgeGetRequest(string url)
+    {
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
+        requestMessage.Headers.Add("x-api-key", _apiKey);
+        return requestMessage;
+    }
+
+    private CurseForgeResource ParseCurseForgeResource(JsonNode jsonNode)
     {
         var id = jsonNode["id"]?.GetValue<int>();
         var classId = jsonNode["classId"]?.GetValue<int>();
@@ -202,7 +443,7 @@ public class CurseForgeClient
             || websiteUrl is null
             || iconurl is null
         )
-            throw new Exception("Error in parsing JSON response");
+            throw new FormatException();
 
         // Create CurseForgeResource object
         var curseResource = new CurseForgeResource
