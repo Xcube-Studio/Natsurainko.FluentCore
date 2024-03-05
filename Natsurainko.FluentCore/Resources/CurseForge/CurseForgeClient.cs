@@ -35,8 +35,7 @@ public class CurseForgeClient
 
     public async Task<IEnumerable<CurseForgeResource>> SearchResourcesAsync(
         string searchFilter,
-        CurseForgeResourceType? resourceType = null,
-        string? version = null)
+        CurseForgeResourceType? resourceType = null)
     {
         // Build URL
         var stringBuilder = new StringBuilder(BaseUrl)
@@ -203,40 +202,6 @@ public class CurseForgeClient
         }
 
         return result;
-    }
-
-    public async Task<string> GetJsonForResourceSearchAsync(string searchFilter, CurseForgeResourceType? resourceType = default)
-    {
-        // Build URL
-        var stringBuilder = new StringBuilder(BaseUrl)
-            .Append($"mods/search?gameId={MinecraftGameId}")
-            .Append($"&sortField=Featured")
-            .Append($"&sortOrder=desc");
-
-        if (resourceType is not null)
-            stringBuilder.Append($"&categoryId=0&classId={(int)resourceType}");
-
-        stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
-
-        string url = stringBuilder.ToString();
-
-        // Send request
-        var request = CreateCurseForgeGetRequest(url);
-        using var responseMessage = await _httpClient.SendAsync(request);
-        
-        return await responseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
-    }
-
-    public async Task<string> GetRawJsonResourceAsync(int resourceId)
-    {
-        var request = CreateCurseForgeGetRequest($"{BaseUrl}categories?gameId={MinecraftGameId}");
-        using var responseMessage = await _httpClient.SendAsync(request);
-
-        return await responseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
     }
 
     #endregion

@@ -155,49 +155,4 @@ public class ModrinthClient
 
         return modrinthFiles;
     }
-
-    public async Task<string> GetJsonForResourceSearchAsync(
-        string query,
-        ModrinthResourceType? resourceType = null,
-        string? version = null)
-    {
-        // Build URL
-        var stringBuilder = new StringBuilder($"{BaseUrl}search?query={query}");
-
-        var facets = new List<string>();
-        if (resourceType is not null)
-        {
-            string type = resourceType switch
-            {
-                ModrinthResourceType.ModPack => "modpack",
-                ModrinthResourceType.Resourcepack => "resourcepack",
-                _ => "mod"
-            };
-            facets.Add($"[\"project_type:{type}\"]");
-        }
-        if (version is not null)
-            facets.Add($"[\"versions:{version}\"]");
-
-        if (facets.Any())
-            stringBuilder.Append($"&facets=[{string.Join(',', facets)}]");
-
-        string url = stringBuilder.ToString();
-
-        // Send request
-        using var responseMessage = await _httpClient.GetAsync(url);
-        string responseJson = await responseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
-
-        return responseJson;
-    }
-
-    public async Task<string> GetProjectJsonAsync(string projectId)
-    {
-        using var responseMessage = await _httpClient.GetAsync($"{BaseUrl}project/{projectId}");
-
-        return await responseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
-    }
 }
