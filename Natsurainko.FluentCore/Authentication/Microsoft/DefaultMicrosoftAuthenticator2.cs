@@ -90,6 +90,7 @@ public class DefaultMicrosoftAuthenticator2
                     Type = AuthExceptionType.DeviceFlowError
                 };
             }
+            // Continue polling
         }
         while (stopwatch.Elapsed < TimeSpan.FromSeconds(timeout));
 
