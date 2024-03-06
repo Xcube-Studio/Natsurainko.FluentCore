@@ -291,8 +291,8 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
                 if (
                     deviceAuthResponse is null
-                    || deviceAuthResponse.ExpiresIn is null
-                    || deviceAuthResponse.Interval is null
+                    //|| deviceAuthResponse.ExpiresIn is null
+                    //|| deviceAuthResponse.Interval is null
                 )
                     throw new AuthException("Error in device flow authentication\n" + deviceAuthPostRes.Content);
 

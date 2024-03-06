@@ -1,5 +1,6 @@
 ﻿using Nrk.FluentCore.Utils;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -8,6 +9,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationException;
@@ -31,21 +33,89 @@ public class DefaultMicrosoftAuthenticator2
         _redirectUri = redirectUri;
     }
 
-    public Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null)
-        => AuthenticateAsync(code, "code", progress);
+    public async Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null)
+    {
+        progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
+        (string msaToken, string msaRefreshToken) = await AuthMsaAsync("code", code);
 
-    public Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null)
-        => AuthenticateAsync(account.RefreshToken, "refresh_token", progress);
+        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+    }
 
-    // Common authentication process
-    private async Task<MicrosoftAccount> AuthenticateAsync(
-        string code,
-        string param,
+    public async Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null)
+    {
+        progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
+        (string msaToken, string msaRefreshToken) = await AuthMsaAsync("refresh_token", account.RefreshToken);
+
+        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+    }
+
+    public async Task<MicrosoftAccount> LoginFromDeviceFlowAsync(
+        Action<DeviceCodeResponse> ReceiveUserCodeAction,
+        CancellationToken cancellationToken = default,
         IProgress<AuthStep>? progress = null)
     {
         progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
-        (string msaToken, string msaRefreshToken) = await AuthMsaAsync(param, code);
+        var deviceCodeResponse = await GetDeviceCodeAsync();
 
+        // Allow the caller to provide the device code to the user, e.g. display on UI or print to console
+        ReceiveUserCodeAction(deviceCodeResponse);
+
+        // Polling for device flow login
+        OAuth20TokenResponse? oauth2TokenResponse = null;
+        int timeout = deviceCodeResponse.ExpiresIn;
+        var stopwatch = Stopwatch.StartNew();
+        do
+        {
+            if (cancellationToken.IsCancellationRequested)
+                throw new TaskCanceledException();
+
+            await Task.Delay(TimeSpan.FromSeconds(deviceCodeResponse.Interval), cancellationToken);
+
+            // Check if the user has logged in
+            var pollResult = await PollDeviceFlowLoginAsync(deviceCodeResponse.DeviceCode);
+
+            // Authentication successful
+            if (pollResult.Success == true)
+            {
+                oauth2TokenResponse = pollResult.OAuth20TokenResponse!;
+                break; // Stop polling
+            }
+            // Authentication failed
+            if (pollResult.Success == false)
+            {
+                throw new AuthException("Device flow authentication failed")
+                {
+                    HelpLink = deviceCodeResponse.Message,
+                    Step = AuthStep.AuthenticatingMicrosoftAccount,
+                    Type = AuthExceptionType.DeviceFlowError
+                };
+            }
+        }
+        while (stopwatch.Elapsed < TimeSpan.FromSeconds(timeout));
+
+        // Time out
+        if (oauth2TokenResponse is null)
+        {
+            throw new AuthException("Device flow authentication timed out")
+            {
+                HelpLink = "The user didn't login within the time limit",
+                Step = AuthStep.AuthenticatingMicrosoftAccount,
+                Type = AuthExceptionType.DeviceFlowError
+            };
+        }
+
+        // Device flow login successful
+        string msaToken = oauth2TokenResponse.AccessToken;
+        string msaRefreshToken = oauth2TokenResponse.RefreshToken;
+        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+    }
+
+    // Common authentication process
+    private async Task<MicrosoftAccount> AuthenticateCommonAsync(
+        string msaToken,
+        string msaRefreshToken,
+        IProgress<AuthStep>? progress = null)
+    {
         progress?.Report(AuthStep.AuthenticatingWithXboxLive);
         var xblResponse = await AuthXboxLiveAsync(msaToken);
 
@@ -71,10 +141,11 @@ public class DefaultMicrosoftAuthenticator2
         );
     }
 
+
     #region HTTP APIs
 
     // Get Microsoft Account OAuth2 token
-    private async Task<(string msaAccessToken, string msaRefreshToken)> AuthMsaAsync(string parameterName, string code)
+    private async Task<(string msaAccessToken, string msaRefreshToken)> AuthMsaAsync(string? parameterName, string code)
     {
         // Send OAuth2 request
         string authCodePost =
@@ -315,6 +386,90 @@ public class DefaultMicrosoftAuthenticator2
         }
 
         return (response.Name, guid);
+    }
+
+    // Get device code for device flow authentication
+    private async Task<DeviceCodeResponse> GetDeviceCodeAsync()
+    {
+        // Send request
+        var requestParams = $"client_id={_clientId}" + "&scope=XboxLive.signin%20offline_access";
+
+        using var responseMessage = await _httpClient.PostAsync(
+            "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode",
+            new StringContent(requestParams, Encoding.UTF8, "application/x-www-form-urlencoded"));
+
+        // Parse response
+        DeviceCodeResponse? response = null;
+        try
+        {
+            response = await responseMessage
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<DeviceCodeResponse>();
+
+            if (response is null)
+                throw new FormatException("Response is null");
+            if (response.ExpiresIn == -1 || response.Interval <= 0 || response.DeviceCode is null)
+                throw new FormatException("Invalid response");
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
+            throw new AuthException("Error in device flow authentication\n" + responseMessage.Content);
+        }
+
+        return response;
+    }
+
+    // Poll for device flow authentication
+    private async Task<DeviceFlowPollResult> PollDeviceFlowLoginAsync(string deviceCode)
+    {
+        var requestParams =
+            "grant_type=urn:ietf:params:oauth:grant-type:device_code" +
+            $"&client_id={_clientId}" +
+            $"&device_code={deviceCode}";
+
+        using var responseMessage = await _httpClient.PostAsync(
+            "https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+            new StringContent(requestParams, Encoding.UTF8, "application/x-www-form-urlencoded"));
+
+        // Handle errors
+        if (!responseMessage.IsSuccessStatusCode)
+        {
+            string responseJson = await responseMessage.Content.ReadAsStringAsync();
+            string error = "";
+            try
+            {
+                error = JsonNode.Parse(responseJson)?["error"]?.GetValue<string>() ?? error;
+            }
+            catch { }
+
+            bool authFailed =
+                error == "authorization_declined" ||
+                error == "bad_verification_code" ||
+                error == "expired_token";
+
+            // Other errors means polling should continue, i.e. waiting for user to login
+            return new DeviceFlowPollResult(authFailed ? false : null, null);
+        }
+
+        // Device flow login successful
+        OAuth20TokenResponse? oauthResponse = null;
+        try
+        {
+            oauthResponse = await responseMessage
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<OAuth20TokenResponse>();
+
+            if (oauthResponse is null)
+                throw new FormatException("Response is null");
+            if (oauthResponse.AccessToken is null || oauthResponse.RefreshToken is null)
+                throw new FormatException("Token is null");
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
+            throw new AuthException("Error in device flow authentication\n" + responseMessage.Content);
+        }
+
+        return new DeviceFlowPollResult(true, oauthResponse);
     }
 
     #endregion

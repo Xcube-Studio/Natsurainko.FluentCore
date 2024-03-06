@@ -18,4 +18,5 @@ public enum MicrosoftAccountAuthenticationExceptionType
     NetworkConnectionError = 1,
     XboxLiveError = 3,
     GameOwnershipError = 4,
+    DeviceFlowError
 }

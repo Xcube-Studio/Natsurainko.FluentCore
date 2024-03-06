@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -22,10 +23,10 @@ public class OAuth20TokenResponse
     public string? Scope { get; set; }
 
     [JsonPropertyName("access_token")]
-    public string? AccessToken { get; set; }
+    public required string AccessToken { get; set; }
 
     [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
+    public required string RefreshToken { get; set; }
 
     [JsonPropertyName("user_id")]
     public string? UserId { get; set; }
@@ -118,16 +119,16 @@ public class DeviceCodeResponse
     public string? UserCode { get; set; }
 
     [JsonPropertyName("device_code")]
-    public string? DeviceCode { get; set; }
+    public required string DeviceCode { get; set; }
 
     [JsonPropertyName("verification_uri")]
     public string? VerificationUrl { get; set; }
 
     [JsonPropertyName("expires_in")]
-    public int? ExpiresIn { get; set; }
+    public required int ExpiresIn { get; set; } = -1;
 
     [JsonPropertyName("interval")]
-    public int? Interval { get; set; }
+    public required int Interval { get; set; } = -1;
 
     [JsonPropertyName("message")]
     public string? Message { get; set; }
@@ -138,4 +139,23 @@ public class DeviceFlowResponse
     public bool Success { get; set; }
 
     public OAuth20TokenResponse? OAuth20TokenResponse { get; set; }
+}
+
+/// <summary>
+/// Describes the result of a device flow poll.
+/// </summary>
+/// <param name="Success">true if successful, false if failed, otherwise null</param>
+/// <param name="OAuth20TokenResponse">OAuth resposne if successful</param>
+internal class DeviceFlowPollResult
+{
+    public bool? Success { get; init; }
+    
+    // Not null when Success is true
+    public OAuth20TokenResponse? OAuth20TokenResponse { get; init; }
+
+    public DeviceFlowPollResult(bool? success, OAuth20TokenResponse? oauth2TokenResponse)
+    {
+        Success = success;
+        OAuth20TokenResponse = oauth2TokenResponse;
+    }
 }
