@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -32,20 +33,50 @@ public class DefaultMicrosoftAuthenticator2
         _redirectUri = redirectUri;
     }
 
-    public async Task<MicrosoftAccount> LoginAsync(string code, Func<MicrosoftAuthenticateProgressChangedEventArgs>? progressChanged = null)
-    {
-        throw new NotImplementedException();
-    }
+    public Task<MicrosoftAccount> LoginAsync(string code, IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
+        => AuthenticateAsync(code, "code", progress);
 
-    public async Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, Func<MicrosoftAuthenticateProgressChangedEventArgs>? progressChanged = null)
+    public Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
+        => AuthenticateAsync(account.RefreshToken, "refresh_token", progress);
+
+    // Common authentication process
+    private async Task<MicrosoftAccount> AuthenticateAsync(
+        string code,
+        string param,
+        IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
     {
-        throw new NotImplementedException();
+        progress?.Report((AuthStep.Get_Authorization_Token, 0.2));
+        (string msaToken, string msaRefreshToken) = await AuthMsaAsync(param, code);
+
+        progress?.Report((AuthStep.Authenticate_with_XboxLive, 0.40));
+        var xblResponse = await AuthXboxLiveAsync(msaToken);
+
+        progress?.Report((AuthStep.Obtain_XSTS_token_for_Minecraft, 0.55));
+        string xstsToken = await AuthXstsAsync(xblResponse.Token);
+
+        progress?.Report((AuthStep.Authenticate_with_Minecraft, 0.75));
+        string minecraftToken = await AuthMinecraftAsync(xblResponse, xstsToken);
+
+        progress?.Report((AuthStep.Checking_Game_Ownership, 0.80));
+        await EnsureGameOwnershipAsync(minecraftToken);
+
+        progress?.Report((AuthStep.Get_the_profile, 0.90));
+        var (name, guid) = await GetMinecraftProfileAsync(minecraftToken);
+
+        progress?.Report((AuthStep.Finished, 1.0));
+        return new MicrosoftAccount(
+            name,
+            guid,
+            minecraftToken,
+            msaRefreshToken,
+            DateTime.Now
+        );
     }
 
     #region HTTP APIs
 
     // Get Microsoft Account OAuth2 token
-    private async Task<string> AuthMsaAsync(string parameterName, string code)
+    private async Task<(string msaAccessToken, string msaRefreshToken)> AuthMsaAsync(string parameterName, string code)
     {
         // Send OAuth2 token request
         string authCodePost =
@@ -64,10 +95,10 @@ public class DefaultMicrosoftAuthenticator2
             .EnsureSuccessStatusCode().Content
             .ReadFromJsonAsync<OAuth20TokenResponse>();
 
-        if (oauth2TokenResponse is null || oauth2TokenResponse.AccessToken is null)
+        if (oauth2TokenResponse is null || oauth2TokenResponse.AccessToken is null || oauth2TokenResponse.RefreshToken is null)
             throw new AuthException("Error in getting authorization token\nOAuth response:\n" + response.Content.ReadAsString());
 
-        return oauth2TokenResponse.AccessToken;
+        return (oauth2TokenResponse.AccessToken, oauth2TokenResponse.RefreshToken);
     }
 
     // Get Xbox Live token
