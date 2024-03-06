@@ -10,9 +10,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
-using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationException;
-using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationExceptionType;
-using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationStep;
+using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationException;
+using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationExceptionType;
+using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationProgress;
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
@@ -43,22 +43,22 @@ public class DefaultMicrosoftAuthenticator2
         string param,
         IProgress<AuthStep>? progress = null)
     {
-        progress?.Report(AuthStep.AuthenticateMicrosoftAccount);
+        progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
         (string msaToken, string msaRefreshToken) = await AuthMsaAsync(param, code);
 
-        progress?.Report(AuthStep.AuthenticateXboxLive);
+        progress?.Report(AuthStep.AuthenticatingWithXboxLive);
         var xblResponse = await AuthXboxLiveAsync(msaToken);
 
-        progress?.Report(AuthStep.AuthenticateXsts);
+        progress?.Report(AuthStep.AuthenticatingWithXsts);
         string xstsToken = await AuthXstsAsync(xblResponse.Token);
 
-        progress?.Report(AuthStep.AuthenticateMinecraftAccount);
+        progress?.Report(AuthStep.AuthenticatingMinecraftAccount);
         string minecraftToken = await AuthMinecraftAsync(xblResponse, xstsToken);
 
-        progress?.Report(AuthStep.CheckGameOwnership);
+        progress?.Report(AuthStep.CheckingGameOwnership);
         await EnsureGameOwnershipAsync(minecraftToken);
 
-        progress?.Report(AuthStep.GetMinecraftProfile);
+        progress?.Report(AuthStep.GettingMinecraftProfile);
         var (name, guid) = await GetMinecraftProfileAsync(minecraftToken);
 
         progress?.Report(AuthStep.Finish);
@@ -180,7 +180,7 @@ public class DefaultMicrosoftAuthenticator2
                             + "this doesn't trigger.",
                     _ => "Unknown error"
                 },
-                Step = AuthStep.AuthenticateXsts,
+                Step = AuthStep.AuthenticatingWithXsts,
                 Type = AuthExceptionType.XboxLiveError
             };
         }
@@ -272,7 +272,7 @@ public class DefaultMicrosoftAuthenticator2
             throw new AuthException("An error occurred while checking game ownership\n" + responseString)
             {
                 HelpLink = "The account doesn't own the game",
-                Step = AuthStep.CheckGameOwnership,
+                Step = AuthStep.CheckingGameOwnership,
                 Type = AuthExceptionType.GameOwnershipError
             };
         }
