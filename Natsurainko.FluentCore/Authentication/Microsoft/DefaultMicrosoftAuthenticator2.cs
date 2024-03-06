@@ -1,7 +1,5 @@
 ﻿using Nrk.FluentCore.Utils;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -78,7 +76,7 @@ public class DefaultMicrosoftAuthenticator2
     // Get Microsoft Account OAuth2 token
     private async Task<(string msaAccessToken, string msaRefreshToken)> AuthMsaAsync(string parameterName, string code)
     {
-        // Send OAuth2 token request
+        // Send OAuth2 request
         string authCodePost =
             $"client_id={_clientId}" +
             $"&{parameterName}={code}" +
@@ -91,12 +89,22 @@ public class DefaultMicrosoftAuthenticator2
             );
 
         // Parse response
-        var oauth2TokenResponse = await response
-            .EnsureSuccessStatusCode().Content
-            .ReadFromJsonAsync<OAuth20TokenResponse>();
+        OAuth20TokenResponse? oauth2TokenResponse = null;
+        try
+        {
+            oauth2TokenResponse = await response
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<OAuth20TokenResponse>();
 
-        if (oauth2TokenResponse is null || oauth2TokenResponse.AccessToken is null || oauth2TokenResponse.RefreshToken is null)
+            if (oauth2TokenResponse is null)
+                throw new FormatException("Response is null");
+            if (oauth2TokenResponse.AccessToken is null || oauth2TokenResponse.RefreshToken is null)
+                throw new FormatException("Token is null");
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
             throw new AuthException("Error in getting authorization token\nOAuth response:\n" + response.Content.ReadAsString());
+        }
 
         return (oauth2TokenResponse.AccessToken, oauth2TokenResponse.RefreshToken);
     }
@@ -115,12 +123,21 @@ public class DefaultMicrosoftAuthenticator2
             xblRequest);
 
         // Parse response
-        var xblResponse = await xblResponseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadFromJsonAsync<XBLAuthenticateResponse>();
+        XBLAuthenticateResponse? xblResponse = null;
+        try {
+            xblResponse = await xblResponseMessage
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<XBLAuthenticateResponse>();
 
-        if (xblResponse is null || xblResponse.Token is null)
+            if (xblResponse is null)
+                throw new FormatException("Response is null");
+            if (xblResponse.Token is null)
+                throw new FormatException("Token is null");
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
             throw new AuthException("Error in XBL authentication" + xblResponse);
+        }
 
         return xblResponse;
     }
@@ -169,12 +186,22 @@ public class DefaultMicrosoftAuthenticator2
         }
 
         // Parse response
-        var xstsResponse = await xstsResponseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadFromJsonAsync<XSTSAuthenticateResponse>();
+        XSTSAuthenticateResponse? xstsResponse = null;
+        try
+        {
+            xstsResponse = await xstsResponseMessage
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<XSTSAuthenticateResponse>();
 
-        if (xstsResponse is null || xstsResponse.Token is null)
+            if (xstsResponse is null)
+                throw new FormatException("Response is null");
+            if (xstsResponse.Token is null)
+                throw new FormatException("Token is null");
+}
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
             throw new AuthException("Error in XSTS authentication\n" + xstsResponseMessage.Content.ReadAsString());
+        }
 
         return xstsResponse.Token;
     }
@@ -209,7 +236,7 @@ public class DefaultMicrosoftAuthenticator2
         try
         {
             accessToken = JsonNode.Parse(responseString)?["access_token"]?.GetValue<string>()
-                ?? throw new FormatException();
+                ?? throw new FormatException("Unable to parse access token");
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
@@ -234,9 +261,13 @@ public class DefaultMicrosoftAuthenticator2
             .EnsureSuccessStatusCode().Content
             .ReadAsStringAsync();
 
-        var gameOwnershipItems = JsonNode.Parse(responseString)?["items"]?.AsArray();
-
-        if (gameOwnershipItems is null || !gameOwnershipItems.Any())
+        try
+        {
+            var gameOwnershipItems = JsonNode.Parse(responseString)?["items"]?.AsArray();
+            if (gameOwnershipItems is null || !gameOwnershipItems.Any())
+                throw new InvalidOperationException();
+        }
+        catch (Exception e) when (e is JsonException || e is InvalidOperationException)
         {
             throw new AuthException("An error occurred while checking game ownership\n" + responseString)
             {
@@ -261,15 +292,24 @@ public class DefaultMicrosoftAuthenticator2
         using var responseMessage = await _httpClient.SendAsync(requestMessage);
 
         // Parse response
-        var response = await responseMessage
-            .EnsureSuccessStatusCode().Content
-            .ReadFromJsonAsync<MicrosoftAuthenticationResponse>();
+        MicrosoftAuthenticationResponse? response = null;
+        Guid guid = Guid.Empty;
+        try
+        {
+            response = await responseMessage
+                .EnsureSuccessStatusCode().Content
+                .ReadFromJsonAsync<MicrosoftAuthenticationResponse>();
 
-        // Check errors
-        if (response is null ||
-            response.Name is null ||
-            response.Id is null ||
-            !Guid.TryParse(response.Id, out Guid guid))
+            // Check errors
+            if (response is null ||
+                response.Name is null ||
+                response.Id is null ||
+                !Guid.TryParse(response.Id, out guid))
+            {
+                   throw new FormatException("Invalid response");
+            }
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
         {
             throw new AuthException("Error in getting the profile\n" + responseMessage.Content.ReadAsString());
         }
