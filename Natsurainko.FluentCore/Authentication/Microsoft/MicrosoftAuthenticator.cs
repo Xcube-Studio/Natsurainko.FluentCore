@@ -18,14 +18,14 @@ using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthent
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
-public class DefaultMicrosoftAuthenticator2
+public class MicrosoftAuthenticator
 {
     private readonly HttpClient _httpClient;
 
     private string _clientId;
     private string _redirectUri;
 
-    public DefaultMicrosoftAuthenticator2(string clientId, string redirectUri, HttpClient? httpClient = null)
+    public MicrosoftAuthenticator(string clientId, string redirectUri, HttpClient? httpClient = null)
     {
         _httpClient = httpClient ?? HttpUtils.HttpClient;
 
