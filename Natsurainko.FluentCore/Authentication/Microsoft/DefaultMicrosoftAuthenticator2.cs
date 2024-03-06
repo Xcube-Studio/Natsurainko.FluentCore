@@ -66,8 +66,7 @@ public class DefaultMicrosoftAuthenticator2
         var stopwatch = Stopwatch.StartNew();
         do
         {
-            if (cancellationToken.IsCancellationRequested)
-                throw new TaskCanceledException();
+            cancellationToken.ThrowIfCancellationRequested();
 
             await Task.Delay(TimeSpan.FromSeconds(deviceCodeResponse.Interval), cancellationToken);
 
