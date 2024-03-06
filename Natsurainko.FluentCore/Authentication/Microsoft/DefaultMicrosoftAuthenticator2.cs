@@ -13,8 +13,8 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationException;
-using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateExceptionType;
-using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateStep;
+using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationExceptionType;
+using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationStep;
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
@@ -33,37 +33,37 @@ public class DefaultMicrosoftAuthenticator2
         _redirectUri = redirectUri;
     }
 
-    public Task<MicrosoftAccount> LoginAsync(string code, IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
+    public Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null)
         => AuthenticateAsync(code, "code", progress);
 
-    public Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
+    public Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null)
         => AuthenticateAsync(account.RefreshToken, "refresh_token", progress);
 
     // Common authentication process
     private async Task<MicrosoftAccount> AuthenticateAsync(
         string code,
         string param,
-        IProgress<MicrosoftAuthenticateProgressChangedEventArgs>? progress = null)
+        IProgress<AuthStep>? progress = null)
     {
-        progress?.Report((AuthStep.Get_Authorization_Token, 0.2));
+        progress?.Report(AuthStep.AuthenticateMicrosoftAccount);
         (string msaToken, string msaRefreshToken) = await AuthMsaAsync(param, code);
 
-        progress?.Report((AuthStep.Authenticate_with_XboxLive, 0.40));
+        progress?.Report(AuthStep.AuthenticateXboxLive);
         var xblResponse = await AuthXboxLiveAsync(msaToken);
 
-        progress?.Report((AuthStep.Obtain_XSTS_token_for_Minecraft, 0.55));
+        progress?.Report(AuthStep.AuthenticateXsts);
         string xstsToken = await AuthXstsAsync(xblResponse.Token);
 
-        progress?.Report((AuthStep.Authenticate_with_Minecraft, 0.75));
+        progress?.Report(AuthStep.AuthenticateMinecraftAccount);
         string minecraftToken = await AuthMinecraftAsync(xblResponse, xstsToken);
 
-        progress?.Report((AuthStep.Checking_Game_Ownership, 0.80));
+        progress?.Report(AuthStep.CheckGameOwnership);
         await EnsureGameOwnershipAsync(minecraftToken);
 
-        progress?.Report((AuthStep.Get_the_profile, 0.90));
+        progress?.Report(AuthStep.GetMinecraftProfile);
         var (name, guid) = await GetMinecraftProfileAsync(minecraftToken);
 
-        progress?.Report((AuthStep.Finished, 1.0));
+        progress?.Report(AuthStep.Finish);
         return new MicrosoftAccount(
             name,
             guid,
@@ -163,7 +163,7 @@ public class DefaultMicrosoftAuthenticator2
                             + "this doesn't trigger.",
                     _ => "Unknown error"
                 },
-                Step = AuthStep.Obtain_XSTS_token_for_Minecraft,
+                Step = AuthStep.AuthenticateXsts,
                 Type = AuthExceptionType.XboxLiveError
             };
         }
@@ -241,7 +241,7 @@ public class DefaultMicrosoftAuthenticator2
             throw new AuthException("An error occurred while checking game ownership\n" + responseString)
             {
                 HelpLink = "The account doesn't own the game",
-                Step = AuthStep.Checking_Game_Ownership,
+                Step = AuthStep.CheckGameOwnership,
                 Type = AuthExceptionType.GameOwnershipError
             };
         }

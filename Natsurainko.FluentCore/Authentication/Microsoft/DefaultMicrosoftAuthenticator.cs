@@ -8,8 +8,8 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationException;
-using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateExceptionType;
-using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticateStep;
+using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationExceptionType;
+using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAuthenticationStep;
 
 namespace Nrk.FluentCore.Authentication.Microsoft;
 
@@ -44,7 +44,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         if (!_createdFromDeviceFlow) // _parameterName is "code" or "refresh_token"
         {
-            ProgressChanged?.Invoke(this, (AuthStep.Get_Authorization_Token, 0.2));
+            ProgressChanged?.Invoke(this, (AuthStep.AuthenticateMicrosoftAccount, 0.2));
 
             string authCodePost =
                 $"client_id={_clientId}"
@@ -73,7 +73,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
         if (_oAuth20TokenResponse is null)
             throw new AuthException("Invalid OAuth response");
 
-        ProgressChanged?.Invoke(this, (AuthStep.Authenticate_with_XboxLive, 0.40));
+        ProgressChanged?.Invoke(this, (AuthStep.AuthenticateXboxLive, 0.40));
 
         var xBLReqModel = new XBLAuthenticateRequest();
         xBLReqModel.Properties.RpsTicket = xBLReqModel.Properties.RpsTicket.Replace(
@@ -97,7 +97,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         #region Authenticate with XSTS
 
-        ProgressChanged?.Invoke(this, (AuthStep.Obtain_XSTS_token_for_Minecraft, 0.55));
+        ProgressChanged?.Invoke(this, (AuthStep.AuthenticateXsts, 0.55));
 
         var xSTSReqModel = new XSTSAuthenticateRequest();
         xSTSReqModel.Properties.UserTokens.Add(xBLResModel.Token);
@@ -133,7 +133,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
                             + "this doesn't trigger.",
                     _ => "Unknown error"
                 },
-                Step = AuthStep.Obtain_XSTS_token_for_Minecraft,
+                Step = AuthStep.AuthenticateXsts,
                 Type = AuthExceptionType.XboxLiveError
             };
         }
@@ -150,7 +150,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         #region Authenticate with Minecraft
 
-        ProgressChanged?.Invoke(this, (AuthStep.Authenticate_with_Minecraft, 0.75));
+        ProgressChanged?.Invoke(this, (AuthStep.AuthenticateMinecraftAccount, 0.75));
 
         var x =
             xBLResModel.DisplayClaims?.Xui?[0]?["uhs"]?.GetValue<string>()
@@ -180,7 +180,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         #region Checking Game Ownership
 
-        ProgressChanged?.Invoke(this, (AuthStep.Checking_Game_Ownership, 0.80));
+        ProgressChanged?.Invoke(this, (AuthStep.CheckGameOwnership, 0.80));
 
         using var checkingGameOwnershipGetRes = HttpUtils.HttpGet(
             $"https://api.minecraftservices.com/entitlements/mcstore",
@@ -200,7 +200,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
             throw new AuthException("An error occurred while checking game ownership")
             {
                 HelpLink = "The account doesn't own the game",
-                Step = AuthStep.Checking_Game_Ownership,
+                Step = AuthStep.CheckGameOwnership,
                 Type = AuthExceptionType.GameOwnershipError
             };
 
@@ -208,7 +208,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
 
         #region Get the profile
 
-        ProgressChanged?.Invoke(this, (AuthStep.Get_the_profile, 0.9));
+        ProgressChanged?.Invoke(this, (AuthStep.GetMinecraftProfile, 0.9));
 
         using var profileRes = HttpUtils.HttpGet("https://api.minecraftservices.com/minecraft/profile", authorization);
 
@@ -218,7 +218,7 @@ public class DefaultMicrosoftAuthenticator : IAuthenticator<MicrosoftAccount>
             profileRes.Content.ReadAsString()
         );
 
-        ProgressChanged?.Invoke(this, (AuthStep.Finished, 1.0));
+        ProgressChanged?.Invoke(this, (AuthStep.Finish, 1.0));
 
         if (
             microsoftAuthenticationResponse is null

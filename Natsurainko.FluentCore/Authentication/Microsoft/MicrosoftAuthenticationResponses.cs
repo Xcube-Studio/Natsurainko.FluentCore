@@ -43,7 +43,7 @@ public class XBLAuthenticateResponse
     public string? NotAfter { get; set; }
 
     [JsonPropertyName("Token")]
-    public string? Token { get; set; }
+    public required string Token { get; set; }
 
     [JsonPropertyName("DisplayClaims")]
     public DisplayClaims? DisplayClaims { get; set; }
