@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.Authentication.Yggdrasil;
+namespace Nrk.FluentCore.Authentication;
 
 public class YggdrasilAuthenticator
 {

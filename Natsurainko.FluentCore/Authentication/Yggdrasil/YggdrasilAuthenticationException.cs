@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Nrk.FluentCore.Authentication.Yggdrasil;
+namespace Nrk.FluentCore.Authentication;
 
 public class YggdrasilAuthenticationException : Exception
 {

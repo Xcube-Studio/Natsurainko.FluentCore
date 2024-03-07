@@ -1,6 +1,6 @@
-﻿namespace Nrk.FluentCore.Authentication.Microsoft;
+﻿namespace Nrk.FluentCore.Authentication;
 
-public enum MicrosoftAccountAuthenticationProgress
+public enum MicrosoftAuthenticationProgress
 {
     AuthenticatingMicrosoftAccount = 1,
     AuthenticatingWithXboxLive = 2,

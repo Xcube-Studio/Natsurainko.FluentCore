@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Authentication.Microsoft;
+namespace Nrk.FluentCore.Authentication;
 
 public class DisplayClaims
 {

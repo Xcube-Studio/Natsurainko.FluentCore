@@ -12,11 +12,11 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
-using AuthException = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationException;
-using AuthExceptionType = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationExceptionType;
-using AuthStep = Nrk.FluentCore.Authentication.Microsoft.MicrosoftAccountAuthenticationProgress;
+using AuthException = Nrk.FluentCore.Authentication.MicrosoftAuthenticationException;
+using AuthExceptionType = Nrk.FluentCore.Authentication.MicrosoftAuthenticationExceptionType;
+using AuthStep = Nrk.FluentCore.Authentication.MicrosoftAuthenticationProgress;
 
-namespace Nrk.FluentCore.Authentication.Microsoft;
+namespace Nrk.FluentCore.Authentication;
 
 public class MicrosoftAuthenticator
 {
