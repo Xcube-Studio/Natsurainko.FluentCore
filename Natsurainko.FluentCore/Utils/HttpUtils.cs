@@ -31,36 +31,6 @@ public static class HttpUtils
     public static readonly HttpClient HttpClient = new();
     public static readonly MemoryPool<byte> MemoryPool = MemoryPool<byte>.Shared;
 
-    public static HttpResponseMessage HttpPost(
-        string url,
-        string content,
-        Dictionary<string, string> headers,
-        string contentType = "application/json")
-    {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-        using var httpContent = new StringContent(content);
-        httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
-        if (headers != null)
-            foreach (var kvp in headers)
-                requestMessage.Headers.Add(kvp.Key, kvp.Value);
-
-        requestMessage.Content = httpContent;
-
-        return HttpClient.Send(requestMessage);
-    }
-
-    public static HttpResponseMessage HttpPost(string url, string content, string contentType = "application/json")
-    {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-        using var httpContent = new StringContent(content);
-
-        httpContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        requestMessage.Content = httpContent;
-
-        return HttpClient.Send(requestMessage);
-    }
-
     public static HttpResponseMessage HttpGet(
         string url,
         Tuple<string, string> authorization = default,
