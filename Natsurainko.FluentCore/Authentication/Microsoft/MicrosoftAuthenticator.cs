@@ -50,7 +50,7 @@ public class MicrosoftAuthenticator
     }
 
     public async Task<MicrosoftAccount> LoginFromDeviceFlowAsync(
-        Action<DeviceCodeResponse> ReceiveUserCodeAction,
+        Action<DeviceCodeResponse> receiveUserCodeAction,
         CancellationToken cancellationToken = default,
         IProgress<AuthStep>? progress = null)
     {
@@ -58,7 +58,7 @@ public class MicrosoftAuthenticator
         var deviceCodeResponse = await GetDeviceCodeAsync();
 
         // Allow the caller to provide the device code to the user, e.g. display on UI or print to console
-        ReceiveUserCodeAction(deviceCodeResponse);
+        receiveUserCodeAction(deviceCodeResponse);
 
         // Polling for device flow login
         OAuth20TokenResponse? oauth2TokenResponse = null;

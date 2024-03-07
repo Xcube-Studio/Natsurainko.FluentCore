@@ -25,6 +25,9 @@ public class YggdrasilAuthenticator
         _clientToken = clientToken;
     }
 
+    public YggdrasilAuthenticator(string serverUrl, HttpClient? httpClient = null)
+        : this(serverUrl, Guid.NewGuid().ToString("N"), httpClient) { }
+    
     /// <summary>
     /// Login to Yggdrasil account
     /// </summary>

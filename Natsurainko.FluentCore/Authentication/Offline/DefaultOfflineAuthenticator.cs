@@ -50,4 +50,11 @@ public class OfflineAuthenticator
             uuid ?? new Guid(MD5.HashData(Encoding.UTF8.GetBytes(name))),
             Guid.NewGuid().ToString("N")
         );
+
+    public OfflineAccount Refresh(OfflineAccount account)
+        => new OfflineAccount(
+            account.Name,
+            account.Uuid,
+            Guid.NewGuid().ToString("N")
+            );
 }
