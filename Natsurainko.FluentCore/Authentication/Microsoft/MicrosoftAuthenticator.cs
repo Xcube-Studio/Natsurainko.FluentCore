@@ -414,7 +414,7 @@ public class MicrosoftAuthenticator
 
             if (response is null)
                 throw new FormatException("Response is null");
-            if (response.ExpiresIn == -1 || response.Interval <= 0 || response.DeviceCode is null)
+            if (response.ExpiresIn == -1 || response.Interval <= 0 || response.DeviceCode is null || response.UserCode is null)
                 throw new FormatException("Invalid response");
         }
         catch (Exception e) when (e is JsonException || e is FormatException)

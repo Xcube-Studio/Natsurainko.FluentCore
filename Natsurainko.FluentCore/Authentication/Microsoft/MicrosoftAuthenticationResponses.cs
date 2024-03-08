@@ -116,7 +116,7 @@ public class SkinModel
 public class OAuth2DeviceCodeResponse
 {
     [JsonPropertyName("user_code")]
-    public string? UserCode { get; set; }
+    public required string UserCode { get; set; }
 
     [JsonPropertyName("device_code")]
     public required string DeviceCode { get; set; }
