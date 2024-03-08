@@ -22,8 +22,8 @@ public class MicrosoftAuthenticator
 {
     private readonly HttpClient _httpClient;
 
-    private string _clientId;
-    private string _redirectUri;
+    private readonly string _clientId;
+    private readonly string _redirectUri;
 
     public MicrosoftAuthenticator(string clientId, string redirectUri, HttpClient? httpClient = null)
     {
@@ -36,32 +36,40 @@ public class MicrosoftAuthenticator
     public async Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null)
     {
         progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
-        (string msaToken, string msaRefreshToken) = await AuthMsaAsync("code", code);
+        var msaOAuthTokens = await AuthMsaAsync("code", code);
 
-        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+        return await AuthenticateCommonAsync(msaOAuthTokens.AccessToken, msaOAuthTokens.RefreshToken, progress);
     }
+
+    public async Task<MicrosoftAccount> LoginAsync(OAuth2Tokens msaTokens, IProgress<AuthStep>? progress = null)
+        => await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress);
 
     public async Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null)
     {
         progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
-        (string msaToken, string msaRefreshToken) = await AuthMsaAsync("refresh_token", account.RefreshToken);
+        var msaTokens = await AuthMsaAsync("refresh_token", account.RefreshToken);
 
-        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+        return await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress);
     }
 
-    public async Task<MicrosoftAccount> LoginFromDeviceFlowAsync(
-        Action<DeviceCodeResponse> receiveUserCodeAction,
-        CancellationToken cancellationToken = default,
-        IProgress<AuthStep>? progress = null)
+    /// <summary>
+    /// Authenticate with Microsoft Account using OAuth2 device flow and poll for user login
+    /// </summary>
+    /// <param name="receiveUserCodeAction">Function called when user code is received</param>
+    /// <param name="cancellationToken">Token for cancelling device flow authentication process</param>
+    /// <returns>Microsoft Account OAuth tokens</returns>
+    /// <exception cref="AuthException">Error in authenticating Microsoft Account using OAuth2 device flow</exception>
+    public async Task<OAuth2Tokens> AuthMsaFromDeviceFlowAsync(
+        Action<OAuth2DeviceCodeResponse> receiveUserCodeAction,
+        CancellationToken cancellationToken = default)
     {
-        progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
         var deviceCodeResponse = await GetDeviceCodeAsync();
 
         // Allow the caller to provide the device code to the user, e.g. display on UI or print to console
         receiveUserCodeAction(deviceCodeResponse);
 
         // Polling for device flow login
-        OAuth20TokenResponse? oauth2TokenResponse = null;
+        OAuth2TokenResponse? oauth2TokenResponse = null;
         int timeout = deviceCodeResponse.ExpiresIn;
         var stopwatch = Stopwatch.StartNew();
         do
@@ -105,19 +113,17 @@ public class MicrosoftAuthenticator
         }
 
         // Device flow login successful
-        string msaToken = oauth2TokenResponse.AccessToken;
-        string msaRefreshToken = oauth2TokenResponse.RefreshToken;
-        return await AuthenticateCommonAsync(msaToken, msaRefreshToken, progress);
+        return new OAuth2Tokens(oauth2TokenResponse.AccessToken, oauth2TokenResponse.RefreshToken);
     }
 
     // Common authentication process
     private async Task<MicrosoftAccount> AuthenticateCommonAsync(
-        string msaToken,
+        string msaAccessToken,
         string msaRefreshToken,
         IProgress<AuthStep>? progress = null)
     {
         progress?.Report(AuthStep.AuthenticatingWithXboxLive);
-        var xblResponse = await AuthXboxLiveAsync(msaToken);
+        var xblResponse = await AuthXboxLiveAsync(msaAccessToken);
 
         progress?.Report(AuthStep.AuthenticatingWithXsts);
         string xstsToken = await AuthXstsAsync(xblResponse.Token);
@@ -145,7 +151,7 @@ public class MicrosoftAuthenticator
     #region HTTP APIs
 
     // Get Microsoft Account OAuth2 token
-    private async Task<(string msaAccessToken, string msaRefreshToken)> AuthMsaAsync(string? parameterName, string code)
+    private async Task<OAuth2TokenResponse> AuthMsaAsync(string? parameterName, string code)
     {
         // Send OAuth2 request
         string authCodePost =
@@ -160,12 +166,12 @@ public class MicrosoftAuthenticator
             );
 
         // Parse response
-        OAuth20TokenResponse? oauth2TokenResponse = null;
+        OAuth2TokenResponse? oauth2TokenResponse = null;
         try
         {
             oauth2TokenResponse = await response
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<OAuth20TokenResponse>();
+                .ReadFromJsonAsync<OAuth2TokenResponse>();
 
             if (oauth2TokenResponse is null)
                 throw new FormatException("Response is null");
@@ -177,7 +183,7 @@ public class MicrosoftAuthenticator
             throw new AuthException("Error in getting authorization token\nOAuth response:\n" + response.Content.ReadAsString());
         }
 
-        return (oauth2TokenResponse.AccessToken, oauth2TokenResponse.RefreshToken);
+        return oauth2TokenResponse;
     }
 
     // Get Xbox Live token
@@ -389,7 +395,7 @@ public class MicrosoftAuthenticator
     }
 
     // Get device code for device flow authentication
-    private async Task<DeviceCodeResponse> GetDeviceCodeAsync()
+    private async Task<OAuth2DeviceCodeResponse> GetDeviceCodeAsync()
     {
         // Send request
         var requestParams = $"client_id={_clientId}" + "&scope=XboxLive.signin%20offline_access";
@@ -399,12 +405,12 @@ public class MicrosoftAuthenticator
             new StringContent(requestParams, Encoding.UTF8, "application/x-www-form-urlencoded"));
 
         // Parse response
-        DeviceCodeResponse? response = null;
+        OAuth2DeviceCodeResponse? response = null;
         try
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<DeviceCodeResponse>();
+                .ReadFromJsonAsync<OAuth2DeviceCodeResponse>();
 
             if (response is null)
                 throw new FormatException("Response is null");
@@ -452,12 +458,12 @@ public class MicrosoftAuthenticator
         }
 
         // Device flow login successful
-        OAuth20TokenResponse? oauthResponse = null;
+        OAuth2TokenResponse? oauthResponse = null;
         try
         {
             oauthResponse = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<OAuth20TokenResponse>();
+                .ReadFromJsonAsync<OAuth2TokenResponse>();
 
             if (oauthResponse is null)
                 throw new FormatException("Response is null");

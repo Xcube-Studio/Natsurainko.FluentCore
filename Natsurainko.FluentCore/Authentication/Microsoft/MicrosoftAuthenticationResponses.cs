@@ -11,7 +11,7 @@ public class DisplayClaims
     public JsonArray? Xui { get; set; }
 }
 
-public class OAuth20TokenResponse
+public class OAuth2TokenResponse
 {
     [JsonPropertyName("token_type")]
     public string? TokenType { get; set; }
@@ -113,7 +113,7 @@ public class SkinModel
     public string? Alias { get; set; }
 }
 
-public class DeviceCodeResponse
+public class OAuth2DeviceCodeResponse
 {
     [JsonPropertyName("user_code")]
     public string? UserCode { get; set; }
@@ -134,13 +134,6 @@ public class DeviceCodeResponse
     public string? Message { get; set; }
 }
 
-public class DeviceFlowResponse
-{
-    public bool Success { get; set; }
-
-    public OAuth20TokenResponse? OAuth20TokenResponse { get; set; }
-}
-
 /// <summary>
 /// Describes the result of a device flow poll.
 /// </summary>
@@ -151,11 +144,13 @@ internal class DeviceFlowPollResult
     public bool? Success { get; init; }
     
     // Not null when Success is true
-    public OAuth20TokenResponse? OAuth20TokenResponse { get; init; }
+    public OAuth2TokenResponse? OAuth20TokenResponse { get; init; }
 
-    public DeviceFlowPollResult(bool? success, OAuth20TokenResponse? oauth2TokenResponse)
+    public DeviceFlowPollResult(bool? success, OAuth2TokenResponse? oauth2TokenResponse)
     {
         Success = success;
         OAuth20TokenResponse = oauth2TokenResponse;
     }
 }
+
+public record OAuth2Tokens(string AccessToken, string RefreshToken);
