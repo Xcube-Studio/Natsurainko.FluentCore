@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Authentication.Yggdrasil;
+namespace Nrk.FluentCore.Authentication;
 
 public class YggdrasilLoginRequest
 {

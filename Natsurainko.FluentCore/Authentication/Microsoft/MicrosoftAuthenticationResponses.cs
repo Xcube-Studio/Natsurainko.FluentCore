@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Authentication.Microsoft;
+namespace Nrk.FluentCore.Authentication;
 
 public class DisplayClaims
 {
@@ -10,7 +11,7 @@ public class DisplayClaims
     public JsonArray? Xui { get; set; }
 }
 
-public class OAuth20TokenResponse
+public class OAuth2TokenResponse
 {
     [JsonPropertyName("token_type")]
     public string? TokenType { get; set; }
@@ -22,10 +23,10 @@ public class OAuth20TokenResponse
     public string? Scope { get; set; }
 
     [JsonPropertyName("access_token")]
-    public string? AccessToken { get; set; }
+    public required string AccessToken { get; set; }
 
     [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
+    public required string RefreshToken { get; set; }
 
     [JsonPropertyName("user_id")]
     public string? UserId { get; set; }
@@ -43,7 +44,7 @@ public class XBLAuthenticateResponse
     public string? NotAfter { get; set; }
 
     [JsonPropertyName("Token")]
-    public string? Token { get; set; }
+    public required string Token { get; set; }
 
     [JsonPropertyName("DisplayClaims")]
     public DisplayClaims? DisplayClaims { get; set; }
@@ -112,30 +113,44 @@ public class SkinModel
     public string? Alias { get; set; }
 }
 
-public class DeviceCodeResponse
+public class OAuth2DeviceCodeResponse
 {
     [JsonPropertyName("user_code")]
-    public string? UserCode { get; set; }
+    public required string UserCode { get; set; }
 
     [JsonPropertyName("device_code")]
-    public string? DeviceCode { get; set; }
+    public required string DeviceCode { get; set; }
 
     [JsonPropertyName("verification_uri")]
     public string? VerificationUrl { get; set; }
 
     [JsonPropertyName("expires_in")]
-    public int? ExpiresIn { get; set; }
+    public required int ExpiresIn { get; set; } = -1;
 
     [JsonPropertyName("interval")]
-    public int? Interval { get; set; }
+    public required int Interval { get; set; } = -1;
 
     [JsonPropertyName("message")]
     public string? Message { get; set; }
 }
 
-public class DeviceFlowResponse
+/// <summary>
+/// Describes the result of a device flow poll.
+/// </summary>
+/// <param name="Success">true if successful, false if failed, otherwise null</param>
+/// <param name="OAuth20TokenResponse">OAuth resposne if successful</param>
+internal class DeviceFlowPollResult
 {
-    public bool Success { get; set; }
+    public bool? Success { get; init; }
+    
+    // Not null when Success is true
+    public OAuth2TokenResponse? OAuth20TokenResponse { get; init; }
 
-    public OAuth20TokenResponse? OAuth20TokenResponse { get; set; }
+    public DeviceFlowPollResult(bool? success, OAuth2TokenResponse? oauth2TokenResponse)
+    {
+        Success = success;
+        OAuth20TokenResponse = oauth2TokenResponse;
+    }
 }
+
+public record OAuth2Tokens(string AccessToken, string RefreshToken);
