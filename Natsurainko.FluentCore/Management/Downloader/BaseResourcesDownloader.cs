@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Management.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Threading;

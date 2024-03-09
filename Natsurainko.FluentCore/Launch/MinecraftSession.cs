@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Management;
 using Nrk.FluentCore.Management.Downloader;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;

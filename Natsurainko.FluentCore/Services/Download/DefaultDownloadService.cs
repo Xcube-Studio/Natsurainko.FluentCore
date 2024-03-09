@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
+﻿using Nrk.FluentCore.Management;
 using Nrk.FluentCore.Management.Downloader;
 using Nrk.FluentCore.Management.Downloader.Data;
 using Nrk.FluentCore.Management.Parsing;

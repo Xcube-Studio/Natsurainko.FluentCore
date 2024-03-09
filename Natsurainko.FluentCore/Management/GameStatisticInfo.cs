@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Management.ModLoaders;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Management;
 
 /// <summary>
 /// 游戏统计数据

@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.ModLoaders;

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Management;
 
 /// <summary>
 /// 用于记录游戏的基本信息和信息源

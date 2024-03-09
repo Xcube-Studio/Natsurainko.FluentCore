@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Launch;
+﻿using Nrk.FluentCore.Management;
 using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Management.Parsing;
 using System;
