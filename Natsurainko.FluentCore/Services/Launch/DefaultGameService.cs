@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Management.GameLocator;
 using System;
 using System.Collections.ObjectModel;
 

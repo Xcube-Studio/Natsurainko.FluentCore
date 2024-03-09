@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Resources;
+﻿namespace Nrk.FluentCore.Management.Downloader;
 
 public interface IDownloadElement
 {

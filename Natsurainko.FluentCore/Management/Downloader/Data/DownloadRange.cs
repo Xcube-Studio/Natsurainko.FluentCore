@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Resources;
+﻿namespace Nrk.FluentCore.Management.Downloader.Data;
 
 /// <summary>
 /// 表示一个分片文件的下载范围

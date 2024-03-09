@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Nrk.FluentCore.Launch;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Management.GameLocator;
 
 /// <summary>
 /// 游戏定位器接口

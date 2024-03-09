@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Management.Downloader.Data;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
 
-namespace Nrk.FluentCore.Resources;
+namespace Nrk.FluentCore.Management.Downloader;
 
 public class DefaultResourcesDownloader : BaseResourcesDownloader
 {
@@ -109,7 +110,7 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
 
         transformManyBlock.Complete();
 
-        if(filteredLibraries is null || filteredAssets is null)
+        if (filteredLibraries is null || filteredAssets is null)
             throw new Exception("filteredLibraries or filteredAssets is null");
         DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);
 

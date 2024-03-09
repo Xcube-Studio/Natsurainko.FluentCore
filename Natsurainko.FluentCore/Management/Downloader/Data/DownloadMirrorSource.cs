@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Resources;
+namespace Nrk.FluentCore.Management.Downloader.Data;
 
 /// <summary>
 /// 表示一个下载镜像源
