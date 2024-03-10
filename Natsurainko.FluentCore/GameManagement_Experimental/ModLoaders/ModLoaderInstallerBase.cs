@@ -9,7 +9,7 @@ public abstract class ModLoaderInstallerBase : IModLoaderInstaller
 
     public required string AbsoluteId { get; set; }
 
-    public required GameInfo InheritedFrom { get; set; }
+    public required MinecraftInstance InheritedFrom { get; set; }
 
     public event EventHandler<double>? ProgressChanged;
 

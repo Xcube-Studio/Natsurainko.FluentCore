@@ -3,6 +3,7 @@ using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Resources;
 using Nrk.FluentCore.Utils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
@@ -63,10 +64,11 @@ public class FabricInstaller : ModLoaderInstallerBase
 
     void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
-        var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        resourcesDownloader.SetLibraryElements(libraries);
+        throw new NotImplementedException();
+        //var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
+        //resourcesDownloader.SetLibraryElements(libraries);
 
-        resourcesDownloader.Download();
+        //resourcesDownloader.Download();
     }
 
     void WriteFiles(JsonNode versionInfoJson)

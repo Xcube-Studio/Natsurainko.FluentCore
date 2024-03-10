@@ -8,7 +8,7 @@ public interface IModLoaderInstaller
 {
     string AbsoluteId { get; }
 
-    GameInfo InheritedFrom { get; }
+    MinecraftInstance InheritedFrom { get; }
 
     event EventHandler<double> ProgressChanged;
 

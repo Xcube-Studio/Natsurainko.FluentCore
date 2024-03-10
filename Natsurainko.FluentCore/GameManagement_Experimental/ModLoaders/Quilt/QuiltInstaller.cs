@@ -62,10 +62,11 @@ public class QuiltInstaller : ModLoaderInstallerBase
 
     void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
-        var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        resourcesDownloader.SetLibraryElements(libraries);
+        throw new NotImplementedException();
+        //var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
+        //resourcesDownloader.SetLibraryElements(libraries);
 
-        resourcesDownloader.Download();
+        //resourcesDownloader.Download();
     }
 
     void WriteFiles(JsonNode versionInfoJson)

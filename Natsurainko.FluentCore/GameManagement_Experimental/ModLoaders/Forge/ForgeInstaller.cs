@@ -211,15 +211,16 @@ public class ForgeInstaller : ModLoaderInstallerBase
 
     void DownloadLibraries(List<LibraryElement> _libraries)
     {
-        OnProgressChanged(0.3);
+        throw new NotImplementedException();
+        //OnProgressChanged(0.3);
 
-        var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        resourcesDownloader.SetLibraryElements(_libraries);
-        resourcesDownloader.SetDownloadMirror(DownloadMirrors.Bmclapi);
+        //var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
+        //resourcesDownloader.SetLibraryElements(_libraries);
+        //resourcesDownloader.SetDownloadMirror(DownloadMirrors.Bmclapi);
 
-        resourcesDownloader.Download();
+        //resourcesDownloader.Download();
 
-        OnProgressChanged(0.5);
+        //OnProgressChanged(0.5);
     }
 
     void WriteFiles(ZipArchive _packageArchive, JsonNode _installProfile, string _forgeVersion, JsonNode _versionInfoJson)
