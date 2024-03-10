@@ -123,7 +123,7 @@ public class FabricInstaller : ModLoaderInstallerBase
             WorkingDirectory = this.InheritedFrom.MinecraftFolderPath,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
-            Arguments = string.Join(' ', args)
+            ArgumentsJsonObject = string.Join(' ', args)
         });
 
         void AddOutput(string data, bool error = false)
