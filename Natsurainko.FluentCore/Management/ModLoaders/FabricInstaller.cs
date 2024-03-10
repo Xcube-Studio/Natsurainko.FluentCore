@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Management.Downloader;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Resources;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
@@ -119,7 +120,7 @@ public class FabricInstaller : ModLoaderInstallerBase
             WorkingDirectory = this.InheritedFrom.MinecraftFolderPath,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
-            Arguments = string.Join(' ', args)
+            ArgumentsJsonObject = string.Join(' ', args)
         });
 
         void AddOutput(string data, bool error = false)

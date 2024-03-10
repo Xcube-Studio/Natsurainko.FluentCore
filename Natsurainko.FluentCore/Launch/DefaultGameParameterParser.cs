@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Management.Parsing;
+namespace Nrk.FluentCore.Launch;
 
 /// <summary>
 /// 默认游戏参数解析器

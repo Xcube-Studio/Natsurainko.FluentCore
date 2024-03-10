@@ -1,4 +1,6 @@
-﻿namespace Nrk.FluentCore.Resources;
+﻿using Nrk.FluentCore.Management.Downloader;
+
+namespace Nrk.FluentCore.Management.Downloader.Data;
 
 /// <summary>
 /// 表示一个下载元素

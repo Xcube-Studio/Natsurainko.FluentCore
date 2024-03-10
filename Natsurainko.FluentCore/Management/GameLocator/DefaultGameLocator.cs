@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Management.GameLocator;
 
 /// <summary>
 /// 游戏定位器的默认实现

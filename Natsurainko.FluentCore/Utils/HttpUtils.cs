@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Resources;
+﻿using Nrk.FluentCore.Management.Downloader;
+using Nrk.FluentCore.Management.Downloader.Data;
 using System;
 using System.Buffers;
 using System.Collections.Generic;

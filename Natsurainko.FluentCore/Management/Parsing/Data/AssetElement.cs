@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Resources;
+﻿using Nrk.FluentCore.Management.Downloader;
 
 namespace Nrk.FluentCore.Management.Parsing;
 

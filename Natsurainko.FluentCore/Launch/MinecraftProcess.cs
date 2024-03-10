@@ -51,7 +51,7 @@ public class MinecraftProcess : IDisposable
     public MinecraftProcessState State { get; private set; }
 
     /// <summary>
-    /// Arguments passed when the Minecraft process is started. 
+    /// ArgumentsJsonObject passed when the Minecraft process is started. 
     /// Can be updated before calling <see cref="Start"/>
     /// </summary>
     public IEnumerable<string> ArgumentList { get; init; }

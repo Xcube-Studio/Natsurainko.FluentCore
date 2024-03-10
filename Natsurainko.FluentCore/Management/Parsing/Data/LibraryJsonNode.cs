@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Resources;
+﻿using Nrk.FluentCore.Management.Downloader.Data;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 

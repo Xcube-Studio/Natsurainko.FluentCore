@@ -1,6 +1,7 @@
-﻿using Nrk.FluentCore.Launch;
+﻿using Nrk.FluentCore.Management;
+using Nrk.FluentCore.Management.Downloader;
+using Nrk.FluentCore.Management.Downloader.Data;
 using Nrk.FluentCore.Management.Parsing;
-using Nrk.FluentCore.Resources;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Linq;

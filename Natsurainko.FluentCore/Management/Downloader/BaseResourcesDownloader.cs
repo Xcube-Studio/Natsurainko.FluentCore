@@ -1,10 +1,9 @@
-﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Management.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Nrk.FluentCore.Resources;
+namespace Nrk.FluentCore.Management.Downloader;
 
 /// <summary>
 /// 资源下载器的抽象定义

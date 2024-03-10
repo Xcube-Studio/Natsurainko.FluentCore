@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Nrk.FluentCore.Management.Downloader.Data;
 
-namespace Nrk.FluentCore.Resources;
+namespace Nrk.FluentCore.Management.Downloader;
 
 public static class DownloadMirrors
 {

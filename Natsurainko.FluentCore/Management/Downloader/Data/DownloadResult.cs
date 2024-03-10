@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Nrk.FluentCore.Management.Downloader;
 
-namespace Nrk.FluentCore.Resources;
+namespace Nrk.FluentCore.Management.Downloader.Data;
 
 /// <summary>
 /// 表示下载任务结果

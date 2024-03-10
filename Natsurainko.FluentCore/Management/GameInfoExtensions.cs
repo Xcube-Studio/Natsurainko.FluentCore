@@ -1,13 +1,13 @@
-﻿using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Management.ModLoaders;
+﻿using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Management.Parsing;
+using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Utils;
+namespace Nrk.FluentCore.Management;
 
 // TOOD: use internal
 public static class GameInfoExtensions
