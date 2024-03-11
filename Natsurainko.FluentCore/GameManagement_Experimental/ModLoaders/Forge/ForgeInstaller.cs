@@ -152,7 +152,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
             .GetValue<string>()
             ?? throw new Exception("Failed to parse Minecraft version");
 
-        var jarPath = InheritedFrom.JarPath?.ToPathParameter()
+        var jarPath = InheritedFrom.ClientJarPath?.ToPathParameter()
             ?? throw new Exception("Failed to parse Minecraft jar path");
 
         var replaceValues = new Dictionary<string, string>

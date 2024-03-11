@@ -168,10 +168,10 @@ public class OptiFineInstaller : ModLoaderInstallerBase
             throw new Exception("Invalid OptiFine package");
         jar.ExtractToFile(launchwrapperFile, true);
 
-        if (InheritedFrom.JarPath is null || !File.Exists(InheritedFrom.JarPath))
+        if (InheritedFrom.ClientJarPath is null || !File.Exists(InheritedFrom.ClientJarPath))
             throw new Exception("Invalid Minecraft jar");
 
-        File.Copy(InheritedFrom.JarPath, jarFilePath, true);
+        File.Copy(InheritedFrom.ClientJarPath, jarFilePath, true);
 
         OnProgressChanged(0.6);
     }
@@ -179,7 +179,7 @@ public class OptiFineInstaller : ModLoaderInstallerBase
     private void RunProcessor(string optifineLibraryPath)
     {
         OnProgressChanged(0.65);
-        if (InheritedFrom.JarPath is null || !File.Exists(InheritedFrom.JarPath))
+        if (InheritedFrom.ClientJarPath is null || !File.Exists(InheritedFrom.ClientJarPath))
             throw new Exception("Invalid Minecraft jar");
 
         using var process = Process.Start(
@@ -196,7 +196,7 @@ public class OptiFineInstaller : ModLoaderInstallerBase
                         "-cp",
                         PackageFilePath.ToPathParameter(),
                         "optifine.Patcher",
-                        InheritedFrom.JarPath.ToPathParameter(),
+                        InheritedFrom.ClientJarPath.ToPathParameter(),
                         PackageFilePath.ToPathParameter(),
                         optifineLibraryPath.ToPathParameter()
                     }

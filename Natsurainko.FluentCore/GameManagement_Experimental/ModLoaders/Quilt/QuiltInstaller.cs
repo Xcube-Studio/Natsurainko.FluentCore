@@ -47,7 +47,7 @@ public class QuiltInstaller : ModLoaderInstallerBase
     void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.AbsoluteId}/{QuiltBuild.BuildVersion}/profile/json"
+            $"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.Id}/{QuiltBuild.BuildVersion}/profile/json"
         );
         var node = JsonNode.Parse(responseMessage.Content.ReadAsString()) ?? throw new Exception("Version info is null");
         versionInfoJson = node;

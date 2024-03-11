@@ -46,7 +46,7 @@ public class FabricInstaller : ModLoaderInstallerBase
     void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.AbsoluteId}/{FabricBuild.BuildVersion}/profile/json"
+            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.Id}/{FabricBuild.BuildVersion}/profile/json"
         );
         versionInfoJson =
             JsonNode.Parse(responseMessage.Content.ReadAsString())
@@ -105,7 +105,7 @@ public class FabricInstaller : ModLoaderInstallerBase
             "-jar", PackageFilePath.ToPathParameter(),
             "client",
             "-dir", InheritedFrom.MinecraftFolderPath.ToPathParameter(),
-            "-mcversion", InheritedFrom.AbsoluteId.ToPathParameter()
+            "-mcversion", InheritedFrom.Id.ToPathParameter()
         };
 
         if (InheritedFrom.Type.Equals("snapshot"))

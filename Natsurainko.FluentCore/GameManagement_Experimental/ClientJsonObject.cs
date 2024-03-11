@@ -16,10 +16,10 @@ namespace Nrk.FluentCore.GameManagement;
 public class ClientJsonObject
 {
     [JsonPropertyName("id")]
-    public required string Id { get; set; }
+    public required string? Id { get; set; }
 
     [JsonPropertyName("mainClass")]
-    public required string MainClass { get; set; }
+    public required string? MainClass { get; set; }
 
     /// <summary>
     /// Replaced by <see cref="Arguments"/> since 1.13 (17w43a)
@@ -40,13 +40,13 @@ public class ClientJsonObject
     public string? InheritsFrom { get; set; }
 
     [JsonPropertyName("type")]
-    public required string Type { get; set; }
+    public required string? Type { get; set; }
 
     [JsonPropertyName("assets")]
-    public required string Assets { get; set; }
+    public required string? Assets { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public required AssstIndexJsonObject AssetIndex { get; set; }
+    public required AssstIndexJsonObject? AssetIndex { get; set; }
 
     /// <summary>
     /// client.json 下 arguments 键 对应的实体类
