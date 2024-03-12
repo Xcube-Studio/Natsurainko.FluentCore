@@ -12,7 +12,7 @@ namespace Nrk.FluentCore.GameManagement;
 /// Data structure of client.json in .minecraft/versions/&lt;version&gt;. It is named &lt;game version&gt;.json in later versions.
 /// <para>More details on Minecraft Wiki: <seealso href="https://minecraft.wiki/w/Client.json"/></para>
 /// </summary>
-public class ClientJsonObject
+internal class ClientJsonObject
 {
     [JsonPropertyName("id")]
     public required string? Id { get; set; }
@@ -53,7 +53,7 @@ public class ClientJsonObject
     /// <summary>
     /// client.json 下 arguments 键 对应的实体类
     /// </summary>
-    public class ArgumentsJsonObject
+    internal class ArgumentsJsonObject
     {
         [JsonPropertyName("game")]
         [JsonConverter(typeof(ClientArgumentsConverter<GameArgumentRule>))]
@@ -193,7 +193,7 @@ public class ClientJsonObject
     /// <summary>
     /// client.json 下 assetIndex 键 对应的实体类
     /// </summary>
-    public class AssstIndexJsonObject
+    internal class AssstIndexJsonObject
     {
         [JsonPropertyName("url")]
         public required string? Url { get; set; }
@@ -211,7 +211,7 @@ public class ClientJsonObject
         public required int? TotalSize { get; set; }
     }
 
-    public class LibraryJsonObject
+    internal class LibraryJsonObject
     {
         [JsonPropertyName("name")]
         public required string? MavenName { get; set; }
@@ -259,7 +259,7 @@ public class ClientJsonObject
         }
     }
 
-    public class OsRule
+    internal class OsRule
     {
         [JsonPropertyName("name")]
         public string? Name { get; set; }
