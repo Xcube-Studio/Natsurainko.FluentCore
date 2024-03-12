@@ -72,10 +72,10 @@ public class ClientJsonObject
         {
             [JsonPropertyName("value")]
             [JsonConverter(typeof(ArgumentValuesConverter))]
-            public required IEnumerable<string> Values { get; set; }
+            public required IEnumerable<string>? Values { get; set; }
 
             [JsonPropertyName("rules")]
-            public required IEnumerable<TRule> Conditions { get; set; }
+            public required IEnumerable<TRule>? Conditions { get; set; }
         }
         public class GameArgumentRule
         {
@@ -123,8 +123,10 @@ public class ClientJsonObject
         {
             public override IEnumerable<ClientArgument> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                List<ClientArgument> arguments = new();
+                if (reader.TokenType != JsonTokenType.StartArray)
+                    throw new JsonException("Unable to parse client argument");
 
+                List<ClientArgument> arguments = new();
                 while (reader.Read())
                 {
                     if (reader.TokenType == JsonTokenType.EndArray)
@@ -204,18 +206,18 @@ public class ClientJsonObject
     public class AssstIndexJsonObject
     {
         [JsonPropertyName("url")]
-        public required string Url { get; set; }
+        public required string? Url { get; set; }
 
         [JsonPropertyName("id")]
-        public required string Id { get; set; }
+        public required string? Id { get; set; }
 
         [JsonPropertyName("sha1")]
-        public required string Sha1 { get; set; }
+        public required string? Sha1 { get; set; }
 
         [JsonPropertyName("size")]
-        public required int Size { get; set; }
+        public required int? Size { get; set; }
 
         [JsonPropertyName("totalSize")]
-        public required int TotalSize { get; set; }
+        public required int? TotalSize { get; set; }
     }
 }
