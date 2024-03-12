@@ -55,20 +55,20 @@ public class ClientJsonObject
     {
         [JsonPropertyName("game")]
         [JsonConverter(typeof(ClientArgumentsConverter<GameArgumentRule>))]
-        public required IEnumerable<ClientArgument<GameArgumentRule>> GameArguments { get; set; } = [];
+        public required IEnumerable<ClientArgument> GameArguments { get; set; } = [];
 
         [JsonPropertyName("jvm")]
         [JsonConverter(typeof(ClientArgumentsConverter<OsRule>))]
-        public required IEnumerable<ClientArgument<OsRule>> JvmArguments { get; set; } = [];
+        public required IEnumerable<ClientArgument> JvmArguments { get; set; } = [];
 
-        public abstract class ClientArgument<TRule> { }
+        public abstract class ClientArgument { }
 
-        public class DefaultClientArgument<TRule> : ClientArgument<TRule>
+        public class DefaultClientArgument : ClientArgument
         {
             public required string Value { get; set; }
         }
 
-        public class ConditionalClientArgument<TRule> : ClientArgument<TRule>
+        public class ConditionalClientArgument<TRule> : ClientArgument
         {
             [JsonPropertyName("value")]
             [JsonConverter(typeof(ArgumentValuesConverter))]
@@ -119,11 +119,11 @@ public class ClientJsonObject
             public string? Arch { get; set; }
         }
 
-        internal class ClientArgumentsConverter<TRule> : JsonConverter<IEnumerable<ClientArgument<TRule>>>
+        internal class ClientArgumentsConverter<TRule> : JsonConverter<IEnumerable<ClientArgument>>
         {
-            public override IEnumerable<ClientArgument<TRule>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            public override IEnumerable<ClientArgument> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                List<ClientArgument<TRule>> arguments = new();
+                List<ClientArgument> arguments = new();
 
                 while (reader.Read())
                 {
@@ -137,7 +137,7 @@ public class ClientJsonObject
                         string? value = reader.GetString();
                         if (value is not null)
                         {
-                            arguments.Add(new DefaultClientArgument<TRule> { Value = value });
+                            arguments.Add(new DefaultClientArgument { Value = value });
                         }
                     }
                     else if (reader.TokenType == JsonTokenType.StartObject) // The argument is a conditional argument
@@ -153,12 +153,12 @@ public class ClientJsonObject
                 return arguments;
             }
 
-            public override void Write(Utf8JsonWriter writer, IEnumerable<ClientArgument<TRule>> value, JsonSerializerOptions options)
+            public override void Write(Utf8JsonWriter writer, IEnumerable<ClientArgument> value, JsonSerializerOptions options)
             {
                 writer.WriteStartArray();
                 foreach (var arg in value)
                 {
-                    if (arg is DefaultClientArgument<TRule> defaultArg)
+                    if (arg is DefaultClientArgument defaultArg)
                     {
                         writer.WriteStringValue(defaultArg.Value);
                     }
