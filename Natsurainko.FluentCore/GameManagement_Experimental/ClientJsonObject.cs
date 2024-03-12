@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.Management.Parsing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,6 +46,9 @@ public class ClientJsonObject
 
     [JsonPropertyName("assetIndex")]
     public required AssstIndexJsonObject? AssetIndex { get; set; }
+
+    [JsonPropertyName("libraries")]
+    public required IEnumerable<LibraryJsonObject>? Libraries { get; set; }
 
     /// <summary>
     /// client.json 下 arguments 键 对应的实体类
@@ -105,18 +107,6 @@ public class ClientJsonObject
                 [JsonPropertyName("is_quick_play_realms")]
                 public bool? IsQuickPlayRealms { get; set; }
             }
-        }
-
-        public class OsRule
-        {
-            [JsonPropertyName("name")]
-            public string? Name { get; set; }
-
-            [JsonPropertyName("version")]
-            public string? Version { get; set; }
-
-            [JsonPropertyName("arch")]
-            public string? Arch { get; set; }
         }
 
         internal class ClientArgumentsConverter<TRule> : JsonConverter<IEnumerable<ClientArgument>>
@@ -219,5 +209,65 @@ public class ClientJsonObject
 
         [JsonPropertyName("totalSize")]
         public required int? TotalSize { get; set; }
+    }
+
+    public class LibraryJsonObject
+    {
+        [JsonPropertyName("name")]
+        public required string? MavenName { get; set; }
+
+        // Used by Forge
+        [JsonPropertyName("url")]
+        public string? MavenUrl { get; set; }
+
+        // This field may not exist for libraries used by mod loaders
+        [JsonPropertyName("downloads")]
+        public DownloadInformationJsonObject? DownloadInformation { get; set; }
+
+        [JsonPropertyName("rules")]
+        public IEnumerable<OsRule>? Rules { get; set; }
+
+        // "platform-name": "classifier"
+        // Classifier is used for identifying native libraries
+        [JsonPropertyName("natives")]
+        public Dictionary<string, string>? NativeClassifierNames { get; set; }
+
+        public class DownloadInformationJsonObject
+        {
+            [JsonPropertyName("artifact")]
+            public DownloadArtifactJsonObject? Artifact { get; set; }
+
+            // Possible keys: "javadoc", "sources" and "natives-*"
+            // Keys for native libraries are declared in the "natives" field in LibraryJsonObject
+            [JsonPropertyName("classifiers")]
+            public Dictionary<string, DownloadArtifactJsonObject>? Classifiers { get; init; }
+        }
+
+        public class DownloadArtifactJsonObject
+        {
+            [JsonPropertyName("path")]
+            public required string? Path { get; set; }
+
+            [JsonPropertyName("url")]
+            public required string? Url { get; set; }
+
+            [JsonPropertyName("sha1")]
+            public required string? Sha1 { get; set; }
+
+            [JsonPropertyName("size")]
+            public required int? Size { get; set; }
+        }
+    }
+
+    public class OsRule
+    {
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("version")]
+        public string? Version { get; set; }
+
+        [JsonPropertyName("arch")]
+        public string? Arch { get; set; }
     }
 }
