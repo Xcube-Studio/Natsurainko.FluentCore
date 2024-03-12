@@ -54,66 +54,76 @@ public class ClientJsonObject
     public class ArgumentsJsonObject
     {
         [JsonPropertyName("game")]
-        [JsonConverter(typeof(GameArgumentsConverter))]
-        public required IEnumerable<GameArgument> GameArguments { get; set; } = [];
+        [JsonConverter(typeof(ClientArgumentsConverter<GameArgumentRule>))]
+        public required IEnumerable<ClientArgument<GameArgumentRule>> GameArguments { get; set; } = [];
 
         [JsonPropertyName("jvm")]
-        public required IEnumerable<JvmArgument> JvmArguments { get; set; } = [];
+        [JsonConverter(typeof(ClientArgumentsConverter<OsRule>))]
+        public required IEnumerable<ClientArgument<OsRule>> JvmArguments { get; set; } = [];
 
-        #region GameArgument
+        public abstract class ClientArgument<TRule> { }
 
-        public abstract class GameArgument { }
-
-        public class DefaultGameArgument : GameArgument
+        public class DefaultClientArgument<TRule> : ClientArgument<TRule>
         {
             public required string Value { get; set; }
         }
 
-        public class ConditioanlGameArgument: GameArgument
+        public class ConditionalClientArgument<TRule> : ClientArgument<TRule>
         {
             [JsonPropertyName("value")]
             [JsonConverter(typeof(ArgumentValuesConverter))]
             public required IEnumerable<string> Values { get; set; }
 
             [JsonPropertyName("rules")]
-            public required IEnumerable<Rule> Conditions { get; set; }
+            public required IEnumerable<TRule> Conditions { get; set; }
+        }
+        public class GameArgumentRule
+        {
+            [JsonPropertyName("action")]
+            public required string Action { get; set; }
 
-            public class Rule
+            [JsonPropertyName("features")]
+            public required RuleFeatures Features { get; set; }
+
+            public class RuleFeatures
             {
-                [JsonPropertyName("action")]
-                public required string Action { get; set; }
+                [JsonPropertyName("is_demo_user")]
+                public bool? IsDemoUser { get; set; }
 
-                [JsonPropertyName("features")]
-                public required RuleFeatures Features { get; set; }
+                [JsonPropertyName("has_custom_resolution")]
+                public bool? HasCustomResolution { get; set; }
 
-                public class RuleFeatures
-                {
-                    [JsonPropertyName("is_demo_user")]
-                    public bool? IsDemoUser { get; set; }
+                [JsonPropertyName("has_quick_plays_support")]
+                public bool? HasQuickPlaysSupport { get; set; }
 
-                    [JsonPropertyName("has_custom_resolution")]
-                    public bool? HasCustomResolution { get; set; }
+                [JsonPropertyName("is_quick_play_singleplayer")]
+                public bool? IsQuickPlaySingleplayer { get; set; }
 
-                    [JsonPropertyName("has_quick_plays_support")]
-                    public bool? HasQuickPlaysSupport { get; set; }
+                [JsonPropertyName("is_quick_play_multiplayer")]
+                public bool? IsQuickPlayMultiplayer { get; set; }
 
-                    [JsonPropertyName("is_quick_play_singleplayer")]
-                    public bool? IsQuickPlaySingleplayer { get; set; }
-
-                    [JsonPropertyName("is_quick_play_multiplayer")]
-                    public bool? IsQuickPlayMultiplayer { get; set; }
-
-                    [JsonPropertyName("is_quick_play_realms")]
-                    public bool? IsQuickPlayRealms { get; set; }
-                }
+                [JsonPropertyName("is_quick_play_realms")]
+                public bool? IsQuickPlayRealms { get; set; }
             }
         }
 
-        internal class GameArgumentsConverter : JsonConverter<IEnumerable<GameArgument>>
+        public class OsRule
         {
-            public override IEnumerable<GameArgument> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            [JsonPropertyName("name")]
+            public string? Name { get; set; }
+
+            [JsonPropertyName("version")]
+            public string? Version { get; set; }
+
+            [JsonPropertyName("arch")]
+            public string? Arch { get; set; }
+        }
+
+        internal class ClientArgumentsConverter<TRule> : JsonConverter<IEnumerable<ClientArgument<TRule>>>
+        {
+            public override IEnumerable<ClientArgument<TRule>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                List<GameArgument> arguments = new();
+                List<ClientArgument<TRule>> arguments = new();
 
                 while (reader.Read())
                 {
@@ -127,12 +137,12 @@ public class ClientJsonObject
                         string? value = reader.GetString();
                         if (value is not null)
                         {
-                            arguments.Add(new DefaultGameArgument { Value = value });
+                            arguments.Add(new DefaultClientArgument<TRule> { Value = value });
                         }
                     }
                     else if (reader.TokenType == JsonTokenType.StartObject) // The argument is a conditional argument
                     {
-                        var obj = JsonSerializer.Deserialize<ConditioanlGameArgument>(ref reader, options);
+                        var obj = JsonSerializer.Deserialize<ConditionalClientArgument<TRule>>(ref reader, options);
                         if (obj is not null)
                         {
                             arguments.Add(obj);
@@ -143,16 +153,16 @@ public class ClientJsonObject
                 return arguments;
             }
 
-            public override void Write(Utf8JsonWriter writer, IEnumerable<GameArgument> value, JsonSerializerOptions options)
+            public override void Write(Utf8JsonWriter writer, IEnumerable<ClientArgument<TRule>> value, JsonSerializerOptions options)
             {
                 writer.WriteStartArray();
                 foreach (var arg in value)
                 {
-                    if (arg is DefaultGameArgument defaultArg)
+                    if (arg is DefaultClientArgument<TRule> defaultArg)
                     {
                         writer.WriteStringValue(defaultArg.Value);
                     }
-                    else if (arg is ConditioanlGameArgument conditionalArg)
+                    else if (arg is ConditionalClientArgument<TRule> conditionalArg)
                     {
                         JsonSerializer.Serialize(writer, conditionalArg, options);
                     }
@@ -160,43 +170,6 @@ public class ClientJsonObject
                 writer.WriteEndArray();
             }
         }
-
-        #endregion
-
-        #region JvmArgument
-
-        public class JvmArgument
-        {
-            [JsonPropertyName("value")]
-            [JsonConverter(typeof(ArgumentValuesConverter))]
-            public required IEnumerable<string> Values { get; set; }
-
-            [JsonPropertyName("rules")]
-            public required IEnumerable<Rule> Conditions { get; set; }
-
-            public class Rule
-            {
-                [JsonPropertyName("action")]
-                public required string Action { get; set; }
-
-                [JsonPropertyName("os")]
-                public required OsRule Os { get; set; }
-
-                public class OsRule
-                {
-                    [JsonPropertyName("name")]
-                    public required string Name { get; set; }
-
-                    [JsonPropertyName("version")]
-                    public required string Version { get; set; }
-
-                    [JsonPropertyName("arch")]
-                    public required string Arch { get; set; }
-                }
-            }
-        }
-
-        #endregion
 
         internal class ArgumentValuesConverter : JsonConverter<IEnumerable<string>>
         {

@@ -12,6 +12,7 @@ public class MinecraftProfile
     public string MinecraftFolderPath { get; init; }
 
     // Vanilla items
+    // TODO: Consider lazy loading
     public IList<MinecraftInstance> Instances { get; init; } = [];
 
     public IList<object> Assets { get; init; } = [];
