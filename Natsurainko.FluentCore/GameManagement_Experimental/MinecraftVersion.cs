@@ -11,10 +11,11 @@ public enum MinecraftVersionType
     Release,
     Snapshot,
     OldBeta,
-    OldAlpha
+    OldAlpha,
+    Other // Special versions
 }
 
 public record struct MinecraftVersion(MinecraftVersionType Type, string Version)
 {
-    public static MinecraftVersion Unknown => new(MinecraftVersionType.Release, "Unknown");
+    public static MinecraftVersion Unknown => new(MinecraftVersionType.Release, "_Unknown_");
 }

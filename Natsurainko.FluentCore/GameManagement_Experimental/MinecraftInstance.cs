@@ -11,88 +11,64 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.GameManagement;
 
-public abstract class MinecraftInstance
+public abstract partial class MinecraftInstance
 {
     /// <summary>
-    /// 游戏的绝对Id
-    /// <para>
-    /// 即 client.json 中的 "Id"
-    /// </para>
+    /// Id in client.json
+    /// <para>Used as the identifier of this instance, must match the folder name</para>
     /// </summary>
     public required string Id { get; init; }
 
+    /// <summary>
+    /// Minecraft versino of this instance
+    /// </summary>
     public required MinecraftVersion Version { get; init; }
 
     /// <summary>
-    /// 游戏是否为原版
+    /// If the instance is a vanilla instance
     /// </summary>
     public bool IsVanilla { get => this is VanillaMinecraftInstance; }
 
     /// <summary>
-    /// .minecraft 目录的绝对路径
+    /// Absolute path of the .minecraft folder
     /// </summary>
     public required string MinecraftFolderPath { get; init; }
 
     /// <summary>
-    /// client.json 的绝对路径
+    /// Absolute path of client.json
     /// </summary>
     public required string ClientJsonPath { get; init; }
 
     /// <summary>
-    /// client.jar 的绝对路径
+    /// Absolute path of client.jar
     /// </summary>
     public required string ClientJarPath { get; init; }
-
-    /// <summary>
-    /// assets\indexes\assetindex.json 的绝对路径（如果存在）
-    /// </summary>
-    public string? AssetsIndexJsonPath { get; init; }
-
-    public static MinecraftInstance Parse(DirectoryInfo clientDir)
-    {
-        // Find client.json
-        var clientJsonFile = clientDir
-            .GetFiles($"{clientDir.Name}.json")
-            .FirstOrDefault()
-            ?? throw new FileNotFoundException($"client.json not found in {clientDir.FullName}");
-
-        // Parse client.json
-        string clientJson = File.ReadAllText(clientJsonFile.FullName);
-        var clientJsonNode = JsonNode.Parse(clientJson)
-            ?? throw new JsonException($"Failed to parse {clientJsonFile.FullName}");
-
-        var clientJsonObject = clientJsonNode.Deserialize<ClientJsonObject>()
-            ?? throw new JsonException($"Failed to deserialize {clientJsonFile.FullName} into {typeof(ClientJsonObject)}");
-
-        // Create MinecraftInstance
-        throw new NotImplementedException();
-    }
 }
 
 public class VanillaMinecraftInstance : MinecraftInstance { }
 
 /// <summary>
-/// 模组加载器信息
+/// Mod loader information
 /// </summary>
-/// <param name="Type">加载器类型</param>
-/// <param name="Version">加载器版本</param>
+/// <param name="Type">Type of a mod loader</param>
+/// <param name="Version">Version of a mod loader</param>
 public record struct ModLoaderInfo(ModLoaderType Type, string Version);
 
 public class ModifiedMinecraftInstance : MinecraftInstance
 {
     /// <summary>
-    /// 模组加载器信息列表
+    /// List of mod loaders installed in this instance
     /// </summary>
     public required IEnumerable<ModLoaderInfo> ModLoaders { get; init; }
 
     /// <summary>
-    /// 是否有继承的核心
+    /// If the instance inherits from another instance
     /// </summary>
     [MemberNotNullWhen(true, nameof(InheritedMinecraftInstance))]
     public bool HasInheritence { get => InheritedMinecraftInstance is not null; }
 
     /// <summary>
-    /// 继承的核心（若有）
+    /// The instance from which this instance inherits
     /// </summary>
     public MinecraftInstance? InheritedMinecraftInstance { get; init; }
 }
