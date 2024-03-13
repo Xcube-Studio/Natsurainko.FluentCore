@@ -13,10 +13,6 @@ namespace Nrk.FluentCore.GameManagement;
 
 public abstract partial class MinecraftInstance
 {
-    /// <summary>
-    /// Id in client.json
-    /// <para>Used as the identifier of this instance, must match the folder name</para>
-    /// </summary>
     public required string Id { get; init; }
 
     /// <summary>
