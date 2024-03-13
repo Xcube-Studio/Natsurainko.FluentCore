@@ -8,6 +8,7 @@
     <AssemblyName>Natsurainko.FluentCore</AssemblyName>
     <RootNamespace>Nrk.FluentCore</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

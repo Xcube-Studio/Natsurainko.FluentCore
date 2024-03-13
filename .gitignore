@@ -32,3 +32,5 @@ bld/
 [Ll]ogs/
 
 .vs/
+docs/_site/
+docs/api/
