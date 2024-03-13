@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Nrk.FluentCore.Management;
 
 namespace Nrk.FluentCore.GameManagement;
 
@@ -28,6 +29,38 @@ public abstract partial class MinecraftInstance
             ?? throw new JsonException($"Failed to deserialize {clientJsonFile.FullName} into {typeof(ClientJsonObject)}");
 
         // Create MinecraftInstance
+        bool isVanilla = ParsingHelpers.IsVanilla(clientJsonObject);
         throw new NotImplementedException();
+    }
+
+}
+
+file static class ParsingHelpers
+{
+    public static bool IsVanilla(ClientJsonObject clientJsonObject)
+    {
+        if (clientJsonObject.MainClass is null)
+            throw new JsonException("MainClass is not defined in client.json");
+
+        bool hasVanillaMainClass = clientJsonObject.MainClass is
+            "net.minecraft.client.main.Main"
+            or "net.minecraft.launchwrapper.Launch"
+            or "com.mojang.rubydung.RubyDung";
+
+        bool hasTweakClass =
+            // Before 1.13
+            clientJsonObject.MinecraftArguments?.Contains("--tweakClass") == true
+            && clientJsonObject.MinecraftArguments?.Contains("net.minecraft.launchwrapper.AlphaVanillaTweaker") == false
+            // Since 1.13
+            || clientJsonObject.Arguments?.GameArguments?
+                .Where(e => e is ClientJsonObject.ArgumentsJsonObject.DefaultClientArgument { Value: "--tweakClass" })
+                .Any() == true;
+
+        if (!string.IsNullOrEmpty(clientJsonObject.InheritsFrom)
+            || !hasVanillaMainClass
+            || hasVanillaMainClass && hasTweakClass)
+            return false;
+
+        return true;
     }
 }
