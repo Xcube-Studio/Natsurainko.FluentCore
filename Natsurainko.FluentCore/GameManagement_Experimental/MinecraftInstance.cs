@@ -39,6 +39,17 @@ public abstract partial class MinecraftInstance
     /// Absolute path of client.jar
     /// </summary>
     public required string ClientJarPath { get; init; }
+
+
+    public IEnumerable<MinecraftAsset> GetRequiredAssets()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<MinecraftLibrary> GetRequiredLibraries()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class VanillaMinecraftInstance : MinecraftInstance { }
