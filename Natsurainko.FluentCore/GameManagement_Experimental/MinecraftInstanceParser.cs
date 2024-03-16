@@ -66,10 +66,8 @@ file static class ParsingHelpers
 
     public static MinecraftInstance ParseVanilla(ClientJsonObject clientJsonObject, JsonNode clientJsonNode, DirectoryInfo clientDir, string clientJsonPath)
     {
-        // Parse client id
-        // TODO: change id to <version> folder name to allow customisation of <version> folder name
-        string id = clientJsonObject.Id
-            ?? throw new JsonException("Id is not defined in <version>.json");
+        // Parse <version> folder name
+        string versionFolderName = clientDir.Name;
 
         // Get .minecraft folder path
         string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
@@ -111,7 +109,7 @@ file static class ParsingHelpers
 
         return new VanillaMinecraftInstance
         {
-            VersionFolderName = id,
+            VersionFolderName = versionFolderName,
             Version = version,
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,
@@ -129,10 +127,8 @@ file static class ParsingHelpers
             inheritedInstance = (VanillaMinecraftInstance)parsedInstances?.FirstOrDefault()!;
         }
 
-        // Parse client id
-        // TODO: change id to <version> folder name to allow customisation of <version> folder name
-        string id = clientJsonObject.Id
-            ?? throw new JsonException("Id is not defined in <version>.json");
+        // Parse <version> folder name
+        string versionFolderName = clientDir.Name;
 
         // Get .minecraft folder path
         string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
@@ -144,9 +140,6 @@ file static class ParsingHelpers
             : clientJsonPath[..^"json".Length] + "jar"; // If there is no inheritance, replace .json with .jar file extension
         if (!File.Exists(clientJarPath))
             throw new FileNotFoundException($"{clientJarPath} not found");
-
-        // Parse version
-        MinecraftVersion version = MinecraftVersion.Parse(id);
 
         // Parse version
         string? versionId = clientJsonObject.Id; // By default, use the id in client.json
@@ -180,9 +173,11 @@ file static class ParsingHelpers
             throw new FormatException("Failed to parse version ID");
         }
 
+        MinecraftVersion version = MinecraftVersion.Parse(versionId);
+
         return new ModifiedMinecraftInstance
         {
-            VersionFolderName = id,
+            VersionFolderName = versionFolderName,
             Version = version,
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,
