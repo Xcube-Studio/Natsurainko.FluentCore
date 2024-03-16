@@ -41,12 +41,12 @@ public abstract partial class MinecraftInstance
     public required string ClientJarPath { get; init; }
 
 
-    public IEnumerable<MinecraftAsset> GetRequiredAssets()
+    public IEnumerable<GameAsset> GetRequiredAssets()
     {
         throw new NotImplementedException();
     }
 
-    public IEnumerable<MinecraftLibrary> GetRequiredLibraries()
+    public IEnumerable<GameLibrary> GetRequiredLibraries()
     {
         throw new NotImplementedException();
     }
@@ -77,5 +77,5 @@ public class ModifiedMinecraftInstance : MinecraftInstance
     /// <summary>
     /// The instance from which this instance inherits
     /// </summary>
-    public MinecraftInstance? InheritedMinecraftInstance { get; init; }
+    public VanillaMinecraftInstance? InheritedMinecraftInstance { get; init; }
 }

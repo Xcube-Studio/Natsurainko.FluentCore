@@ -23,16 +23,16 @@ public class MinecraftLibrary
     /// <summary>
     /// Parse a library from the full name of a Java library
     /// </summary>
-    /// <remarks>If <paramref name="fullName"/> is not a Java library name, then it is set for <see cref="Name"/> and other fields are <see cref="string.Empty"/></remarks>
-    /// <param name="fullName">Full library name in the format of DOMAIN:NAME:VER:CLASSIFIER</param>
-    public MinecraftLibrary(string fullName)
+    /// <remarks>If <paramref name="packageName"/> is not a Java library name, then it is set for <see cref="Name"/> and other fields are <see cref="string.Empty"/></remarks>
+    /// <param name="packageName">Full library name in the format of DOMAIN:NAME:VER:CLASSIFIER</param>
+    public MinecraftLibrary(string packageName)
     {
         Regex regex = new(@"^(?<domain>[^:]+):(?<name>[^:]+):(?<version>[^:]+)(?::(?<classifier>[^:]+))?");
-        Match match = regex.Match(fullName);
+        Match match = regex.Match(packageName);
 
         if (!match.Success)
         {
-            Name = fullName;
+            Name = packageName;
             return;
         }
 

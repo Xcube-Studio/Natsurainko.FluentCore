@@ -26,18 +26,18 @@ public record struct MinecraftVersion
     private static Regex _preReleaseRegex = new(@"^\d+\.\d+(\.\d+)?-pre\d+$");
     private static Regex _snapshotRegex = new(@"^\d{2}w\d{2}[a-z]$");
 
-    public MinecraftVersion(string id)
+    public MinecraftVersion(string version)
     {
-        Version = id;
-        if (_releaseRegex.IsMatch(id))
+        Version = version;
+        if (_releaseRegex.IsMatch(version))
             Type = MinecraftVersionType.Release;
-        else if (_preReleaseRegex.IsMatch(id))
+        else if (_preReleaseRegex.IsMatch(version))
             Type = MinecraftVersionType.PreRelease;
-        else if (_snapshotRegex.IsMatch(id))
+        else if (_snapshotRegex.IsMatch(version))
             Type = MinecraftVersionType.Snapshot;
-        else if (id.StartsWith("beta", StringComparison.OrdinalIgnoreCase))
+        else if (version.StartsWith("beta", StringComparison.OrdinalIgnoreCase))
             Type = MinecraftVersionType.OldBeta;
-        else if (id.StartsWith("alpha", StringComparison.OrdinalIgnoreCase))
+        else if (version.StartsWith("alpha", StringComparison.OrdinalIgnoreCase))
             Type = MinecraftVersionType.OldAlpha;
         else
             Type = MinecraftVersionType.Other;
