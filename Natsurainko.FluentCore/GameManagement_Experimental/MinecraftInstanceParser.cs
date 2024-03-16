@@ -80,17 +80,7 @@ file static class ParsingHelpers
             throw new FileNotFoundException($"client.jar not found in {clientDir.FullName}");
 
         // Parse version
-        MinecraftVersionType? versionType = clientJsonObject.Type switch
-        {
-            "release" => MinecraftVersionType.Release,
-            "old_beta" => MinecraftVersionType.OldBeta,
-            "old_alpha" => MinecraftVersionType.OldAlpha,
-            "snapshot" => null, // May be snapshot or pre-release, leave it for the MinecraftVersion constructor to parse from version id
-            _ => null // Uncertain version type, leave it for the MinecraftVersion constructor to parse from version id
-        };
-        MinecraftVersion version = versionType == null
-            ? new MinecraftVersion(id)
-            : new MinecraftVersion(id, versionType.Value);
+        MinecraftVersion version = MinecraftVersion.Parse(id);
 
         return new VanillaMinecraftInstance
         {
@@ -102,8 +92,10 @@ file static class ParsingHelpers
         };
     }
 
-    public static MinecraftInstance ParseModified(ClientJsonObject clientJsonObject)
+    public static MinecraftInstance ParseModified(ClientJsonObject clientJsonObject, IEnumerable<MinecraftInstance>? parsedInstances = null)
     {
+
+
         throw new NotImplementedException();
     }
 }
