@@ -22,9 +22,9 @@ public record struct MinecraftVersion
     public MinecraftVersionType Type { get; init; }
     public string Version { get; init; }
 
-    private static Regex _releaseRegex = new(@"^\d+\.\d+(\.\d+)?$");
-    private static Regex _preReleaseRegex = new(@"^\d+\.\d+(\.\d+)?-pre\d+$");
-    private static Regex _snapshotRegex = new(@"^\d{2}w\d{2}[a-z]$");
+    private static Regex _releaseRegex = new(@"^\d+\.\d+(\.\d+)?");
+    private static Regex _preReleaseRegex = new(@"^\d+\.\d+(\.\d+)?-pre\d+");
+    private static Regex _snapshotRegex = new(@"^\d{2}w\d{2}[a-z]");
 
     public MinecraftVersion(string version)
     {
