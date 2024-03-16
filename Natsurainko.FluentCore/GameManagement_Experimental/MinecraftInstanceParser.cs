@@ -142,43 +142,50 @@ file static class ParsingHelpers
             throw new FileNotFoundException($"{clientJarPath} not found");
 
         // Parse version
-        string? versionId = clientJsonObject.Id; // By default, use the id in client.json
-
-        // Read the version ID from the additional fields created by HMCL and PCL, regardless of whether it inherits from another instance or not, because
-        // HMCL and PCL may modify the "id" field in client.json to store the nickname.
-        try
+        MinecraftVersion? version = null;
+        if (hasInheritance)
         {
-            if (clientJsonNode["patches"] is JsonNode hmclPatchesNode)
-            {
-                // HMCL uses the "id" field in client.json to store the nickname of the game instance.
-                // This is inconsistent with the standard behavior of the official Minecraft launcher, and
-                // to adapt to this modification, read the version ID from the additional "version" field in the "patches" node created by HMCL.
-                versionId = hmclPatchesNode[0]?["version"]?.GetValue<string>();
-            }
-            else if (clientJsonNode["clientVersion"] is JsonNode pclClientVersionNode)
-            {
-                // PCL uses the "id" field in client.json to store the nickname of the game instance.
-                // This is inconsistent with the standard behavior of the official Minecraft launcher, and
-                // to adapt to this modification, read the version ID from the addtional "clientVersion" field created by PCL.
-                versionId = pclClientVersionNode.GetValue<string>();
-            }
-
-            if (versionId is null)
-                throw new FormatException();
+            // Use inherited version
+            version = inheritedInstance.Version;
         }
-        catch (Exception e) when (e is InvalidOperationException || e is FormatException)
+        else
         {
-            throw new FormatException("Failed to parse version ID");
-        }
+            // Read from client.json (TODO: extract duplicate logic)
+            string? versionId = clientJsonObject.Id; // By default, use the id in client.json
 
-        MinecraftVersion version = hasInheritance
-            ? inheritedInstance.Version
-            : MinecraftVersion.Parse(versionId);
+            // Read the version ID from the additional fields created by HMCL and PCL, regardless of whether it inherits from another instance or not, because
+            // HMCL and PCL may modify the "id" field in client.json to store the nickname.
+            try
+            {
+                if (clientJsonNode["patches"] is JsonNode hmclPatchesNode)
+                {
+                    // HMCL uses the "id" field in client.json to store the nickname of the game instance.
+                    // This is inconsistent with the standard behavior of the official Minecraft launcher, and
+                    // to adapt to this modification, read the version ID from the additional "version" field in the "patches" node created by HMCL.
+                    versionId = hmclPatchesNode[0]?["version"]?.GetValue<string>();
+                }
+                else if (clientJsonNode["clientVersion"] is JsonNode pclClientVersionNode)
+                {
+                    // PCL uses the "id" field in client.json to store the nickname of the game instance.
+                    // This is inconsistent with the standard behavior of the official Minecraft launcher, and
+                    // to adapt to this modification, read the version ID from the addtional "clientVersion" field created by PCL.
+                    versionId = pclClientVersionNode.GetValue<string>();
+                }
+
+                if (versionId is null)
+                    throw new FormatException();
+            }
+            catch (Exception e) when (e is InvalidOperationException || e is FormatException)
+            {
+                throw new FormatException("Failed to parse version ID");
+            }
+            version = MinecraftVersion.Parse(versionId);
+        }
 
         return new ModifiedMinecraftInstance
         {
             VersionFolderName = versionFolderName,
-            Version = version,
+            Version = (MinecraftVersion)version,
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,
             ClientJarPath = clientJarPath,
