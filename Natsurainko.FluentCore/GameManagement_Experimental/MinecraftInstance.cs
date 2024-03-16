@@ -13,10 +13,15 @@ namespace Nrk.FluentCore.GameManagement;
 
 public abstract partial class MinecraftInstance
 {
+    /// <summary>
+    /// Unique identifier of this instance in a <see cref="MinecraftProfile"/>
+    /// <para>Matches the client folder name and the client.json filename</para>
+    /// </summary>
     public required string Id { get; init; }
 
     /// <summary>
-    /// Minecraft versino of this instance
+    /// Minecraft version of this instance
+    /// <para>Parsed from id in client.json</para>
     /// </summary>
     public required MinecraftVersion Version { get; init; }
 
