@@ -143,8 +143,6 @@ file static class ParsingHelpers
 
         // Parse version
         string? versionId = clientJsonObject.Id; // By default, use the id in client.json
-        if (hasInheritance)
-            versionId = inheritedInstance.VersionFolderName; // The inherited instance is vanilla, so use its id is read directly from client.json
 
         // Read the version ID from the additional fields created by HMCL and PCL, regardless of whether it inherits from another instance or not, because
         // HMCL and PCL may modify the "id" field in client.json to store the nickname.
@@ -173,7 +171,9 @@ file static class ParsingHelpers
             throw new FormatException("Failed to parse version ID");
         }
 
-        MinecraftVersion version = MinecraftVersion.Parse(versionId);
+        MinecraftVersion version = hasInheritance
+            ? inheritedInstance.Version
+            : MinecraftVersion.Parse(versionId);
 
         return new ModifiedMinecraftInstance
         {
