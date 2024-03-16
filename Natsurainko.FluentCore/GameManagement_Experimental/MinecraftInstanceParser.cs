@@ -187,7 +187,8 @@ file static class ParsingHelpers
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,
             ClientJarPath = clientJarPath,
-            ModLoaders = null! // TODO: Parse mod loaders
+            InheritedMinecraftInstance = inheritedInstance,
+            ModLoaders = null! // TODO: Parse mod loaders (this requires parsing the "libraries" section in client.json)
         };
     }
 }
