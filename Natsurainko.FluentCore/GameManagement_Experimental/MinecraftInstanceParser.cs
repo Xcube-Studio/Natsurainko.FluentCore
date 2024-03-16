@@ -10,6 +10,12 @@ using Nrk.FluentCore.Management;
 
 namespace Nrk.FluentCore.GameManagement;
 
+using PartialData = (
+    string VersionFolderName,
+    string MinecraftFolderPath,
+    string ClientJsonPath
+    );
+
 public abstract partial class MinecraftInstance
 {
     public static MinecraftInstance Parse(DirectoryInfo clientDir)
@@ -19,19 +25,31 @@ public abstract partial class MinecraftInstance
             .GetFiles($"{clientDir.Name}.json")
             .FirstOrDefault()
             ?? throw new FileNotFoundException($"client.json not found in {clientDir.FullName}");
+        string clientJsonPath = clientJsonFile.FullName;
 
         // Parse client.json
-        string clientJson = File.ReadAllText(clientJsonFile.FullName);
+        string clientJson = File.ReadAllText(clientJsonPath);
         var clientJsonNode = JsonNode.Parse(clientJson)
-            ?? throw new JsonException($"Failed to parse {clientJsonFile.FullName}");
+            ?? throw new JsonException($"Failed to parse {clientJsonPath}");
 
         var clientJsonObject = clientJsonNode.Deserialize<ClientJsonObject>()
-            ?? throw new JsonException($"Failed to deserialize {clientJsonFile.FullName} into {typeof(ClientJsonObject)}");
+            ?? throw new JsonException($"Failed to deserialize {clientJsonPath} into {typeof(ClientJsonObject)}");
+
+        // Parse MinecraftInstance data common to both vanilla, modified and inheriting instances
+
+        // <version> folder name
+        string versionFolderName = clientDir.Name;
+
+        // .minecraft folder path
+        string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
+            ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
+
+        PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath);
 
         // Create MinecraftInstance
         return ParsingHelpers.IsVanilla(clientJsonObject)
-            ? ParsingHelpers.ParseVanilla(clientJsonObject, clientJsonNode, clientDir, clientJsonFile.FullName)
-            : ParsingHelpers.ParseModified(clientJsonObject, clientJsonNode, clientDir, clientJsonFile.FullName);
+            ? ParsingHelpers.ParseVanilla(partialData, clientJsonObject, clientJsonNode)
+            : ParsingHelpers.ParseModified(partialData, clientJsonObject, clientJsonNode);
     }
 }
 
@@ -64,21 +82,20 @@ file static class ParsingHelpers
         return true;
     }
 
-    public static MinecraftInstance ParseVanilla(ClientJsonObject clientJsonObject, JsonNode clientJsonNode, DirectoryInfo clientDir, string clientJsonPath)
+    private static string ReplaceJsonWithJar(string clientJsonPath)
     {
-        // Parse <version> folder name
-        string versionFolderName = clientDir.Name;
+        return clientJsonPath[..^"json".Length] + "jar"; // Replace .json with .jar file extension
+    }
 
-        // Get .minecraft folder path
-        string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
-            ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
-
-        // Check if client.jar exists
-        string clientJarPath = clientJsonPath[..^"json".Length] + "jar"; // Replace .json with .jar file extension
-        if (!File.Exists(clientJarPath))
-            throw new FileNotFoundException($"{clientJarPath} not found");
-
-        // Parse version
+    /// <summary>
+    /// Parse version ID from client.json in a non-inheriting instance
+    /// </summary>
+    /// <param name="clientJsonObject"></param>
+    /// <param name="clientJsonNode"></param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    private static string ReadVersionIdFromNonInheritingClientJson(ClientJsonObject clientJsonObject, JsonNode clientJsonNode)
+    {
         string? versionId = clientJsonObject.Id;
         try
         {
@@ -104,93 +121,73 @@ file static class ParsingHelpers
         {
             throw new FormatException("Failed to parse version ID");
         }
+        return versionId;
+    }
 
+    public static MinecraftInstance ParseVanilla(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode)
+    {
+        // Check if client.jar exists
+        string clientJarPath = ReplaceJsonWithJar(partialData.ClientJsonPath);
+        if (!File.Exists(clientJarPath))
+            throw new FileNotFoundException($"{clientJarPath} not found");
+
+        // Parse version
+        string versionId = ReadVersionIdFromNonInheritingClientJson(clientJsonObject, clientJsonNode);
         MinecraftVersion version = MinecraftVersion.Parse(versionId);
 
         return new VanillaMinecraftInstance
         {
-            VersionFolderName = versionFolderName,
+            VersionFolderName = partialData.VersionFolderName,
             Version = version,
-            MinecraftFolderPath = minecraftFolderPath,
-            ClientJsonPath = clientJsonPath,
+            MinecraftFolderPath = partialData.MinecraftFolderPath,
+            ClientJsonPath = partialData.ClientJsonPath,
             ClientJarPath = clientJarPath
         };
     }
 
-    public static MinecraftInstance ParseModified(ClientJsonObject clientJsonObject, JsonNode clientJsonNode, DirectoryInfo clientDir, string clientJsonPath, IEnumerable<MinecraftInstance>? parsedInstances = null)
+    public static MinecraftInstance ParseModified(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode, IEnumerable<MinecraftInstance>? parsedInstances = null)
     {
         bool hasInheritance = !string.IsNullOrEmpty(clientJsonObject.InheritsFrom);
         VanillaMinecraftInstance? inheritedInstance = null!;
         if (hasInheritance)
         {
             // Parsed inherited instance if has inheritance
+            // TODO: Get inherited instance
             inheritedInstance = (VanillaMinecraftInstance)parsedInstances?.FirstOrDefault()!;
         }
-
-        // Parse <version> folder name
-        string versionFolderName = clientDir.Name;
-
-        // Get .minecraft folder path
-        string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
-            ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
 
         // Check if client.jar exists
         string clientJarPath = hasInheritance
             ? inheritedInstance.ClientJarPath // Use inherited client.jar path if has inheritance
-            : clientJsonPath[..^"json".Length] + "jar"; // If there is no inheritance, replace .json with .jar file extension
+            : ReplaceJsonWithJar(partialData.ClientJsonPath); // If there is no inheritance, replace .json with .jar file extension
         if (!File.Exists(clientJarPath))
             throw new FileNotFoundException($"{clientJarPath} not found");
 
         // Parse version
-        MinecraftVersion? version = null;
+        MinecraftVersion? version;
         if (hasInheritance)
         {
-            // Use inherited version
+            // Use version from the inherited instance
             version = inheritedInstance.Version;
         }
         else
         {
-            // Read from client.json (TODO: extract duplicate logic)
-            string? versionId = clientJsonObject.Id; // By default, use the id in client.json
-
-            // Read the version ID from the additional fields created by HMCL and PCL, regardless of whether it inherits from another instance or not, because
-            // HMCL and PCL may modify the "id" field in client.json to store the nickname.
-            try
-            {
-                if (clientJsonNode["patches"] is JsonNode hmclPatchesNode)
-                {
-                    // HMCL uses the "id" field in client.json to store the nickname of the game instance.
-                    // This is inconsistent with the standard behavior of the official Minecraft launcher, and
-                    // to adapt to this modification, read the version ID from the additional "version" field in the "patches" node created by HMCL.
-                    versionId = hmclPatchesNode[0]?["version"]?.GetValue<string>();
-                }
-                else if (clientJsonNode["clientVersion"] is JsonNode pclClientVersionNode)
-                {
-                    // PCL uses the "id" field in client.json to store the nickname of the game instance.
-                    // This is inconsistent with the standard behavior of the official Minecraft launcher, and
-                    // to adapt to this modification, read the version ID from the addtional "clientVersion" field created by PCL.
-                    versionId = pclClientVersionNode.GetValue<string>();
-                }
-
-                if (versionId is null)
-                    throw new FormatException();
-            }
-            catch (Exception e) when (e is InvalidOperationException || e is FormatException)
-            {
-                throw new FormatException("Failed to parse version ID");
-            }
+            // Read from client.json
+            string versionId = ReadVersionIdFromNonInheritingClientJson(clientJsonObject, clientJsonNode);
             version = MinecraftVersion.Parse(versionId);
         }
 
+        // TODO: Parse mod loaders (this requires parsing the "libraries" section in client.json)
+
         return new ModifiedMinecraftInstance
         {
-            VersionFolderName = versionFolderName,
+            VersionFolderName = partialData.VersionFolderName,
             Version = (MinecraftVersion)version,
-            MinecraftFolderPath = minecraftFolderPath,
-            ClientJsonPath = clientJsonPath,
+            MinecraftFolderPath = partialData.MinecraftFolderPath,
+            ClientJsonPath = partialData.ClientJsonPath,
             ClientJarPath = clientJarPath,
             InheritedMinecraftInstance = inheritedInstance,
-            ModLoaders = null! // TODO: Parse mod loaders (this requires parsing the "libraries" section in client.json)
+            ModLoaders = null!
         };
     }
 }
