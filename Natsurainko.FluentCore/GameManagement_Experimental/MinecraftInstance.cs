@@ -18,8 +18,8 @@ public abstract partial class MinecraftInstance
     /// <para>This matches the client.json filename and must be unique in a <see cref="MinecraftProfile"/></para>
     /// </summary>
     public required string VersionFolderName { get; init; }
-    // This choice is made because the isolated instance feature implemented by third party launchers
-    // allows multiple instances of the same version id, so the "id" field in client.json may not be unique.
+    // The isolated instance feature implemented by third party launchers allows multiple
+    // instances of the same version id, so the "id" field in client.json may not be unique.
 
     /// <summary>
     /// Minecraft version of this instance
