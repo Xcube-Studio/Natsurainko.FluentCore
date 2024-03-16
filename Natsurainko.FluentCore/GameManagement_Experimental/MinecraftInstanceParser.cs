@@ -111,7 +111,7 @@ file static class ParsingHelpers
 
         return new VanillaMinecraftInstance
         {
-            Id = id,
+            VersionFolderName = id,
             Version = version,
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,
@@ -151,7 +151,7 @@ file static class ParsingHelpers
         // Parse version
         string? versionId = clientJsonObject.Id; // By default, use the id in client.json
         if (hasInheritance)
-            versionId = inheritedInstance.Id; // The inherited instance is vanilla, so use its id is read directly from client.json
+            versionId = inheritedInstance.VersionFolderName; // The inherited instance is vanilla, so use its id is read directly from client.json
 
         // Read the version ID from the additional fields created by HMCL and PCL, regardless of whether it inherits from another instance or not, because
         // HMCL and PCL may modify the "id" field in client.json to store the nickname.
@@ -182,7 +182,7 @@ file static class ParsingHelpers
 
         return new ModifiedMinecraftInstance
         {
-            Id = id,
+            VersionFolderName = id,
             Version = version,
             MinecraftFolderPath = minecraftFolderPath,
             ClientJsonPath = clientJsonPath,

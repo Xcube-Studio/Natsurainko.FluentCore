@@ -46,7 +46,7 @@ public class FabricInstaller : ModLoaderInstallerBase
     void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.Id}/{FabricBuild.BuildVersion}/profile/json"
+            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.VersionFolderName}/{FabricBuild.BuildVersion}/profile/json"
         );
         versionInfoJson =
             JsonNode.Parse(responseMessage.Content.ReadAsString())

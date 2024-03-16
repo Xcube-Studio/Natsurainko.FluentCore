@@ -14,10 +14,10 @@ namespace Nrk.FluentCore.GameManagement;
 public abstract partial class MinecraftInstance
 {
     /// <summary>
-    /// Unique identifier of this instance in a <see cref="MinecraftProfile"/>
-    /// <para>Matches the client folder name and the client.json filename.</para>
+    /// Name of the folder of this instance
+    /// <para>This matches the client.json filename and must be unique in a <see cref="MinecraftProfile"/></para>
     /// </summary>
-    public required string Id { get; init; }
+    public required string VersionFolderName { get; init; }
     // This choice is made because the isolated instance feature implemented by third party launchers
     // allows multiple instances of the same version id, so the "id" field in client.json may not be unique.
 
