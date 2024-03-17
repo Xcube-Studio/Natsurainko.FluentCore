@@ -20,6 +20,9 @@ public abstract partial class MinecraftInstance
 {
     public static MinecraftInstance Parse(DirectoryInfo clientDir)
     {
+        if (!clientDir.Exists)
+            throw new DirectoryNotFoundException($"{clientDir.FullName} not found");
+
         // Find client.json
         var clientJsonFile = clientDir
             .GetFiles($"{clientDir.Name}.json")
@@ -145,15 +148,32 @@ file static class ParsingHelpers
         };
     }
 
+    // Parse a modified instance
+    // If it has inheritance,
+    // - If parsedInstances are provided, try to find inherited instance from the list
+    // - If parsedinstances are not provided, or the inherited instance is not found in the list, parse inherited instance from the .minecraft folder
     public static MinecraftInstance ParseModified(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode, IEnumerable<MinecraftInstance>? parsedInstances = null)
     {
         bool hasInheritance = !string.IsNullOrEmpty(clientJsonObject.InheritsFrom);
         VanillaMinecraftInstance? inheritedInstance = null!;
         if (hasInheritance)
         {
-            // Parsed inherited instance if has inheritance
-            // TODO: Get inherited instance
-            inheritedInstance = (VanillaMinecraftInstance)parsedInstances?.FirstOrDefault()!;
+            // Get inherited instance
+            string inheritedInstanceId = clientJsonObject.InheritsFrom
+                ?? throw new InvalidOperationException("InheritsFrom is not defined in client.json");
+
+            inheritedInstance = parsedInstances?
+                .Where(i => i is VanillaMinecraftInstance v && v.Version.VersionId == inheritedInstanceId)
+                .FirstOrDefault() as VanillaMinecraftInstance;
+
+            if (inheritedInstance is null)
+            {
+                string inheritedInstancePath = Path.Combine(partialData.MinecraftFolderPath, "versions", inheritedInstanceId);
+                var inheritedInstanceDir = new DirectoryInfo(inheritedInstancePath);
+
+                inheritedInstance = MinecraftInstance.Parse(inheritedInstanceDir) as VanillaMinecraftInstance
+                    ?? throw new InvalidOperationException($"Failed to parse inherited instance {inheritedInstanceId}");
+            }
         }
 
         // Check if client.jar exists

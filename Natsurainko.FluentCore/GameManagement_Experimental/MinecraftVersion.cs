@@ -20,9 +20,9 @@ public enum MinecraftVersionType
 /// <summary>
 /// Version of vanilla Minecraft
 /// </summary>
-/// <param name="Version">Release type of the version</param>
-/// <param name="Type">Version ID</param>
-public record struct MinecraftVersion(string Version, MinecraftVersionType Type)
+/// <param name="VersionId">Version ID</param>
+/// <param name="Type">Release type of the version</param>
+public record struct MinecraftVersion(string VersionId, MinecraftVersionType Type)
 {
     private static Regex _releaseRegex = new(@"^\d+\.\d+(\.\d+)?$");
     private static Regex _preReleaseRegex = new(@"^\d+\.\d+(\.\d+)?-pre\d+$");
