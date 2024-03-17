@@ -47,12 +47,12 @@ public class MinecraftInstanceParser
     /// <summary>
     /// Parse all instances in the .minecraft/versions folder
     /// </summary>
-    public void ParseAllInstances()
+    public IReadOnlyCollection<MinecraftInstance> ParseAllInstances()
     {
         var versionsDirectory = new DirectoryInfo(Path.Combine(_minecraftFolderPath, "versions"));
 
         if (!versionsDirectory.Exists)
-            return; // .minecraft/versions folder does not exist, no instance to parse.
+            return []; // .minecraft/versions folder does not exist, no instance to parse.
 
         foreach (DirectoryInfo dir in versionsDirectory.EnumerateDirectories())
         {
@@ -68,6 +68,8 @@ public class MinecraftInstanceParser
                 _erroneousDirectories.Add(dir);
             }
         }
+
+        return _parsedInstances;
     }
 }
 
