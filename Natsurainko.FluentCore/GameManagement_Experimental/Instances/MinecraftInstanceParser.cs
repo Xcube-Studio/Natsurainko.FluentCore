@@ -60,6 +60,16 @@ public class MinecraftInstanceParser
             try
             {
                 var instance = ParsingHelpers.Parse(dir, _parsedInstances, out bool inheritedInstanceAlreadyFound);
+
+                // Remove the existing instance with the same version folder name as the one just parsed
+                // This might be the case when the instance is modified and ParseAllInstances is called again
+                int index = _parsedInstances.FindIndex(i => i.VersionFolderName == instance.VersionFolderName);
+                if (index != -1)
+                {
+                    _parsedInstances.RemoveAt(index);
+                }
+
+                // Add the parsed instance and the inherited instance (if not already parsed) to the list
                 _parsedInstances.Add(instance);
                 if (instance is ModifiedMinecraftInstance m && m.HasInheritence && !inheritedInstanceAlreadyFound)
                     _parsedInstances.Add(m.InheritedMinecraftInstance);
