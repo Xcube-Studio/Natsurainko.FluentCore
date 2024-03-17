@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Nrk.FluentCore.Management;
+using Nrk.FluentCore.GameManagement.ModLoaders;
 
 namespace Nrk.FluentCore.GameManagement;
 
@@ -188,6 +189,21 @@ file static class ParsingHelpers
         };
     }
 
+    // Characteristic libraries of mod loaders
+    // Key: Library name
+    // Value1: ModLoaderType
+    // Value2: Function that parses mod loader version from the library (java package) version
+    private static readonly Dictionary<string, (ModLoaderType, Func<string, string>)> _modLoaderLibs = new()
+    {
+        { "net.minecraftforge:forge:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
+        { "net.minecraftforge:fmlloader:", (ModLoaderType.Forge, libVersion => libVersion.Split('-')[1]) },
+        { "net.neoforged.fancymodloader:loader:", (ModLoaderType.NeoForge, libVersion => libVersion) },
+        { "optifine:optifine", (ModLoaderType.OptiFine, libVersion => libVersion[(libVersion.IndexOf('_') + 1)..].ToUpper()) },
+        { "net.fabricmc:fabric-loader:", (ModLoaderType.Fabric, libVersion => libVersion) },
+        { "com.mumfrey:liteloader:", (ModLoaderType.LiteLoader, libVersion => libVersion) },
+        { "org.quiltmc:quilt-loader:", (ModLoaderType.Quilt, libVersion => libVersion) },
+    };
+
     // Parse a modified instance
     // If it has inheritance,
     // - If parsedInstances are provided, try to find inherited instance from the list
@@ -246,7 +262,34 @@ file static class ParsingHelpers
             version = MinecraftVersion.Parse(versionId);
         }
 
-        // TODO: Parse mod loaders (this requires parsing the "libraries" section in client.json)
+        // Parse mod loaders
+        List<ModLoaderInfo> modLoaders = [];
+        var libraries = clientJsonObject.Libraries ?? [];
+        foreach (var lib in libraries)
+        {
+            string? libNameLowered = lib.MavenName?.ToLower();
+            if (libNameLowered is null)
+                continue;
+
+            foreach (var key in _modLoaderLibs.Keys)
+            {
+                if (!libNameLowered.Contains(key))
+                    continue;
+
+                // Mod loader library detected
+                var id = libNameLowered.Split(':')[2];
+                var loader = new ModLoaderInfo
+                {
+                    Type = _modLoaderLibs[key].Item1,
+                    Version = _modLoaderLibs[key].Item2(id)
+                };
+
+                if (!modLoaders.Contains(loader))
+                    modLoaders.Add(loader);
+
+                break;
+            }
+        }
 
         return new ModifiedMinecraftInstance
         {
@@ -256,7 +299,7 @@ file static class ParsingHelpers
             ClientJsonPath = partialData.ClientJsonPath,
             ClientJarPath = clientJarPath,
             InheritedMinecraftInstance = inheritedInstance,
-            ModLoaders = null!
+            ModLoaders = modLoaders
         };
     }
 

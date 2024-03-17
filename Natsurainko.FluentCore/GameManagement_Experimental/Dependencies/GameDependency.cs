@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.GameManagement;
 
-public abstract class GameDependency
+public abstract class GameDependency // TODO: Implement IDownloadable interface for downloading game dependencies
 {
     /// <summary>
     /// Relative path to the .minecraft folder

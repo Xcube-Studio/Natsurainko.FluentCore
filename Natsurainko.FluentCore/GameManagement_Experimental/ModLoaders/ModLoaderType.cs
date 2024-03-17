@@ -1,17 +1,17 @@
 ﻿namespace Nrk.FluentCore.GameManagement.ModLoaders;
 
 /// <summary>
-/// 模组加载器类型
+/// Type of a mod loader
 /// </summary>
 public enum ModLoaderType
 {
-    Any = 0,
-    Forge = 1,
-    Cauldron = 2,
-    LiteLoader = 3,
-    Fabric = 4,
-    OptiFine = 6,
-    Quilt = 7,
-    NeoForge = 8,
-    Unknown = 114514,
+    Any,
+    Forge,
+    Cauldron,
+    LiteLoader,
+    Fabric,
+    OptiFine,
+    Quilt,
+    NeoForge,
+    Unknown,
 }
