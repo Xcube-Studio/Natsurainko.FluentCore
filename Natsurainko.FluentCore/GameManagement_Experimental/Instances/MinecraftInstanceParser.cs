@@ -47,6 +47,7 @@ public class MinecraftInstanceParser
     /// <summary>
     /// Parse all instances in the .minecraft/versions folder
     /// </summary>
+    /// <returns>All Minecraft instances parsed in this .minecraft profile</returns>
     public IReadOnlyCollection<MinecraftInstance> ParseAllInstances()
     {
         var versionsDirectory = new DirectoryInfo(Path.Combine(_minecraftFolderPath, "versions"));
@@ -75,6 +76,11 @@ public class MinecraftInstanceParser
 
 public abstract partial class MinecraftInstance
 {
+    /// <summary>
+    /// Parse a Minecraft instance from a directory
+    /// </summary>
+    /// <param name="clientDir">A .minecraft/versions/&lt;version&gt; directory</param>
+    /// <returns>The <see cref="MinecraftInstance"/> parsed</returns>
     public static MinecraftInstance Parse(DirectoryInfo clientDir)
         => ParsingHelpers.Parse(clientDir, null, out bool _);
 }
