@@ -10,16 +10,79 @@ using Nrk.FluentCore.Management;
 
 namespace Nrk.FluentCore.GameManagement;
 
+// Temporary data structure for parsing Minecraft instances
 using PartialData = (
     string VersionFolderName,
     string MinecraftFolderPath,
     string ClientJsonPath
     );
 
+public class MinecraftInstanceParser
+{
+    /// <summary>
+    /// Successfully parsed instances
+    /// </summary>
+    public IReadOnlyCollection<MinecraftInstance> ParsedInstances => _parsedInstances;
+    private readonly List<MinecraftInstance> _parsedInstances = new();
+
+    /// <summary>
+    /// Erroneous directories that failed to parse
+    /// </summary>
+    public IReadOnlyCollection<DirectoryInfo> ErroneousDirectories => _erroneousDirectories;
+    private readonly List<DirectoryInfo> _erroneousDirectories = new();
+
+    // .minecraft folder path
+    private readonly string _minecraftFolderPath;
+
+
+    /// <summary>
+    /// Create a <see cref="MinecraftInstanceParser"/> for parsing instances in a particular .minecraft folder
+    /// </summary>
+    /// <param name="minecraftFolderPath">The absolute .minecraft folder path</param>
+    public MinecraftInstanceParser(string minecraftFolderPath)
+    {
+        _minecraftFolderPath = minecraftFolderPath;
+    }
+
+    /// <summary>
+    /// Parse all instances in the .minecraft/versions folder
+    /// </summary>
+    public void ParseAllInstances()
+    {
+        var versionsDirectory = new DirectoryInfo(Path.Combine(_minecraftFolderPath, "versions"));
+
+        if (!versionsDirectory.Exists)
+            return; // .minecraft/versions folder does not exist, no instance to parse.
+
+        foreach (DirectoryInfo dir in versionsDirectory.EnumerateDirectories())
+        {
+            try
+            {
+                var instance = ParsingHelpers.Parse(dir, _parsedInstances, out bool inheritedInstanceAlreadyFound);
+                _parsedInstances.Add(instance);
+                if (instance is ModifiedMinecraftInstance m && m.HasInheritence && !inheritedInstanceAlreadyFound)
+                    _parsedInstances.Add(m.InheritedMinecraftInstance);
+            }
+            catch (Exception) // TODO: Consider catching specific exceptions and display more detailed error types and info
+            {
+                _erroneousDirectories.Add(dir);
+            }
+        }
+    }
+}
+
 public abstract partial class MinecraftInstance
 {
     public static MinecraftInstance Parse(DirectoryInfo clientDir)
+        => ParsingHelpers.Parse(clientDir, null, out bool _);
+}
+
+file static class ParsingHelpers
+{
+    internal static MinecraftInstance Parse(DirectoryInfo clientDir, IEnumerable<MinecraftInstance>? parsedInstances, out bool foundInheritedInstanceInParsed)
     {
+        foundInheritedInstanceInParsed = false;
+
         if (!clientDir.Exists)
             throw new DirectoryNotFoundException($"{clientDir.FullName} not found");
 
@@ -50,53 +113,12 @@ public abstract partial class MinecraftInstance
         PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath);
 
         // Create MinecraftInstance
-        return ParsingHelpers.IsVanilla(clientJsonObject)
-            ? ParsingHelpers.ParseVanilla(partialData, clientJsonObject, clientJsonNode)
-            : ParsingHelpers.ParseModified(partialData, clientJsonObject, clientJsonNode);
-    }
-}
-
-file static class ParsingHelpers
-{
-    public static bool IsVanilla(ClientJsonObject clientJsonObject)
-    {
-        if (clientJsonObject.MainClass is null)
-            throw new JsonException("MainClass is not defined in client.json");
-
-        bool hasVanillaMainClass = clientJsonObject.MainClass is
-            "net.minecraft.client.main.Main"
-            or "net.minecraft.launchwrapper.Launch"
-            or "com.mojang.rubydung.RubyDung";
-
-        bool hasTweakClass =
-            // Before 1.13
-            clientJsonObject.MinecraftArguments?.Contains("--tweakClass") == true
-            && clientJsonObject.MinecraftArguments?.Contains("net.minecraft.launchwrapper.AlphaVanillaTweaker") == false
-            // Since 1.13
-            || clientJsonObject.Arguments?.GameArguments?
-                .Where(e => e is ClientJsonObject.ArgumentsJsonObject.DefaultClientArgument { Value: "--tweakClass" })
-                .Any() == true;
-
-        if (!string.IsNullOrEmpty(clientJsonObject.InheritsFrom)
-            || !hasVanillaMainClass
-            || hasVanillaMainClass && hasTweakClass)
-            return false;
-
-        return true;
+        return IsVanilla(clientJsonObject)
+            ? ParseVanilla(partialData, clientJsonObject, clientJsonNode)
+            : ParseModified(partialData, clientJsonObject, clientJsonNode, parsedInstances, out foundInheritedInstanceInParsed);
     }
 
-    private static string ReplaceJsonWithJar(string clientJsonPath)
-    {
-        return clientJsonPath[..^"json".Length] + "jar"; // Replace .json with .jar file extension
-    }
-
-    /// <summary>
-    /// Parse version ID from client.json in a non-inheriting instance
-    /// </summary>
-    /// <param name="clientJsonObject"></param>
-    /// <param name="clientJsonNode"></param>
-    /// <returns></returns>
-    /// <exception cref="FormatException"></exception>
+    // Parse version ID from client.json in a non-inheriting instance
     private static string ReadVersionIdFromNonInheritingClientJson(ClientJsonObject clientJsonObject, JsonNode clientJsonNode)
     {
         string? versionId = clientJsonObject.Id;
@@ -127,7 +149,7 @@ file static class ParsingHelpers
         return versionId;
     }
 
-    public static MinecraftInstance ParseVanilla(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode)
+    private static MinecraftInstance ParseVanilla(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode)
     {
         // Check if client.jar exists
         string clientJarPath = ReplaceJsonWithJar(partialData.ClientJsonPath);
@@ -152,13 +174,18 @@ file static class ParsingHelpers
     // If it has inheritance,
     // - If parsedInstances are provided, try to find inherited instance from the list
     // - If parsedinstances are not provided, or the inherited instance is not found in the list, parse inherited instance from the .minecraft folder
-    public static MinecraftInstance ParseModified(PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode, IEnumerable<MinecraftInstance>? parsedInstances = null)
+    private static MinecraftInstance ParseModified(
+        PartialData partialData, ClientJsonObject clientJsonObject, JsonNode clientJsonNode,
+        IEnumerable<MinecraftInstance>? parsedInstances,
+        out bool foundInheritedInstanceInParsed)
     {
+        foundInheritedInstanceInParsed = false;
+
         bool hasInheritance = !string.IsNullOrEmpty(clientJsonObject.InheritsFrom);
         VanillaMinecraftInstance? inheritedInstance = null!;
         if (hasInheritance)
         {
-            // Get inherited instance
+            // Find the inherited instance
             string inheritedInstanceId = clientJsonObject.InheritsFrom
                 ?? throw new InvalidOperationException("InheritsFrom is not defined in client.json");
 
@@ -166,7 +193,11 @@ file static class ParsingHelpers
                 .Where(i => i is VanillaMinecraftInstance v && v.Version.VersionId == inheritedInstanceId)
                 .FirstOrDefault() as VanillaMinecraftInstance;
 
-            if (inheritedInstance is null)
+            if (inheritedInstance is not null) // Found inherited instance in parsedInstances
+            {
+                foundInheritedInstanceInParsed = true;
+            }
+            else // Parse the inherited instance before parsing this modified instance
             {
                 string inheritedInstancePath = Path.Combine(partialData.MinecraftFolderPath, "versions", inheritedInstanceId);
                 var inheritedInstanceDir = new DirectoryInfo(inheritedInstancePath);
@@ -209,5 +240,37 @@ file static class ParsingHelpers
             InheritedMinecraftInstance = inheritedInstance,
             ModLoaders = null!
         };
+    }
+
+    private static bool IsVanilla(ClientJsonObject clientJsonObject)
+    {
+        if (clientJsonObject.MainClass is null)
+            throw new JsonException("MainClass is not defined in client.json");
+
+        bool hasVanillaMainClass = clientJsonObject.MainClass is
+            "net.minecraft.client.main.Main"
+            or "net.minecraft.launchwrapper.Launch"
+            or "com.mojang.rubydung.RubyDung";
+
+        bool hasTweakClass =
+            // Before 1.13
+            clientJsonObject.MinecraftArguments?.Contains("--tweakClass") == true
+            && clientJsonObject.MinecraftArguments?.Contains("net.minecraft.launchwrapper.AlphaVanillaTweaker") == false
+            // Since 1.13
+            || clientJsonObject.Arguments?.GameArguments?
+                .Where(e => e is ClientJsonObject.ArgumentsJsonObject.DefaultClientArgument { Value: "--tweakClass" })
+                .Any() == true;
+
+        if (!string.IsNullOrEmpty(clientJsonObject.InheritsFrom)
+            || !hasVanillaMainClass
+            || hasVanillaMainClass && hasTweakClass)
+            return false;
+
+        return true;
+    }
+
+    private static string ReplaceJsonWithJar(string clientJsonPath)
+    {
+        return clientJsonPath[..^"json".Length] + "jar"; // Replace .json with .jar file extension
     }
 }
