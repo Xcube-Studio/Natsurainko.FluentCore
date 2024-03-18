@@ -18,6 +18,7 @@ using PartialData = (
     string ClientJsonPath
     );
 
+// TODO: Consider upgrading to MinecraftInstanceManager?
 public class MinecraftInstanceParser
 {
     /// <summary>
