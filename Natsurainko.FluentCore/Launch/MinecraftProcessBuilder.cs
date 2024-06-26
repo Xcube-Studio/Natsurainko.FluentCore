@@ -69,7 +69,7 @@ public class MinecraftProcessBuilder
     /// <returns></returns>
     public IEnumerable<string> BuildArguments()
     {
-        // Null check before building argumetns
+        // Null check before building arguments
         if (!CanBuild())
             throw new InvalidOperationException("Missing required parameters");
 

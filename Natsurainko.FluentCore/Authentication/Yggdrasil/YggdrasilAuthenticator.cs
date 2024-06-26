@@ -84,7 +84,7 @@ public class YggdrasilAuthenticator
             if (response?.AvailableProfiles is null)
                 throw new FormatException("Response does not contain any profile");
         }
-        catch (Exception e) when (e is JsonException || e is FormatException)
+        catch (Exception e) // when (e is JsonException || e is FormatException)
         {
             throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
         }

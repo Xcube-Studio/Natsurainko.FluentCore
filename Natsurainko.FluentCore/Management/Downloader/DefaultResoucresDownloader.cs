@@ -81,6 +81,18 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
                     return;
                 }
 
+                if (task.IsCanceled)
+                {
+                    _errorDownload.Add(new DownloadResult
+                    {
+                        DownloadElement = e,
+                        Exception = task.Exception,
+                        IsFaulted = true
+                    });
+
+                    return;
+                }
+
                 var downloadResult = task.Result;
 
                 if (downloadResult.IsFaulted)
