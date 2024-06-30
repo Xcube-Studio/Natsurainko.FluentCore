@@ -121,9 +121,7 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
 
         transformManyBlock.Complete();
 
-        if (filteredLibraries is null || filteredAssets is null)
-            throw new Exception("filteredLibraries or filteredAssets is null");
-        DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);
+        DownloadElementsPosted?.Invoke(this, (filteredLibraries?.Count).GetValueOrDefault() + (filteredAssets?.Count).GetValueOrDefault());
 
         actionBlock.Completion.Wait();
 
