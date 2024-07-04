@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.GameManagement;
+namespace Nrk.FluentCore.Experimental.GameManagement;
 
 public enum MinecraftVersionType
 {

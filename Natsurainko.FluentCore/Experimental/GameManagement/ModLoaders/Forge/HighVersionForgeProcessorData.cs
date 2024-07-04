@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Forge;
 
 public record HighVersionForgeProcessorData
 {

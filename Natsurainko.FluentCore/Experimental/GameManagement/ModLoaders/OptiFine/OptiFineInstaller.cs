@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Management.ModLoaders;
+﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -10,7 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.OptiFine;
 
 public class OptiFineInstaller : ModLoaderInstallerBase
 {

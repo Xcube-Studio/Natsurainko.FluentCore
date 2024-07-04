@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.GameManagement.ModLoaders;
+﻿namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
 /// <summary>
 /// 表示一个模组加载信息

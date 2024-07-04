@@ -7,7 +7,8 @@ using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Nrk.FluentCore.Management;
-using Nrk.FluentCore.GameManagement.ModLoaders;
+using Nrk.FluentCore.Experimental.GameManagement;
+using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
 namespace Nrk.FluentCore.GameManagement;
 

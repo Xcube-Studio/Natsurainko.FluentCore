@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.GameManagement;
+namespace Nrk.FluentCore.Experimental.GameManagement;
 
 /// <summary>
 /// Data structure of client.json in .minecraft/versions/&lt;version&gt;. It is named &lt;game version&gt;.json in later versions.

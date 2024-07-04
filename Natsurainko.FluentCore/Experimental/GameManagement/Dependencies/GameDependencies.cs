@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Nrk.FluentCore.GameManagement;
+namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
 public abstract class GameDependency // TODO: Implement IDownloadable interface for downloading game dependencies
 {

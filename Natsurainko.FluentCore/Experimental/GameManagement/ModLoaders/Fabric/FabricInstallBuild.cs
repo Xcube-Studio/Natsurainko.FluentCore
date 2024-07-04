@@ -1,10 +1,11 @@
-﻿using Nrk.FluentCore.Management.ModLoaders;
+﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Management.Parsing;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Fabric;
 
 public record FabricInstallBuild
 {

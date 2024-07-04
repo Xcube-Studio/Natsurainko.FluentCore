@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
 public class InstallResult
 {

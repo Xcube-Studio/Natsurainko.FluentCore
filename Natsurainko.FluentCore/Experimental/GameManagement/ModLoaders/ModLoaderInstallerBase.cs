@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Nrk.FluentCore.GameManagement;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
 public abstract class ModLoaderInstallerBase : IModLoaderInstaller
 {

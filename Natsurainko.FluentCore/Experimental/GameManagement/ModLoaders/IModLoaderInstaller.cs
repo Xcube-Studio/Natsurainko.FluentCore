@@ -1,8 +1,9 @@
-﻿using Nrk.FluentCore.Management;
+﻿using Nrk.FluentCore.GameManagement;
+using Nrk.FluentCore.Management;
 using System;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.GameManagement.ModLoaders;
+namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
 public interface IModLoaderInstaller
 {
