@@ -74,7 +74,7 @@ public class MinecraftInstanceParser
 
                 // Add the parsed instance and the inherited instance (if not already parsed) to the list
                 _parsedInstances.Add(instance);
-                if (instance is ModifiedMinecraftInstance m && m.HasInheritence && !inheritedInstanceAlreadyFound)
+                if (instance is ModifiedMinecraftInstance m && m.HasInheritance && !inheritedInstanceAlreadyFound)
                     _parsedInstances.Add(m.InheritedMinecraftInstance);
             }
             catch (Exception) // TODO: Consider catching specific exceptions and display more detailed error types and info

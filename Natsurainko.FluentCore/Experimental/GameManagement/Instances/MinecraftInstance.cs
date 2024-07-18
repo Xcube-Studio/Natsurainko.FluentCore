@@ -81,7 +81,7 @@ public class ModifiedMinecraftInstance : MinecraftInstance
     /// If the instance inherits from another instance
     /// </summary>
     [MemberNotNullWhen(true, nameof(InheritedMinecraftInstance))]
-    public bool HasInheritence { get => InheritedMinecraftInstance is not null; }
+    public bool HasInheritance { get => InheritedMinecraftInstance is not null; }
 
     /// <summary>
     /// The instance from which this instance inherits

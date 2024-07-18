@@ -19,15 +19,15 @@ public abstract class GameDependency // TODO: Implement IDownloadable interface 
     /// <summary>
     /// Expected local path to the file from the base path
     /// </summary>
-    public abstract string FilePath { get; } // Generated from the dependency name and other metadata, depening on the type of dependency
+    public abstract string FilePath { get; } // Generated from the dependency name and other metadata, depending on the type of dependency
 
     /// <summary>
     /// URL to download the file
     /// </summary>
-    public abstract string Url { get; } // Generated from the dependency name and other metadata, depening on the type of dependency
+    public abstract string Url { get; } // Generated from the dependency name and other metadata, depending on the type of dependency
 
     /// <summary>
-    /// Expected size of the file
+    /// Expected size of the file in bytes
     /// </summary>
     public required int Size { get; init; }
 
@@ -42,16 +42,28 @@ public class GameLibrary : GameDependency
     /// <inheritdoc/>
     public override string BasePath => "libraries";
 
-    /// <summary>
-    /// Full package name of the Java library in the format "group_id:artifact_id:version[:classifier]"
-    /// </summary>
-    public required string MavenName { get; set; }
-
     /// <inheritdoc/>
     public override string FilePath => GetLibraryPath();
 
     /// <inheritdoc/>
     public override string Url => $"https://libraries.minecraft.net/{FilePath}";
+
+    /// <summary>
+    /// Full package name of the Java library in the format "group_id:artifact_id:version[:classifier]"
+    /// </summary>
+    public required string MavenName { get; init; }
+
+    // TODO: Quick accessors to package details
+
+    //public required string Domain { get; init; } = "";
+
+    //public required string Name { get; init; } = "";
+
+    //public required string Version { get; init; } = "";
+
+    //public string? Classifier { get; init; }
+
+    public bool IsNativeLibrary { get; init; }
 
     private string GetLibraryPath()
     {
@@ -78,16 +90,6 @@ public class GameLibrary : GameDependency
 
         return Path.Combine(path, filename);
     }
-
-    // TODO: More details of the library
-
-    //public required string Domain { get; init; } = "";
-
-    //public required string Name { get; init; } = "";
-
-    //public required string Version { get; init; } = "";
-
-    //public string? Classifier { get; init; }
 
     // <summary>
     // Parse a library from the full name of a Java library
