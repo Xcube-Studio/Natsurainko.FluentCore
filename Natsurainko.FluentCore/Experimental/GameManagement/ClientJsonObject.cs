@@ -271,3 +271,12 @@ internal class ClientJsonObject
         public string? Arch { get; set; }
     }
 }
+
+public record AssetJsonNode
+{
+    [JsonPropertyName("hash")]
+    public required string? Hash { get; set; }
+
+    [JsonPropertyName("size")]
+    public required int? Size { get; set; }
+}

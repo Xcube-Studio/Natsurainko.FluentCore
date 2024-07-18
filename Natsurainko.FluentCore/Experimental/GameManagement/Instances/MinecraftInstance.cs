@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
 
 namespace Nrk.FluentCore.GameManagement;
 
@@ -49,10 +50,66 @@ public abstract partial class MinecraftInstance
     /// </summary>
     public required string ClientJarPath { get; init; }
 
+    public required string AssetIndexJsonPath { get; init; }
+
+
+    // Replaces DefaultAssetParser.GetAssetIndexJson
+    public GameAssetIndex GetAssetIndex()
+    {
+        // Identify file paths
+        string clientJsonPath = ClientJsonPath;
+        string assetIndexJsonPath = AssetIndexJsonPath;
+        if (this is ModifiedMinecraftInstance { HasInheritance: true } instance)
+        {
+            clientJsonPath = instance.InheritedMinecraftInstance.ClientJsonPath;
+            assetIndexJsonPath = instance.InheritedMinecraftInstance.AssetIndexJsonPath;
+        }
+
+        // Parse client.json
+        JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(clientJsonPath));
+        AssstIndexJsonObject assetIndex = jsonNode?["assetIndex"]?.Deserialize<AssstIndexJsonObject>()
+            ?? throw new InvalidDataException("Error in parsing version.json");
+
+        // TODO: Handle nullable check in Json deserialization (requires .NET 9)
+        string id = assetIndex.Id ?? throw new InvalidDataException();
+        id = $"{id}.json";
+        string sha1 = assetIndex.Sha1 ?? throw new InvalidDataException();
+        int size = assetIndex.Size ?? throw new InvalidDataException();
+
+        return new GameAssetIndex
+        {
+            Id = id,
+            Sha1 = sha1,
+            Size = size
+        };
+    }
 
     public IEnumerable<GameAsset> GetRequiredAssets()
     {
-        throw new NotImplementedException();
+        // Identify file paths
+        string assetIndexJsonPath = AssetIndexJsonPath;
+        if (this is ModifiedMinecraftInstance { HasInheritance: true } instance)
+            assetIndexJsonPath = instance.InheritedMinecraftInstance.AssetIndexJsonPath;
+
+        // Parse asset index json
+        JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(assetIndexJsonPath));
+        Dictionary<string, AssetJsonNode> assets = jsonNode?["objects"]?
+            .Deserialize<Dictionary<string, AssetJsonNode>>()
+            ?? throw new InvalidDataException("Error in parsing asset index json file");
+
+        // Parse GameAsset objects
+        foreach (var (key, assetJsonNode) in assets)
+        {
+            string hash = assetJsonNode.Hash ?? throw new InvalidDataException("Invalid asset index");
+            int size = assetJsonNode.Size ?? throw new InvalidDataException();
+
+            yield return new GameAsset
+            {
+                Key = key,
+                Sha1 = hash,
+                Size = size
+            };
+        }
     }
 
     public IEnumerable<GameLibrary> GetRequiredLibraries()

@@ -16,7 +16,8 @@ namespace Nrk.FluentCore.GameManagement;
 using PartialData = (
     string VersionFolderName,
     string MinecraftFolderPath,
-    string ClientJsonPath
+    string ClientJsonPath,
+    string AssetIndexJsonPath
     );
 
 // TODO: Consider upgrading to MinecraftInstanceManager?
@@ -131,7 +132,12 @@ file static class ParsingHelpers
         string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
             ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
 
-        PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath);
+        // Asset index path
+        string assetIndexId = clientJsonObject.AssetIndex?.Id
+            ?? throw new InvalidDataException("Asset index ID does not exist in client.json");
+        string assetIndexJsonPath = Path.Combine(minecraftFolderPath, "assets", "indexes", $"{assetIndexId}.json");
+
+        PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath, assetIndexJsonPath);
 
         // Create MinecraftInstance
         return IsVanilla(clientJsonObject)
@@ -183,6 +189,7 @@ file static class ParsingHelpers
 
         return new VanillaMinecraftInstance
         {
+            AssetIndexJsonPath = partialData.AssetIndexJsonPath,
             VersionFolderName = partialData.VersionFolderName,
             Version = version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,
@@ -295,6 +302,7 @@ file static class ParsingHelpers
 
         return new ModifiedMinecraftInstance
         {
+            AssetIndexJsonPath = partialData.AssetIndexJsonPath,
             VersionFolderName = partialData.VersionFolderName,
             Version = (MinecraftVersion)version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,
