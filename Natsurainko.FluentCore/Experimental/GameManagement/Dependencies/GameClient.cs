@@ -10,10 +10,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 public class GameClient : GameDependency
 {
     /// <inheritdoc/>
-    public override string BasePath => "versions";
-
-    /// <inheritdoc/>
-    public override string FilePath => Path.Combine(ClientId, $"{ClientId}.jar");
+    public override string FilePath => Path.Combine("versions", ClientId, $"{ClientId}.jar");
 
     /// <inheritdoc/>
     public override string Url => _url;

@@ -77,6 +77,7 @@ public abstract partial class MinecraftInstance
 
         return new GameAssetIndex
         {
+            MinecraftFolderPath = MinecraftFolderPath,
             Id = id,
             Sha1 = sha1,
             Size = size
@@ -104,6 +105,7 @@ public abstract partial class MinecraftInstance
 
             yield return new GameAsset
             {
+                MinecraftFolderPath = MinecraftFolderPath,
                 Key = key,
                 Sha1 = hash,
                 Size = size
@@ -151,6 +153,7 @@ public abstract partial class MinecraftInstance
             // Add to the list of enabled libraries
             var gameLib = new GameLibrary(artifactNode.Url)
             {
+                MinecraftFolderPath = MinecraftFolderPath,
                 MavenName = libNode.MavenName,
                 Sha1 = artifactNode.Sha1,
                 Size = (int)artifactNode.Size,

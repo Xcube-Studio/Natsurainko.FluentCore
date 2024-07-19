@@ -1,12 +1,11 @@
-﻿namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+﻿using System.IO;
+
+namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
 public class GameAssetIndex : GameDependency
 {
     /// <inheritdoc/>
-    public override string BasePath => "assets/indexes";
-
-    /// <inheritdoc/>
-    public override string FilePath => $"{Id}.json";
+    public override string FilePath => Path.Combine("assets", "indexes", $"{Id}.json");
 
     /// <inheritdoc/>
     public override string Url => $"https://launchermeta.mojang.com/v1/packages/{Sha1}/{Id}.json";

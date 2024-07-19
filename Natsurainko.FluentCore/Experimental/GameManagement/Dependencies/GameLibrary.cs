@@ -7,13 +7,10 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 public class GameLibrary : GameDependency
 {
     /// <inheritdoc/>
-    public override string BasePath => "libraries";
+    public override string FilePath => Path.Combine("libraries", GetLibraryPath());
 
     /// <inheritdoc/>
-    public override string FilePath => GetLibraryPath();
-
-    /// <inheritdoc/>
-    //public override string Url => $"https://libraries.minecraft.net/{FilePath}";
+    //public override string Url => $"https://libraries.minecraft.net/{GetLibraryPath()}";
 
     public override string Url => _url;
 
@@ -34,7 +31,7 @@ public class GameLibrary : GameDependency
 
     //public string? Classifier { get; init; }
 
-    public bool IsNativeLibrary { get; init; }
+    public required bool IsNativeLibrary { get; init; }
 
     public GameLibrary(string url)
     {

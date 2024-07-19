@@ -67,6 +67,7 @@ public static class MinecraftInstanceExtensions
 
         return new GameClient(url)
         {
+            MinecraftFolderPath = instance.MinecraftFolderPath,
             ClientId = Path.GetFileNameWithoutExtension(clientJarPath),
             Size = (int)size,
             Sha1 = sha1
@@ -85,24 +86,21 @@ public static class MinecraftInstanceExtensions
 
         foreach (var lib in libs.Concat(nativeLibs))
         {
-            string libPath = Path.Combine(instance.MinecraftFolderPath, lib.BasePath, lib.FilePath);
-            if (File.Exists(libPath))
-                size += new FileInfo(libPath).Length;
+            if (File.Exists(lib.FullPath))
+                size += new FileInfo(lib.FullPath).Length;
             libCount++;
         }
 
         foreach (var asset in assets)
         {
             assetCount++;
-            string assetPath = Path.Combine(instance.MinecraftFolderPath, asset.BasePath, asset.FilePath);
-            if (File.Exists(assetPath))
+            if (File.Exists(asset.FullPath))
             {
-                size += new FileInfo(assetPath).Length;
+                size += new FileInfo(asset.FullPath).Length;
             }
         }
 
-        string assetIndexPath = Path.Combine(instance.MinecraftFolderPath, assetIndex.BasePath, assetIndex.FilePath);
-        size += new FileInfo(assetIndexPath).Length;
+        size += new FileInfo(assetIndex.FullPath).Length;
 
         if (File.Exists(instance.ClientJarPath))
             size += new FileInfo(instance.ClientJarPath).Length;
