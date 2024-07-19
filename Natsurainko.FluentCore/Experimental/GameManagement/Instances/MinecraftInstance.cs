@@ -1,6 +1,8 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement;
+﻿using Nrk.FluentCore.Environment;
+using Nrk.FluentCore.Experimental.GameManagement;
 using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -11,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
+using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 
 namespace Nrk.FluentCore.GameManagement;
 
@@ -52,6 +55,7 @@ public abstract partial class MinecraftInstance
 
     public required string AssetIndexJsonPath { get; init; }
 
+    #region Parse assets
 
     // Replaces DefaultAssetParser.GetAssetIndexJson
     public GameAssetIndex GetAssetIndex()
@@ -112,10 +116,142 @@ public abstract partial class MinecraftInstance
         }
     }
 
-    public IEnumerable<GameLibrary> GetRequiredLibraries()
+    #endregion
+
+    #region Parse libraries
+
+    public (IEnumerable<GameLibrary> Libraries, IEnumerable<GameLibrary> NativeLibraries) GetRequiredLibraries()
     {
-        throw new NotImplementedException();
+        List<GameLibrary> libs = new();
+        List<GameLibrary> nativeLibs = new();
+
+        var libNodes = JsonNodeUtils.ParseFile(ClientJsonPath)?["libraries"]?
+            .Deserialize<IEnumerable<LibraryJsonObject>>()
+            ?? throw new InvalidDataException("client.json does not contain library information");
+
+        foreach (var libNode in libNodes)
+        {
+            if (libNode is null)
+                continue;
+
+            // Check if a library is enabled
+            if (libNode.Rules is IEnumerable<OsRule> libRules)
+            {
+                if (!IsLibraryEnabled(libRules))
+                    continue;
+            }
+
+            // Check platform-specific library name
+            if (libNode.MavenName is null)
+                throw new InvalidDataException("Invalid library name");
+
+            if (libNode.NativeClassifierNames is not null)
+                libNode.MavenName += ":" + libNode.NativeClassifierNames[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
+
+            // Get SHA1 and URL of the library
+            DownloadArtifactJsonObject artifactNode = GetLibraryArtifactInfo(libNode);
+            if (artifactNode.Sha1 is null || artifactNode.Size is null || artifactNode.Url is null)
+                throw new InvalidDataException("Invalid artifact node");
+
+            // Add to the list of enabled libraries
+            var gameLib = new GameLibrary
+            {
+                MavenName = libNode.MavenName,
+                Sha1 = artifactNode.Sha1,
+                Size = (int)artifactNode.Size,
+                Url = artifactNode.Url,
+                IsNativeLibrary = libNode.NativeClassifierNames != null
+            };
+
+            if (gameLib.IsNativeLibrary)
+                nativeLibs.Add(gameLib);
+            else
+                libs.Add(gameLib);
+        }
+
+        return (libs, nativeLibs);
     }
+
+    // Check if a library is enabled on the current platform given its OS rules 
+    private static bool IsLibraryEnabled(IEnumerable<OsRule> rules)
+    {
+        bool windows, linux, osx;
+        windows = linux = osx = false;
+
+        foreach (var item in rules)
+        {
+            if (item.Action == "allow")
+            {
+                if (item.Os == null)
+                {
+                    windows = linux = osx = true;
+                    continue;
+                }
+
+                switch (item.Os.Name)
+                {
+                    case "windows":
+                        windows = true;
+                        break;
+                    case "linux":
+                        linux = true;
+                        break;
+                    case "osx":
+                        osx = true;
+                        break;
+                }
+            }
+            else if (item.Action == "disallow")
+            {
+                if (item.Os == null)
+                {
+                    windows = linux = osx = false;
+                    continue;
+                }
+
+                switch (item.Os.Name)
+                {
+                    case "windows":
+                        windows = false;
+                        break;
+                    case "linux":
+                        linux = false;
+                        break;
+                    case "osx":
+                        osx = false;
+                        break;
+                }
+            }
+        }
+
+        // TODO: Check OS version and architecture?
+
+        return EnvironmentUtils.PlatformName switch
+        {
+            "windows" => windows,
+            "linux" => linux,
+            "osx" => osx,
+            _ => false,
+        };
+    }
+
+    private static DownloadArtifactJsonObject GetLibraryArtifactInfo(LibraryJsonObject libNode)
+    {
+        if (libNode.DownloadInformation is null)
+            throw new InvalidDataException("The library does not contain download information");
+
+        DownloadArtifactJsonObject? artifact = libNode.DownloadInformation.Artifact;
+        if (libNode.NativeClassifierNames != null)
+        {
+            string nativeClassifier = libNode.NativeClassifierNames[EnvironmentUtils.PlatformName]
+                .Replace("${arch}", EnvironmentUtils.SystemArch);
+            artifact = libNode.DownloadInformation.Classifiers?[nativeClassifier];
+        }
+
+        return artifact ?? throw new InvalidDataException("Invalid artifact information");
+    }
+
+    #endregion
 }
 
 public class VanillaMinecraftInstance : MinecraftInstance { }

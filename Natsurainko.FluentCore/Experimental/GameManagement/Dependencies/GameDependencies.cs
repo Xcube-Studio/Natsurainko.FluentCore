@@ -24,7 +24,7 @@ public abstract class GameDependency // TODO: Implement IDownloadable interface 
     /// <summary>
     /// URL to download the file
     /// </summary>
-    public abstract string Url { get; } // Generated from the dependency name and other metadata, depending on the type of dependency
+    public abstract string Url { get; init; } // Generated from the dependency name and other metadata, depending on the type of dependency
 
     /// <summary>
     /// Expected size of the file in bytes
@@ -46,7 +46,9 @@ public class GameLibrary : GameDependency
     public override string FilePath => GetLibraryPath();
 
     /// <inheritdoc/>
-    public override string Url => $"https://libraries.minecraft.net/{FilePath}";
+    //public override string Url => $"https://libraries.minecraft.net/{FilePath}";
+
+    public required override string Url { get; init; }
 
     /// <summary>
     /// Full package name of the Java library in the format "group_id:artifact_id:version[:classifier]"
@@ -124,12 +126,17 @@ public class GameAsset : GameDependency
     public override string FilePath => $"{Sha1[0..2]}/{Sha1}";
 
     /// <inheritdoc/>
-    public override string Url => $"https://resources.download.minecraft.net/{FilePath}";
+    public override string Url { get; init; }
 
     /// <summary>
     /// Key of the asset
     /// </summary>
     public required string Key { get; set; }
+
+    public GameAsset()
+    {
+        Url = $"https://resources.download.minecraft.net/{FilePath}";
+    }
 }
 
 public class GameAssetIndex : GameDependency
@@ -141,10 +148,15 @@ public class GameAssetIndex : GameDependency
     public override string FilePath => $"{Id}.json";
 
     /// <inheritdoc/>
-    public override string Url => $"https://launchermeta.mojang.com/v1/packages/{Sha1}/{Id}.json";
+    public override string Url { get; init; }
 
     /// <summary>
     /// Asset index file ID
     /// </summary>
     public required string Id { get; set; }
+
+    public GameAssetIndex()
+    {
+        Url = $"https://launchermeta.mojang.com/v1/packages/{Sha1}/{Id}.json";
+    }
 }

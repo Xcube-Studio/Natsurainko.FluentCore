@@ -261,6 +261,15 @@ internal class ClientJsonObject
 
     internal class OsRule
     {
+        [JsonPropertyName("action")]
+        public string? Action { get; set; }
+
+        [JsonPropertyName("os")]
+        public Os? Os { get; set; }
+    }
+
+    internal class Os
+    {
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
