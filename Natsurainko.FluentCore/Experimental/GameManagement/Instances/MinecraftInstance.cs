@@ -251,13 +251,6 @@ public abstract partial class MinecraftInstance
 
 public class VanillaMinecraftInstance : MinecraftInstance { }
 
-/// <summary>
-/// Mod loader information
-/// </summary>
-/// <param name="Type">Type of a mod loader</param>
-/// <param name="Version">Version of a mod loader</param>
-public record struct ModLoaderInfo(ModLoaderType Type, string Version);
-
 public class ModifiedMinecraftInstance : MinecraftInstance
 {
     /// <summary>

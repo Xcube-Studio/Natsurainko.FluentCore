@@ -32,6 +32,20 @@ public abstract class GameDependency // TODO: Implement IDownloadable interface 
     public required string Sha1 { get; init; }
 }
 
+public class GameClient : GameDependency
+{
+    /// <inheritdoc/>
+    public override string BasePath => "versions";
+
+    /// <inheritdoc/>
+    public override string FilePath => Path.Combine(ClientId, $"{ClientId}.jar");
+
+    /// <inheritdoc/>
+    public required override string Url { get; init; }
+
+    public required string ClientId { get; init; }
+}
+
 public class GameLibrary : GameDependency
 {
     /// <inheritdoc/>
