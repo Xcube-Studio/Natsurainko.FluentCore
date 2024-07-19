@@ -1,5 +1,4 @@
-﻿using Nrk.FluentCore.GameManagement;
-using Nrk.FluentCore.Management;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using System;
 using System.Threading.Tasks;
 

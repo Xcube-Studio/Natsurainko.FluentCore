@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
+using System;
 using System.Threading.Tasks;
-using Nrk.FluentCore.GameManagement;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
