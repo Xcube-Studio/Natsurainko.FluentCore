@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Quilt;
 
-public class QuiltInstaller : ModLoaderInstallerBase
+public class QuiltInstaller : ModLoaderInstaller
 {
     public required QuiltInstallBuild QuiltBuild { get; set; }
 
-    public override Task<InstallResult> ExecuteAsync() =>
+    public override Task<InstallationResult> ExecuteAsync() =>
         Task.Run(() =>
             {
                 ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries);
@@ -26,14 +26,14 @@ public class QuiltInstaller : ModLoaderInstallerBase
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
-                    return new InstallResult
+                    return new InstallationResult
                     {
                         Success = false,
                         Exception = task.Exception,
                         Log = null
                     };
 
-                return new InstallResult
+                return new InstallationResult
                 {
                     Success = true,
                     Exception = null,
@@ -44,7 +44,7 @@ public class QuiltInstaller : ModLoaderInstallerBase
     void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.quiltmc.org/v3/versions/loader/{InheritedFrom.VersionFolderName}/{QuiltBuild.BuildVersion}/profile/json"
+            $"https://meta.quiltmc.org/v3/versions/loader/{InheritedInstance.VersionFolderName}/{QuiltBuild.BuildVersion}/profile/json"
         );
         var node = JsonNode.Parse(responseMessage.Content.ReadAsString()) ?? throw new Exception("Version info is null");
         versionInfoJson = node;
@@ -53,7 +53,7 @@ public class QuiltInstaller : ModLoaderInstallerBase
 
         libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
             lib,
-            InheritedFrom.MinecraftFolderPath
+            InheritedInstance.MinecraftFolderPath
         );
     }
 
@@ -75,7 +75,7 @@ public class QuiltInstaller : ModLoaderInstallerBase
         if (string.IsNullOrEmpty(id))
             throw new Exception("Version ID is null or empty");
 
-        var jsonFile = new FileInfo(Path.Combine(InheritedFrom.MinecraftFolderPath, "versions", id, $"{id}.json"));
+        var jsonFile = new FileInfo(Path.Combine(InheritedInstance.MinecraftFolderPath, "versions", id, $"{id}.json"));
 
         if (jsonFile.Directory is null)
             throw new Exception("Version directory is null");

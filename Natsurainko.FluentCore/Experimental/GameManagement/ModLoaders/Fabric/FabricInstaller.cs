@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Fabric;
 
-public class FabricInstaller : ModLoaderInstallerBase
+public class FabricInstaller : ModLoaderInstaller
 {
     public required FabricInstallBuild FabricBuild { get; set; }
 
-    public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
+    public override Task<InstallationResult> ExecuteAsync() => Task.Run(() =>
         {
             ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries);
 
@@ -25,14 +25,14 @@ public class FabricInstaller : ModLoaderInstallerBase
         .ContinueWith(task =>
         {
             if (task.IsFaulted)
-                return new InstallResult
+                return new InstallationResult
                 {
                     Success = false,
                     Exception = task.Exception,
                     Log = null
                 };
 
-            return new InstallResult
+            return new InstallationResult
             {
                 Success = true,
                 Exception = null,
@@ -43,7 +43,7 @@ public class FabricInstaller : ModLoaderInstallerBase
     void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedFrom.VersionFolderName}/{FabricBuild.BuildVersion}/profile/json"
+            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedInstance.VersionFolderName}/{FabricBuild.BuildVersion}/profile/json"
         );
         versionInfoJson =
             JsonNode.Parse(responseMessage.Content.ReadAsString())
@@ -55,7 +55,7 @@ public class FabricInstaller : ModLoaderInstallerBase
 
         libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
             librariesJson.AsArray(),
-            InheritedFrom.MinecraftFolderPath
+            InheritedInstance.MinecraftFolderPath
         );
     }
 
@@ -79,7 +79,7 @@ public class FabricInstaller : ModLoaderInstallerBase
 
         var jsonFile = new FileInfo(
             Path.Combine(
-                InheritedFrom.MinecraftFolderPath,
+                InheritedInstance.MinecraftFolderPath,
                 "versions",
                 id.GetValue<string>(),
                 $"{id.GetValue<string>()}.json"

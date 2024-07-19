@@ -8,9 +8,9 @@ public interface IModLoaderInstaller
 {
     string AbsoluteId { get; }
 
-    MinecraftInstance InheritedFrom { get; }
+    MinecraftInstance InheritedInstance { get; }
 
     event EventHandler<double> ProgressChanged;
 
-    Task<InstallResult> ExecuteAsync();
+    Task<InstallationResult> ExecuteAsync();
 }

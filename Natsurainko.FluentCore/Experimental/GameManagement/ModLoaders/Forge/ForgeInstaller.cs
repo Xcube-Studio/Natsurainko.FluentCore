@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Forge;
 
-public class ForgeInstaller : ModLoaderInstallerBase
+public class ForgeInstaller : ModLoaderInstaller
 {
     public required string JavaPath { get; set; }
 
@@ -23,7 +23,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
     private readonly Dictionary<string, List<string>> _outputs = new();
     private readonly Dictionary<string, List<string>> _errorOutputs = new();
 
-    public override Task<InstallResult> ExecuteAsync() => Task.Run(() =>
+    public override Task<InstallationResult> ExecuteAsync() => Task.Run(() =>
     {
         ParsePackage(
             out ZipArchive packageArchive,
@@ -48,14 +48,14 @@ public class ForgeInstaller : ModLoaderInstallerBase
     }).ContinueWith(task =>
     {
         if (task.IsFaulted || _errorOutputs.Count > 0)
-            return new InstallResult
+            return new InstallationResult
             {
                 Success = false,
                 Exception = task.Exception,
                 //Log = _errorOutputs
             };
 
-        return new InstallResult
+        return new InstallationResult
         {
             Success = true,
             Exception = null,
@@ -113,7 +113,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         libraries = new List<LibraryElement>();
         if (versionInfoJson["libraries"]?.AsArray() is JsonArray arr)
         {
-            var libs = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(arr, InheritedFrom.MinecraftFolderPath);
+            var libs = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(arr, InheritedInstance.MinecraftFolderPath);
             libraries.AddRange(libs);
         }
 
@@ -131,7 +131,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         {
             var libs = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
                 profileLibArr,
-                InheritedFrom.MinecraftFolderPath
+                InheritedInstance.MinecraftFolderPath
             );
             libraries.AddRange(libs);
         }
@@ -150,7 +150,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
             .GetValue<string>()
             ?? throw new Exception("Failed to parse Minecraft version");
 
-        var jarPath = InheritedFrom.ClientJarPath?.ToPathParameter()
+        var jarPath = InheritedInstance.ClientJarPath?.ToPathParameter()
             ?? throw new Exception("Failed to parse Minecraft jar path");
 
         var replaceValues = new Dictionary<string, string>
@@ -158,9 +158,9 @@ public class ForgeInstaller : ModLoaderInstallerBase
             { "{SIDE}", "client" },
             { "{MINECRAFT_JAR}", jarPath },
             { "{MINECRAFT_VERSION}", mcVer },
-            { "{ROOT}", InheritedFrom.MinecraftFolderPath.ToPathParameter() },
+            { "{ROOT}", InheritedInstance.MinecraftFolderPath.ToPathParameter() },
             { "{INSTALLER}", PackageFilePath.ToPathParameter() },
-            { "{LIBRARY_DIR}", Path.Combine(InheritedFrom.MinecraftFolderPath, "libraries").ToPathParameter() }
+            { "{LIBRARY_DIR}", Path.Combine(InheritedInstance.MinecraftFolderPath, "libraries").ToPathParameter() }
         };
 
         var replaceProcessorArgs = highVersionForgeDataDictionary.ToDictionary(
@@ -170,7 +170,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
                 if (!value.StartsWith('[')) return value;
 
                 return Path.Combine(
-                    InheritedFrom.MinecraftFolderPath,
+                    InheritedInstance.MinecraftFolderPath,
                     "libraries",
                     StringExtensions.FormatLibraryNameToRelativePath(value.TrimStart('[').TrimEnd(']')))
                     .ToPathParameter();
@@ -189,7 +189,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
                 {
                     if (x.StartsWith("["))
                         return Path.Combine(
-                            InheritedFrom.MinecraftFolderPath,
+                            InheritedInstance.MinecraftFolderPath,
                             "libraries",
                             StringExtensions.FormatLibraryNameToRelativePath(x.TrimStart('[').TrimEnd(']')))
                             .ToPathParameter();
@@ -226,7 +226,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         OnProgressChanged(0.6);
 
         string forgeLibsFolder = Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "libraries\\net\\minecraftforge\\forge",
             _forgeVersion);
 
@@ -253,7 +253,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
             ?? throw new Exception("Failed to parse id");
 
         var jsonFile = new FileInfo(Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "versions",
             id,
             $"{id}.json"));
@@ -281,7 +281,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
         foreach (var processor in _highVersionForgeProcessors)
         {
             var fileName = Path.Combine(
-                InheritedFrom.MinecraftFolderPath,
+                InheritedInstance.MinecraftFolderPath,
                 "libraries",
                 StringExtensions.FormatLibraryNameToRelativePath(processor.Jar));
 
@@ -296,7 +296,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
 
             string classPath = string.Join(Path.PathSeparator.ToString(), new List<string>() { fileName }
                 .Concat(processor.Classpath.Select(x => Path.Combine(
-                    InheritedFrom.MinecraftFolderPath,
+                    InheritedInstance.MinecraftFolderPath,
                     "libraries",
                     StringExtensions.FormatLibraryNameToRelativePath(x)))));
 
@@ -313,7 +313,7 @@ public class ForgeInstaller : ModLoaderInstallerBase
             {
                 Arguments = string.Join(" ", args),
                 UseShellExecute = false,
-                WorkingDirectory = InheritedFrom.MinecraftFolderPath,
+                WorkingDirectory = InheritedInstance.MinecraftFolderPath,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true
             }) ?? throw new Exception("Failed to start Java");

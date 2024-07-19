@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
-public class InstallResult
+public class InstallationResult
 {
     public bool Success { get; set; }
 

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.OptiFine;
 
-public class OptiFineInstaller : ModLoaderInstallerBase
+public class OptiFineInstaller : ModLoaderInstaller
 {
     public required string JavaPath { get; set; }
 
@@ -20,7 +20,7 @@ public class OptiFineInstaller : ModLoaderInstallerBase
     private readonly List<string> _outputs = new();
     private readonly List<string> _errorOutputs = new();
 
-    public override Task<InstallResult> ExecuteAsync() =>
+    public override Task<InstallationResult> ExecuteAsync() =>
         Task.Run(() =>
             {
                 ParsePackage(
@@ -45,14 +45,14 @@ public class OptiFineInstaller : ModLoaderInstallerBase
             .ContinueWith(task =>
             {
                 if (task.IsFaulted || _errorOutputs.Count > 0)
-                    return new InstallResult
+                    return new InstallationResult
                     {
                         Success = false,
                         Exception = task.Exception,
                         Log = _errorOutputs
                     };
 
-                return new InstallResult
+                return new InstallationResult
                 {
                     Success = true,
                     Exception = null,
@@ -117,25 +117,25 @@ public class OptiFineInstaller : ModLoaderInstallerBase
         };
 
         var jsonFilePath = Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "versions",
             jsonEntity.id,
             $"{jsonEntity.id}.json"
         );
         var jarFilePath = Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "versions",
             jsonEntity.id,
             $"{jsonEntity.id}.jar"
         );
         var launchwrapperFile = Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "libraries",
             StringExtensions.FormatLibraryNameToRelativePath(jsonEntity.libraries[1].Name)
         );
 
         optifineLibraryPath = Path.Combine(
-            InheritedFrom.MinecraftFolderPath,
+            InheritedInstance.MinecraftFolderPath,
             "libraries",
             StringExtensions.FormatLibraryNameToRelativePath(jsonEntity.libraries[0].Name)
         );
@@ -167,10 +167,10 @@ public class OptiFineInstaller : ModLoaderInstallerBase
             throw new Exception("Invalid OptiFine package");
         jar.ExtractToFile(launchwrapperFile, true);
 
-        if (InheritedFrom.ClientJarPath is null || !File.Exists(InheritedFrom.ClientJarPath))
+        if (InheritedInstance.ClientJarPath is null || !File.Exists(InheritedInstance.ClientJarPath))
             throw new Exception("Invalid Minecraft jar");
 
-        File.Copy(InheritedFrom.ClientJarPath, jarFilePath, true);
+        File.Copy(InheritedInstance.ClientJarPath, jarFilePath, true);
 
         OnProgressChanged(0.6);
     }
@@ -178,14 +178,14 @@ public class OptiFineInstaller : ModLoaderInstallerBase
     private void RunProcessor(string optifineLibraryPath)
     {
         OnProgressChanged(0.65);
-        if (InheritedFrom.ClientJarPath is null || !File.Exists(InheritedFrom.ClientJarPath))
+        if (InheritedInstance.ClientJarPath is null || !File.Exists(InheritedInstance.ClientJarPath))
             throw new Exception("Invalid Minecraft jar");
 
         using var process = Process.Start(
             new ProcessStartInfo(JavaPath)
             {
                 UseShellExecute = false,
-                WorkingDirectory = InheritedFrom.MinecraftFolderPath,
+                WorkingDirectory = InheritedInstance.MinecraftFolderPath,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 Arguments = string.Join(
@@ -195,7 +195,7 @@ public class OptiFineInstaller : ModLoaderInstallerBase
                         "-cp",
                         PackageFilePath.ToPathParameter(),
                         "optifine.Patcher",
-                        InheritedFrom.ClientJarPath.ToPathParameter(),
+                        InheritedInstance.ClientJarPath.ToPathParameter(),
                         PackageFilePath.ToPathParameter(),
                         optifineLibraryPath.ToPathParameter()
                     }
