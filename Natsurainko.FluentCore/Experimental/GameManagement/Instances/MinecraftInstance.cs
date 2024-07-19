@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 
-namespace Nrk.FluentCore.GameManagement;
+namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 
 public abstract partial class MinecraftInstance
 {

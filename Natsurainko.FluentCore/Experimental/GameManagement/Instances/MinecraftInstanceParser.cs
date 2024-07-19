@@ -6,11 +6,9 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Nrk.FluentCore.Management;
-using Nrk.FluentCore.Experimental.GameManagement;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 
-namespace Nrk.FluentCore.GameManagement;
+namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 
 // Temporary data structure for parsing Minecraft instances
 using PartialData = (
