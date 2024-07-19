@@ -65,12 +65,11 @@ public static class MinecraftInstanceExtensions
         if (sha1 is null || url is null || size is null)
             throw new InvalidDataException("Invalid client info");
 
-        return new GameClient
+        return new GameClient(url)
         {
             ClientId = Path.GetFileNameWithoutExtension(clientJarPath),
             Size = (int)size,
-            Sha1 = sha1,
-            Url = url
+            Sha1 = sha1
         };
     }
 

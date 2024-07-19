@@ -149,12 +149,11 @@ public abstract partial class MinecraftInstance
                 throw new InvalidDataException("Invalid artifact node");
 
             // Add to the list of enabled libraries
-            var gameLib = new GameLibrary
+            var gameLib = new GameLibrary(artifactNode.Url)
             {
                 MavenName = libNode.MavenName,
                 Sha1 = artifactNode.Sha1,
                 Size = (int)artifactNode.Size,
-                Url = artifactNode.Url,
                 IsNativeLibrary = libNode.NativeClassifierNames != null
             };
 
