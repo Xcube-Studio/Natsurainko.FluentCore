@@ -69,7 +69,7 @@ public class MinecraftProcessBuilder
     /// <returns></returns>
     public IEnumerable<string> BuildArguments()
     {
-        // Null check before building argumetns
+        // Null check before building arguments
         if (!CanBuild())
             throw new InvalidOperationException("Missing required parameters");
 
@@ -130,7 +130,7 @@ public class MinecraftProcessBuilder
             { "${auth_uuid}" ,_account.Uuid.ToString("N") },
             { "${user_type}" , _account.Type.Equals(AccountType.Microsoft) ? "MSA" : "Mojang" },
             { "${user_properties}" , "{}" },
-            { "${version_name}" , GameInfo.AbsoluteId },
+            { "${version_name}" , GameInfo.AbsoluteId.ToPathParameter() },
             { "${version_type}" , GameInfo.Type ?? "" },
             { "${game_assets}" , _assetsFolder.ToPathParameter() },
             { "${assets_root}" , _assetsFolder.ToPathParameter() },

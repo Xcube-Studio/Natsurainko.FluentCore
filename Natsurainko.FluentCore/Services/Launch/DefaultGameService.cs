@@ -79,6 +79,8 @@ public class DefaultGameService : IGameService
         if (newFolder == null)
         {
             _games.Clear();
+            ActivateGame(null);
+
             return;
         }
 

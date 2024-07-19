@@ -81,6 +81,18 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
                     return;
                 }
 
+                if (task.IsCanceled)
+                {
+                    _errorDownload.Add(new DownloadResult
+                    {
+                        DownloadElement = e,
+                        Exception = task.Exception,
+                        IsFaulted = true
+                    });
+
+                    return;
+                }
+
                 var downloadResult = task.Result;
 
                 if (downloadResult.IsFaulted)
@@ -109,9 +121,7 @@ public class DefaultResourcesDownloader : BaseResourcesDownloader
 
         transformManyBlock.Complete();
 
-        if (filteredLibraries is null || filteredAssets is null)
-            throw new Exception("filteredLibraries or filteredAssets is null");
-        DownloadElementsPosted?.Invoke(this, filteredLibraries.Count + filteredAssets.Count);
+        DownloadElementsPosted?.Invoke(this, (filteredLibraries?.Count).GetValueOrDefault() + (filteredAssets?.Count).GetValueOrDefault());
 
         actionBlock.Completion.Wait();
 
