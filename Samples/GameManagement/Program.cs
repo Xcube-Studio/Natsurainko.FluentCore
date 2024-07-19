@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.GameManagement;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
 
 var mcFolderPath = @"C:\Users\jinch\Saved Games\Minecraft\.minecraft";
 var minecraftInstanceParser = new MinecraftInstanceParser(mcFolderPath);
