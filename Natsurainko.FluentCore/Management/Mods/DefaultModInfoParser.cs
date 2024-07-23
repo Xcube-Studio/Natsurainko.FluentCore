@@ -64,11 +64,15 @@ public static class DefaultModInfoParser
         mod.DisplayName = jsonNode["name"]?.GetValue<string>();
         mod.Version = jsonNode["version"]?.GetValue<string>();
         mod.Description = jsonNode["description"]?.GetValue<string>();
-        mod.Authors = jsonNode["authors"]
-            ?.AsArray()
-            .Where(x => x?.GetValue<string>() is not null)
-            .Select(x => x?.GetValue<string>()!)
-            .ToArray();
+
+        try
+        {
+            mod.Authors = jsonNode["authors"]
+                ?.AsArray()
+                .Where(x => x?.GetValue<string>() is not null)
+                .Select(x => x?.GetValue<string>()!)
+                .ToArray();
+        } catch { }
 
         return mod;
     }
