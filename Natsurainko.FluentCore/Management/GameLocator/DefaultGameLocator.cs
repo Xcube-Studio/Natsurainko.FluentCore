@@ -48,12 +48,13 @@ public class DefaultGameLocator(string folder) : IGameLocator
             GameInfo gameInfo = new()
             {
                 AbsoluteId = jsonEntity.Id,
-                Name = jsonEntity.Id,
                 Type = jsonEntity.Type,
                 IsInheritedFrom = false,
                 MinecraftFolderPath = MinecraftFolderPath,
                 VersionJsonPath = jsonFile.FullName
             };
+
+            gameInfo.Name = GetName(gameInfo, jsonEntity);
 
             if (jsonEntity.AssetIndex != null)
                 gameInfo.AssetsIndexJsonPath = Path.Combine(MinecraftFolderPath, "assets", "indexes", $"{jsonEntity.AssetIndex?.Id}.json");
@@ -115,12 +116,13 @@ public class DefaultGameLocator(string folder) : IGameLocator
             var gameInfo = new GameInfo
             {
                 AbsoluteId = jsonEntity.Id,
-                Name = jsonEntity.Id,
                 Type = jsonEntity.Type,
                 IsInheritedFrom = false,
                 MinecraftFolderPath = MinecraftFolderPath,
                 VersionJsonPath = jsonFile.FullName
             };
+
+            gameInfo.Name = GetName(gameInfo, jsonEntity);
 
             var assetsIndexFile = Path.Combine(MinecraftFolderPath, "assets", "indexes", $"{jsonEntity.AssetIndex?.Id}.json");
             var jarFile = jsonFile.FullName.Replace(".json", ".jar");
@@ -177,12 +179,13 @@ public class DefaultGameLocator(string folder) : IGameLocator
         var gameInfo = new GameInfo
         {
             AbsoluteId = jsonEntity.Id,
-            Name = jsonEntity.Id,
             Type = jsonEntity.Type,
             IsInheritedFrom = false,
             MinecraftFolderPath = MinecraftFolderPath,
             VersionJsonPath = jsonFile.FullName
         };
+
+        gameInfo.Name = GetName(gameInfo, jsonEntity);
 
         var assetsIndexFile = Path.Combine(MinecraftFolderPath, "assets", "indexes", $"{jsonEntity.AssetIndex?.Id}.json");
         var jarFile = jsonFile.FullName.Replace(".json", ".jar");

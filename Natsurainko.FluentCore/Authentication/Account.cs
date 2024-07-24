@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Authentication;
 
@@ -27,6 +28,9 @@ public enum AccountType
 /// <param name="Name">用户名</param>
 /// <param name="Uuid">UUID</param>
 /// <param name="AccessToken">AccessToken</param>
+[JsonDerivedType(typeof(OfflineAccount), typeDiscriminator: "offline")]
+[JsonDerivedType(typeof(MicrosoftAccount), typeDiscriminator: "microsoft")]
+[JsonDerivedType(typeof(YggdrasilAccount), typeDiscriminator: "yggdrasil")]
 public abstract record Account(string Name, Guid Uuid, string AccessToken)
 {
     /// <summary>
