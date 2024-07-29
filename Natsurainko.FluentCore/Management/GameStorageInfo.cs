@@ -1,12 +1,9 @@
-﻿using Nrk.FluentCore.Management.ModLoaders;
-using System.Collections.Generic;
-
-namespace Nrk.FluentCore.Management;
+﻿namespace Nrk.FluentCore.Management;
 
 /// <summary>
-/// 游戏统计数据
+/// 游戏存储统计
 /// </summary>
-public record GameStatisticInfo
+public record GameStorageInfo
 {
     /// <summary>
     /// 依赖库文件数
@@ -22,9 +19,4 @@ public record GameStatisticInfo
     /// 共计占用磁盘空间大小
     /// </summary>
     public long TotalSize { get; set; }
-
-    /// <summary>
-    /// 加载器
-    /// </summary>
-    public IEnumerable<ModLoaderInfo>? ModLoaders { get; set; }
 }

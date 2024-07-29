@@ -12,7 +12,7 @@ using Tomlyn.Model;
 
 namespace Nrk.FluentCore.Management.Mods;
 
-public static class DefaultModInfoParser
+public static class ModInfoParser
 {
     public static ModInfo Parse(string filePath)
     {

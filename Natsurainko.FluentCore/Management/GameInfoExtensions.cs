@@ -86,7 +86,7 @@ public static class GameInfoExtensions
         }
     }
 
-    public static GameStatisticInfo GetStatisticInfo(this GameInfo gameInfo)
+    public static GameStorageInfo GetStorageInfo(this GameInfo gameInfo)
     {
         var libraryParser = new DefaultLibraryParser(gameInfo);
         libraryParser.EnumerateLibraries(out var enabledLibraries, out var enabledNativesLibraries);
@@ -127,12 +127,11 @@ public static class GameInfoExtensions
 
         length += new FileInfo(gameInfo.VersionJsonPath).Length;
 
-        return new GameStatisticInfo
+        return new GameStorageInfo
         {
             AssetsCount = assets,
             LibrariesCount = enabledLibraries.Count,
-            TotalSize = length,
-            ModLoaders = gameInfo.GetModLoaders()
+            TotalSize = length
         };
     }
 

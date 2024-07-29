@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.Mods;
 
-public class DefaultModsManager : BaseModsManager
+public class ModsManager
 {
-    private readonly List<(Exception, string)> _errorMods = new();
+    protected readonly string _modsFolder;
+
+    private readonly List<(Exception, string)> _errorMods = [];
     public List<(Exception, string)> ErrorMods => _errorMods;
 
-    public DefaultModsManager(string modsFolder)
-        : base(modsFolder) { }
+    public ModsManager(string modsFolder)
+    {
+        _modsFolder = modsFolder;
+    }
 
-    public override IEnumerable<ModInfo> EnumerateMods()
+    public async IAsyncEnumerable<ModInfo> EnumerateModsAsync()
     {
         foreach (var file in Directory.EnumerateFiles(_modsFolder))
         {
@@ -21,31 +26,28 @@ public class DefaultModsManager : BaseModsManager
             if (!(fileExtension.Equals(".jar") || fileExtension.Equals(".disabled")))
                 continue;
 
-            ModInfo? modInfo = null;
+            ModInfo modInfo = default!;
 
-            try
+            await Task.Run(() => modInfo = ModInfoParser.Parse(file)).ContinueWith(task => 
             {
-                modInfo = DefaultModInfoParser.Parse(file);
-            }
-            catch (Exception ex)
-            {
-                _errorMods.Add((ex, file));
-
-                modInfo = new ModInfo
+                if (task.IsFaulted)
                 {
-                    AbsolutePath = file,
-                    DisplayName = Path.GetFileNameWithoutExtension(file),
-                    IsEnabled = Path.GetExtension(file).Equals(".jar")
-                };
-            }
+                    modInfo = new ModInfo
+                    {
+                        AbsolutePath = file,
+                        DisplayName = Path.GetFileNameWithoutExtension(file),
+                        IsEnabled = Path.GetExtension(file).Equals(".jar")
+                    };
+                }
+            });
 
             yield return modInfo;
         }
     }
 
-    public override void Delete(ModInfo modInfo) => File.Delete(modInfo.AbsolutePath);
+    public void Delete(ModInfo modInfo) => File.Delete(modInfo.AbsolutePath);
 
-    public override void Switch(ModInfo modInfo, bool isEnable)
+    public void Switch(ModInfo modInfo, bool isEnable)
     {
         var originalPath = modInfo.AbsolutePath;
 
