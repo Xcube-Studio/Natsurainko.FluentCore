@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Management.Mods;
 
-public class ModsManager
+public class ModManager
 {
     protected readonly string _modsFolder;
 
     private readonly List<(Exception, string)> _errorMods = [];
     public List<(Exception, string)> ErrorMods => _errorMods;
 
-    public ModsManager(string modsFolder)
+    public ModManager(string modsFolder)
     {
         _modsFolder = modsFolder;
     }
