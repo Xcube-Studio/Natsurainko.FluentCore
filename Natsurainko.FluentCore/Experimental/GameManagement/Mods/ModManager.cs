@@ -1,4 +1,7 @@
-﻿using System;
+﻿/**
+ * This module is outdated and should be updated to the latest stable version of FluentCore.
+ */
+using System;
 using System.Collections.Generic;
 using System.IO;
 

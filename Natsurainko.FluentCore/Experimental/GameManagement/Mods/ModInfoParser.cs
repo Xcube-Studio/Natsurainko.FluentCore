@@ -1,4 +1,7 @@
-﻿using Nrk.FluentCore.Management.ModLoaders;
+﻿/**
+ * This module is outdated and should be updated to the latest stable version of FluentCore.
+ */
+using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
