@@ -23,59 +23,6 @@ public enum DownloadStatus
     Cancelled
 }
 
-public class DownloadTask
-{
-    public string Url { get; init; }
-    public string LocalPath { get; init; }
-
-    // Replace with a type union in future C# versions
-    public DownloadStatus Status { get; private set; } = DownloadStatus.Preparing;
-    public long? TotalBytes { get; private set; } = -1; // Set when Status is Downloading | Completed | Failed | Cancelled
-    public Exception? Exception { get; private set; } = null; // Set when Status is Failed
-
-    private long _downloadedBytes = 0;
-    public long DownloadedBytes { get => _downloadedBytes; }
-
-    public Task Task { get; init; }
-
-    public DownloadTask(string url, string localPath, MultipartDownloader downloader, CancellationToken cancellationToken = default)
-    {
-        Url = url;
-        LocalPath = localPath;
-        var progress = new Progress<int>(bytesDownloaded =>
-        {
-            Interlocked.Add(ref _downloadedBytes, bytesDownloaded);
-        });
-        Task = DownloadFileAsync(downloader, FileSizeRetrievedCallback, progress, cancellationToken);
-    }
-
-    private async Task DownloadFileAsync(MultipartDownloader downloader, Action<long?> fileSizeRetrievedCallback, IProgress<int> progress, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await downloader.DownloadFileAsync(Url, LocalPath, fileSizeRetrievedCallback, progress, cancellationToken);
-            Status = DownloadStatus.Completed;
-        }
-        catch (TaskCanceledException)
-        {
-            Status = DownloadStatus.Cancelled;
-        }
-        catch (Exception e)
-        {
-            Status = DownloadStatus.Failed;
-            Exception = e.InnerException ?? e;
-        }
-    }
-
-    private void FileSizeRetrievedCallback(long? fileSize)
-    {
-        TotalBytes = fileSize;
-        Status = DownloadStatus.Downloading;
-    }
-
-    public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
-}
-
 public class MultipartDownloader
 {
     // Downloader config
@@ -90,6 +37,64 @@ public class MultipartDownloader
         _httpClient = httpClient ?? HttpUtils.HttpClient;
         _chunkSize = chunkSize;
         _maxConcurrentThreads = maxConcurrentThreads;
+    }
+
+    private class DownloadTask : IDownloadTask
+    {
+        public string Url { get; init; }
+        public string LocalPath { get; init; }
+
+        // Replace with a type union in future C# versions
+        public DownloadStatus Status { get; private set; } = DownloadStatus.Preparing;
+        public long? TotalBytes { get; private set; } = -1; // Set when Status is Downloading | Completed | Failed | Cancelled
+        public Exception? Exception { get; private set; } = null; // Set when Status is Failed
+
+        private long _downloadedBytes = 0;
+        public long DownloadedBytes { get => _downloadedBytes; }
+
+        public Task Task { get; init; }
+
+        public DownloadTask(string url, string localPath, MultipartDownloader downloader, CancellationToken cancellationToken = default)
+        {
+            Url = url;
+            LocalPath = localPath;
+            var progress = new Progress<int>(bytesDownloaded =>
+            {
+                Interlocked.Add(ref _downloadedBytes, bytesDownloaded);
+            });
+            Task = DownloadFileAsync(downloader, FileSizeRetrievedCallback, progress, cancellationToken);
+        }
+
+        private async Task DownloadFileAsync(MultipartDownloader downloader, Action<long?> fileSizeRetrievedCallback, IProgress<int> progress, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await downloader.DownloadFileAsync(Url, LocalPath, fileSizeRetrievedCallback, progress, cancellationToken);
+                Status = DownloadStatus.Completed;
+            }
+            catch (TaskCanceledException)
+            {
+                Status = DownloadStatus.Cancelled;
+            }
+            catch (Exception e)
+            {
+                Status = DownloadStatus.Failed;
+                Exception = e.InnerException ?? e;
+            }
+        }
+
+        private void FileSizeRetrievedCallback(long? fileSize)
+        {
+            TotalBytes = fileSize;
+            Status = DownloadStatus.Downloading;
+        }
+
+        public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
+    }
+
+    public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken = default)
+    {
+        return new DownloadTask(url, localPath, this, cancellationToken);
     }
 
     public async Task DownloadFileAsync(string url, string localPath, Action<long?>? fileSizeRetrievedCallback = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
@@ -207,7 +212,7 @@ public class MultipartDownloader
                 ChunkScheduled++;
             }
             end = Math.Min(start + ChunkSize, TotalBytes) - 1; // Handle the last chunk
-            return (start, start + ChunkSize - 1);
+            return (start, end);
         }
     }
 
