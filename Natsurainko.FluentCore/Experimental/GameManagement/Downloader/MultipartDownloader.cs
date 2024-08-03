@@ -28,7 +28,7 @@ public class MultipartDownloader
         _maxConcurrentThreads = maxConcurrentThreads;
     }
 
-    public async Task DownloadFileAsync(string url, string destinationPath, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    public async Task DownloadFileAsync(string url, string destinationPath, Action<long?>? fileSizeRetrievedCallback = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         // Try to get the size of the file
         (var response, url) = await PrepareForDownloadAsync(url, cancellationToken);
@@ -56,6 +56,9 @@ public class MultipartDownloader
                 // Fall back to single part download if the remote server does not provide a Content-Length or does not support range requests
             }
         }
+
+        if (fileSizeRetrievedCallback is not null)
+            fileSizeRetrievedCallback(fileSize == -1 ? null : fileSize);
 
         // Ensure destination directory exists
         string? destinationDir = Path.GetDirectoryName(destinationPath);
@@ -109,7 +112,7 @@ public class MultipartDownloader
         ArrayPool<byte>.Shared.Return(downloadBufferArr);
     }
 
-    private async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private static async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         int bytesRead = 0;
         while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
