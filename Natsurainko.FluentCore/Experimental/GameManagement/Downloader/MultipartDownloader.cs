@@ -16,20 +16,23 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
 public class MultipartDownloader
 {
-    public long ChunkSize { get; init; }
-    public int NumberOfConcurrentTasks { get; init; }
+    public long ChunkSize { get => _config.ChunkSize; }
+    public int NumberOfConcurrentTasks { get => _config.NumberOfConcurrentTasks; }
 
-    private readonly HttpClient _httpClient;
+    private HttpClient HttpClient { get => _config.HttpClient; }
+
+    private readonly DownloaderConfig _config;
 
     public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int numConcurrentTasks = 4)
     {
-        _httpClient = httpClient ?? HttpUtils.HttpClient;
-        ChunkSize = chunkSize;
-        NumberOfConcurrentTasks = numConcurrentTasks;
+        httpClient ??= HttpUtils.HttpClient;
+        _config = new DownloaderConfig(httpClient, chunkSize, numConcurrentTasks);
     }
 
     public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken)
-        => new DownloadTask(url, localPath, _httpClient, ChunkSize, NumberOfConcurrentTasks, cancellationToken);
+        => new DownloadTask(url, localPath, _config, cancellationToken);
+
+    private record class DownloaderConfig(HttpClient HttpClient, long ChunkSize, int NumberOfConcurrentTasks);
 
     private class DownloadTask : IDownloadTask
     {
@@ -62,24 +65,21 @@ public class MultipartDownloader
         public event EventHandler<int>? BytesDownloaded;
 
         // Downloader config
-        private readonly HttpClient _httpClient;
-        private readonly long _chunkSize;
-        private readonly int _numConcurrentTasks;
+        private readonly DownloaderConfig _config;
+        private HttpClient HttpClient => _config.HttpClient;
+        private long ChunkSize => _config.ChunkSize;
+        private long NumberOfConcurrentTasks => _config.NumberOfConcurrentTasks;
 
         const int DownloadBufferSize = 4096; // 4 KB
 
         public DownloadTask(
             string url, string localPath,
-            HttpClient? httpClient = null, long chunkSize = 1048576 /* 1MB */, int numConcurrentTasks = 4,
-            CancellationToken cancellationToken = default)
+            DownloaderConfig config, CancellationToken cancellationToken = default)
         {
             Url = url;
             LocalPath = localPath;
             _redirectedUrl = url;
-
-            _httpClient = httpClient ?? HttpUtils.HttpClient;
-            _chunkSize = chunkSize;
-            _numConcurrentTasks = numConcurrentTasks;
+            _config = config;
 
             Task = DownloadFileDriverAsync(cancellationToken);
         }
@@ -124,7 +124,7 @@ public class MultipartDownloader
                 {
                     var rangeRequest = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
                     rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
-                    var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    var rangeResponse = await HttpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                     useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
                 }
             }
@@ -154,7 +154,7 @@ public class MultipartDownloader
         {
             // Get header
             var request = new HttpRequestMessage(HttpMethod.Head, url);
-            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (response.StatusCode == HttpStatusCode.Found)
             {
                 var redirectUrl = response.Headers.Location?.AbsoluteUri;
@@ -169,7 +169,7 @@ public class MultipartDownloader
         private async Task DownloadSinglePartAsync(CancellationToken cancellationToken = default)
         {
             // Send a GET request to start downloading the file
-            using var response = await _httpClient.GetAsync(_redirectedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await HttpClient.GetAsync(_redirectedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             // Prepare streams and download buffer
@@ -204,17 +204,17 @@ public class MultipartDownloader
             {
                 if (_chunkScheduled == _totalChunks)
                     return null;
-                start = _chunkScheduled * _chunkSize;
+                start = _chunkScheduled * ChunkSize;
                 _chunkScheduled++;
             }
             // Handle the last chunk
-            end = Math.Min(start + _chunkSize, _totalBytes) - 1;
+            end = Math.Min(start + ChunkSize, _totalBytes) - 1;
             return (start, end);
         }
 
         private async Task DownloadMultiPartAsync(long fileSize, CancellationToken cancellationToken = default)
         {
-            long totalChunks = Math.DivRem(fileSize, _chunkSize, out long remainder);
+            long totalChunks = Math.DivRem(fileSize, ChunkSize, out long remainder);
             if (remainder > 0)
                 totalChunks++;
             _totalChunks = totalChunks;
@@ -224,7 +224,7 @@ public class MultipartDownloader
             fileStream.SetLength(fileSize);
 
             // Initialize workers
-            int numberOfWorkers = (int)Math.Min(_numConcurrentTasks, totalChunks);
+            int numberOfWorkers = (int)Math.Min(NumberOfConcurrentTasks, totalChunks);
             Task[] workers = new Task[numberOfWorkers];
             for (int i = 0; i < numberOfWorkers; i++)
             {
@@ -250,7 +250,7 @@ public class MultipartDownloader
                 // Send a range request to download the chunk of the file
                 var request = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
                 request.Headers.Range = new RangeHeaderValue(start, end);
-                var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 response.EnsureSuccessStatusCode();
 
                 // Write to the file
