@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
-public class MultipartDownloader
+public class MultipartDownloader : IDownloader
 {
     public long ChunkSize { get => _config.ChunkSize; }
     public int NumberOfConcurrentTasks { get => _config.NumberOfConcurrentTasks; }
@@ -45,7 +45,7 @@ public class MultipartDownloader
         private string _redirectedUrl;
         private long _chunkScheduled = 0;
         private long _totalChunks = 0;
-        private object _chunkOrganizerLock = new();
+        private readonly object _chunkOrganizerLock = new();
         private long _totalBytes = -1; // Set when Status is Downloading | Completed | Failed | Cancelled
         private long _downloadedBytes = 0; // ref long required by Interlock.Add
 

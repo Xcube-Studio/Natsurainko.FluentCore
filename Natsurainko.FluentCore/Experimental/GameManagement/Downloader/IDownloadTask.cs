@@ -4,15 +4,6 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
-public enum DownloadStatus
-{
-    Preparing, // -> Downloading
-    Downloading, // -> Completed | Failed | Cancelled
-    Completed,
-    Failed,
-    Cancelled
-}
-
 public interface IDownloadTask
 {
     long DownloadedBytes { get; }
