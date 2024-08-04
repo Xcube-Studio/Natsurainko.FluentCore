@@ -62,7 +62,7 @@ public class MultipartDownloaderDownloadTask : IDownloadTask
 
     public MultipartDownloaderDownloadTask(
         string url, string localPath,
-        int chunkSize = 104857600 /* 1MB */, int numConcurrentTasks = 4, HttpClient? httpClient = null,
+        int chunkSize = 1048576 /* 1MB */, int numConcurrentTasks = 4, HttpClient? httpClient = null,
         CancellationToken cancellationToken = default)
     {
         Url = url;
@@ -101,26 +101,23 @@ public class MultipartDownloaderDownloadTask : IDownloadTask
         // Try to get the size of the file
         (var response, _redirectedUrl) = await PrepareForDownloadAsync(Url, cancellationToken);
 
-        // Use multi-part download if the file size is larger than a threshold and Content-Length is provided
+        // Use multi-part download if Content-Length is provided and the remote server supports range requests
+        // Fall back to single part download if the remote server does not provide a Content-Length or does not support range requests
         bool useMultiPart = false;
         if (response.Content.Headers.ContentLength is long contentLength)
         {
             _totalBytes = contentLength;
-            if (contentLength > _chunkSize)
+            // Check support for range requests
+            if (response.Headers.AcceptRanges.Contains("bytes")) // Check if the server supports range requests by checking the Accept-Ranges header
             {
-                // Check support for range requests
-                if (response.Headers.AcceptRanges.Contains("bytes")) // Check if the server supports range requests by checking the Accept-Ranges header
-                {
-                    useMultiPart = true;
-                }
-                else // Check if the server supports range requests by sending a range request
-                {
-                    var rangeRequest = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
-                    rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
-                    var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                    useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
-                }
-                // Fall back to single part download if the remote server does not provide a Content-Length or does not support range requests
+                useMultiPart = true;
+            }
+            else // Check if the server supports range requests by sending a range request
+            {
+                var rangeRequest = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
+                rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
+                var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
             }
         }
 
