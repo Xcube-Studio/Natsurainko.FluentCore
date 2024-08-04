@@ -23,91 +23,89 @@ public enum DownloadStatus
     Cancelled
 }
 
-public class MultipartDownloader
+public class MultipartDownloaderDownloadTask : IDownloadTask
 {
+    // Download item info
+    public string Url { get; init; }
+    public string LocalPath { get; init; }
+
+    #region Download task states
+
+    private string _redirectedUrl;
+    private long _chunkScheduled = 0;
+    private long _totalChunks = 0;
+    private object _chunkOrganizerLock = new();
+    private long _totalBytes = -1; // Set when Status is Downloading | Completed | Failed | Cancelled
+    private long _downloadedBytes = 0; // ref long required by Interlock.Add
+
+    public long? TotalBytes { get => _totalChunks == -1 ? null : _totalBytes; }
+
+    public long DownloadedBytes { get => _downloadedBytes; }
+
+    // Task status
+    public Task Task { get; init; }
+    public DownloadStatus Status { get; private set; } = DownloadStatus.Preparing; // Replace with a type union in future C# versions
+    public Exception? Exception { get; private set; } = null; // Set when Status is Failed
+
+    #endregion
+
+    // Events
+    public event EventHandler<long?>? FileSizeReceived;
+    public event EventHandler<int>? BytesDownloaded;
+
     // Downloader config
     private readonly HttpClient _httpClient;
     private readonly int _chunkSize;
-    private readonly int _maxConcurrentThreads;
+    private readonly int _numConcurrentTasks;
 
     const int DownloadBufferSize = 4096; // 4 KB
 
-    public MultipartDownloader(int chunkSize = 104857600 /* 1MB */, int maxConcurrentThreads = 4, HttpClient? httpClient = null)
+    public MultipartDownloaderDownloadTask(
+        string url, string localPath,
+        int chunkSize = 104857600 /* 1MB */, int numConcurrentTasks = 4, HttpClient? httpClient = null,
+        CancellationToken cancellationToken = default)
     {
+        Url = url;
+        LocalPath = localPath;
+        _redirectedUrl = url;
+
         _httpClient = httpClient ?? HttpUtils.HttpClient;
         _chunkSize = chunkSize;
-        _maxConcurrentThreads = maxConcurrentThreads;
+        _numConcurrentTasks = numConcurrentTasks;
+
+        Task = DownloadFileDriverAsync(cancellationToken);
     }
 
-    private class DownloadTask : IDownloadTask
+    private async Task DownloadFileDriverAsync(CancellationToken cancellationToken = default)
     {
-        public string Url { get; init; }
-        public string LocalPath { get; init; }
-
-        // Replace with a type union in future C# versions
-        public DownloadStatus Status { get; private set; } = DownloadStatus.Preparing;
-        public long? TotalBytes { get; private set; } = -1; // Set when Status is Downloading | Completed | Failed | Cancelled
-        public Exception? Exception { get; private set; } = null; // Set when Status is Failed
-
-        private long _downloadedBytes = 0;
-        public long DownloadedBytes { get => _downloadedBytes; }
-
-        public Task Task { get; init; }
-
-        public DownloadTask(string url, string localPath, MultipartDownloader downloader, CancellationToken cancellationToken = default)
+        try
         {
-            Url = url;
-            LocalPath = localPath;
-            var progress = new Progress<int>(bytesDownloaded =>
-            {
-                Interlocked.Add(ref _downloadedBytes, bytesDownloaded);
-            });
-            Task = DownloadFileAsync(downloader, FileSizeRetrievedCallback, progress, cancellationToken);
+            await DownloadFileAsync(cancellationToken);
+            Status = DownloadStatus.Completed;
         }
-
-        private async Task DownloadFileAsync(MultipartDownloader downloader, Action<long?> fileSizeRetrievedCallback, IProgress<int> progress, CancellationToken cancellationToken)
+        catch (TaskCanceledException)
         {
-            try
-            {
-                await downloader.DownloadFileAsync(Url, LocalPath, fileSizeRetrievedCallback, progress, cancellationToken);
-                Status = DownloadStatus.Completed;
-            }
-            catch (TaskCanceledException)
-            {
-                Status = DownloadStatus.Cancelled;
-            }
-            catch (Exception e)
-            {
-                Status = DownloadStatus.Failed;
-                Exception = e.InnerException ?? e;
-            }
+            Status = DownloadStatus.Cancelled;
         }
-
-        private void FileSizeRetrievedCallback(long? fileSize)
+        catch (Exception e)
         {
-            TotalBytes = fileSize;
-            Status = DownloadStatus.Downloading;
+            Status = DownloadStatus.Failed;
+            Exception = e.InnerException ?? e;
         }
-
-        public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
     }
 
-    public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken = default)
-    {
-        return new DownloadTask(url, localPath, this, cancellationToken);
-    }
+    public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
 
-    public async Task DownloadFileAsync(string url, string localPath, Action<long?>? fileSizeRetrievedCallback = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private async Task DownloadFileAsync(CancellationToken cancellationToken = default)
     {
         // Try to get the size of the file
-        (var response, url) = await PrepareForDownloadAsync(url, cancellationToken);
+        (var response, _redirectedUrl) = await PrepareForDownloadAsync(Url, cancellationToken);
 
         // Use multi-part download if the file size is larger than a threshold and Content-Length is provided
         bool useMultiPart = false;
-        long fileSize = -1;
         if (response.Content.Headers.ContentLength is long contentLength)
         {
-            fileSize = contentLength;
+            _totalBytes = contentLength;
             if (contentLength > _chunkSize)
             {
                 // Check support for range requests
@@ -117,7 +115,7 @@ public class MultipartDownloader
                 }
                 else // Check if the server supports range requests by sending a range request
                 {
-                    var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
+                    var rangeRequest = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
                     rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
                     var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                     useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
@@ -126,22 +124,23 @@ public class MultipartDownloader
             }
         }
 
-        if (fileSizeRetrievedCallback is not null)
-            fileSizeRetrievedCallback(fileSize == -1 ? null : fileSize);
+        // Status changed
+        Status = DownloadStatus.Downloading;
+        FileSizeReceived?.Invoke(this, TotalBytes);
 
         // Ensure destination directory exists
-        string? destinationDir = Path.GetDirectoryName(localPath);
+        string? destinationDir = Path.GetDirectoryName(LocalPath);
         if (destinationDir is not null) // destinationDir is not root directory
             Directory.CreateDirectory(destinationDir); // Create the directory if it doesn't exist
 
         // Try multi-part download if Content-Length is provided and the file size is larger than a threshold
         if (useMultiPart)
         {
-            await DownloadMultiPartAsync(url, localPath, fileSize, progress, cancellationToken);
+            await DownloadMultiPartAsync(_totalBytes, cancellationToken);
         }
         else
         {
-            await DownloadSinglePartAsync(url, localPath, fileSize == -1 ? null : fileSize, progress, cancellationToken);
+            await DownloadSinglePartAsync(cancellationToken);
         }
     }
 
@@ -162,110 +161,96 @@ public class MultipartDownloader
         return (response, url);
     }
 
-    private async Task DownloadSinglePartAsync(string url, string destinationPath, long? fileSize, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private async Task DownloadSinglePartAsync(CancellationToken cancellationToken = default)
     {
         // Send a GET request to start downloading the file
-        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response = await _httpClient.GetAsync(_redirectedUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         // Prepare streams and download buffer
         using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
-        if (fileSize is long size)
+        using var fileStream = new FileStream(LocalPath, FileMode.Create, FileAccess.Write);
+        if (TotalBytes is long size)
             fileStream.SetLength(size);
 
         // Download the file
         byte[] downloadBufferArr = ArrayPool<byte>.Shared.Rent(DownloadBufferSize);
         Memory<byte> downloadBuffer = downloadBufferArr.AsMemory(0, DownloadBufferSize);
-        await WriteStreamToFile(contentStream, fileStream, downloadBuffer, progress, cancellationToken);
+        await WriteStreamToFile(contentStream, fileStream, downloadBuffer, cancellationToken);
         ArrayPool<byte>.Shared.Return(downloadBufferArr);
     }
 
-    private static async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         int bytesRead = 0;
         while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer[0..bytesRead], cancellationToken);
-            progress?.Report(bytesRead);
+            Interlocked.Add(ref _downloadedBytes, bytesRead);
+            BytesDownloaded?.Invoke(this, bytesRead);
         }
     }
 
-    private class MultipartDownloadStates
+    // Returns the indices (inclusive) of bytes in the next chunk if there are more chunks to download
+    private (long start, long end)? NextChunk()
     {
-        public required long TotalBytes { get; init; }
-        public required long TotalChunks { get; init; }
-        public required long ChunkSize { get; init; }
-        public long ChunkScheduled { get; private set; } = 0;
-
-        private object _lock = new();
-
-        // Returns the indices (inclusive) of bytes in the next chunk if there are more chunks to download
-        public (long start, long end)? NextChunk()
+        long start, end;
+        lock (_chunkOrganizerLock)
         {
-            long start, end;
-            lock (_lock)
-            {
-                if (ChunkScheduled == TotalChunks)
-                    return null;
-                start = ChunkScheduled * ChunkSize;
-                ChunkScheduled++;
-            }
-            end = Math.Min(start + ChunkSize, TotalBytes) - 1; // Handle the last chunk
-            return (start, end);
+            if (_chunkScheduled == _totalChunks)
+                return null;
+            start = _chunkScheduled * _chunkSize;
+            _chunkScheduled++;
         }
+        // Handle the last chunk
+        end = Math.Min(start + _chunkSize, _totalBytes) - 1;
+        return (start, end);
     }
 
-    private async Task DownloadMultiPartAsync(string url, string localPath, long fileSize, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private async Task DownloadMultiPartAsync(long fileSize, CancellationToken cancellationToken = default)
     {
-        long totalNumberOfParts = Math.DivRem(fileSize, _chunkSize, out long remainder);
+        long totalChunks = Math.DivRem(fileSize, _chunkSize, out long remainder);
         if (remainder > 0)
-            totalNumberOfParts++;
+            totalChunks++;
+        _totalChunks = totalChunks;
 
         // Pre-allocate the file with the desired size
-        using var fileStream = new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.Write);
+        using var fileStream = new FileStream(LocalPath, FileMode.Create, FileAccess.Write, FileShare.Write);
         fileStream.SetLength(fileSize);
 
         // Initialize workers
-        int numberOfWorkers = (int)Math.Min(_maxConcurrentThreads, totalNumberOfParts);
+        int numberOfWorkers = (int)Math.Min(_numConcurrentTasks, totalChunks);
         Task[] workers = new Task[numberOfWorkers];
-        MultipartDownloadStates states = new()
-        {
-            TotalBytes = fileSize,
-            TotalChunks = totalNumberOfParts,
-            ChunkSize = _chunkSize
-        };
         for (int i = 0; i < numberOfWorkers; i++)
         {
-            workers[i] = MultipartDownloadWorker(url, localPath, states, progress, cancellationToken);
+            workers[i] = MultipartDownloadWorker(cancellationToken);
         }
-
         await Task.WhenAll(workers);
     }
 
-    private async Task MultipartDownloadWorker(string url, string localPath, MultipartDownloadStates states, IProgress<int>? progress, CancellationToken cancellationToken)
+    private async Task MultipartDownloadWorker(CancellationToken cancellationToken)
     {
         // Resources for this worker only
-        using var fileStream = new FileStream(localPath, FileMode.Open, FileAccess.Write, FileShare.Write);
+        using var fileStream = new FileStream(LocalPath, FileMode.Open, FileAccess.Write, FileShare.Write);
 
         // Download the file
         byte[] downloadBufferArr = ArrayPool<byte>.Shared.Rent(DownloadBufferSize);
         Memory<byte> downloadBuffer = downloadBufferArr.AsMemory(0, DownloadBufferSize);
 
-        while (states.NextChunk() is (long start, long end))
+        while (NextChunk() is (long start, long end))
         {
             // Start writing at the beginning of the chunk
             fileStream.Seek(start, SeekOrigin.Begin);
 
             // Send a range request to download the chunk of the file
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            var request = new HttpRequestMessage(HttpMethod.Get, _redirectedUrl);
             request.Headers.Range = new RangeHeaderValue(start, end);
             var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             // Write to the file
             using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            await WriteStreamToFile(contentStream, fileStream, downloadBuffer, progress, cancellationToken);
+            await WriteStreamToFile(contentStream, fileStream, downloadBuffer, cancellationToken);
         }
 
         ArrayPool<byte>.Shared.Return(downloadBufferArr);

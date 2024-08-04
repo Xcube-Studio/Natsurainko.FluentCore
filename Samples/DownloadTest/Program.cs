@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
 using var httpClient = new HttpClient();
-MultipartDownloader downloader = new(1048576, 8, httpClient);
+//MultipartDownloader downloader = new(1048576, 8, httpClient);
 
 const string url = "https://github.com/Xcube-Studio/Natsurainko.FluentLauncher/releases/download/v2.2.9.0/Natsurainko.FluentLauncher_2.2.9.0.msixbundle";
 const string path = @"D:\Downloads\Natsurainko.FluentLauncher_2.2.9.0.msixbundle";
@@ -17,7 +17,7 @@ var delay = Task.Run(async () =>
     //cts.Cancel();
 });
 
-var downloadTask = downloader.DownloadFileAsync(url, path, cts.Token);
+var downloadTask = new MultipartDownloaderDownloadTask(url, path, 1048576, 64, httpClient, cts.Token);
 
 // Progress report
 using Timer timer = new((state) =>
