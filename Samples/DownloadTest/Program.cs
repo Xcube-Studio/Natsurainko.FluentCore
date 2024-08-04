@@ -17,7 +17,8 @@ var delay = Task.Run(async () =>
     //cts.Cancel();
 });
 
-var downloadTask = new MultipartDownloaderDownloadTask(url, path, 1048576, 64, httpClient, cts.Token);
+var downloader = new MultipartDownloader(httpClient, 1048576, 16);
+var downloadTask = downloader.DownloadFileAsync(url, path, cts.Token);
 
 // Progress report
 using Timer timer = new((state) =>
