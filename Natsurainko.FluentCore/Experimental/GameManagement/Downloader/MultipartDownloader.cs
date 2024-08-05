@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,9 +31,106 @@ public class MultipartDownloader : IDownloader
     }
 
     public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken)
-        => new DownloadTask(url, localPath, _config, cancellationToken);
+    {
+        var downloadTask = new DownloadTask(url, localPath, _config) { Task = null! };
+        downloadTask.Task = DownloadFileDriverAsync(downloadTask, cancellationToken);
+        return downloadTask;
+    }
+
+    public IDownloadTaskGroup DownloadFilesAsync(IEnumerable<(string url, string localPath)> files, CancellationToken cancellationToken = default)
+    {
+        List<IDownloadTask> downloadTasks = new();
+        List<IDownloadTask> failedTasks = new();
+        List<Task> tasks = new();
+        var group = new DownloadTaskGroup()
+        {
+            DownloadTasks = downloadTasks,
+            FailedDownloadTasks = failedTasks,
+            Task = null! // Set later
+        };
+        foreach ((string url, string localPath) in files)
+        {
+            var downloadTask = new DownloadTask(url, localPath, _config) { Task = null! };
+            downloadTask.Task = DownloadFileDriverAsync(downloadTask, group, cancellationToken);
+            downloadTasks.Add(downloadTask);
+            tasks.Add(downloadTask.Task);
+        }
+        group.Task = Task.WhenAll(tasks);
+        return group;
+    }
+
+    private async Task DownloadFileDriverAsync(DownloadTask downloadTask, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await downloadTask.DownloadFileAsync(cancellationToken);
+            downloadTask.Status = DownloadStatus.Completed;
+        }
+        catch (TaskCanceledException)
+        {
+            downloadTask.Status = DownloadStatus.Cancelled;
+        }
+        catch (Exception e)
+        {
+            downloadTask.Status = DownloadStatus.Failed;
+            downloadTask.Exception = e.InnerException ?? e;
+        }
+    }
+
+    private async Task DownloadFileDriverAsync(DownloadTask downloadTask, DownloadTaskGroup group, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await downloadTask.DownloadFileAsync(cancellationToken);
+            downloadTask.Status = DownloadStatus.Completed;
+        }
+        catch (TaskCanceledException)
+        {
+            downloadTask.Status = DownloadStatus.Cancelled;
+        }
+        catch (Exception e)
+        {
+            downloadTask.Status = DownloadStatus.Failed;
+            downloadTask.Exception = e.InnerException ?? e;
+        }
+        finally
+        {
+            group.OnDownloadTaskCompleted(downloadTask);
+            group.IncrementCompletedTasks();
+        }
+    }
 
     private record class DownloaderConfig(HttpClient HttpClient, long ChunkSize, int NumberOfConcurrentTasks);
+
+    private class DownloadTaskGroup : IDownloadTaskGroup
+    {
+        IReadOnlyList<IDownloadTask> IDownloadTaskGroup.DownloadTasks => DownloadTasks;
+        IReadOnlyList<IDownloadTask> IDownloadTaskGroup.FailedDownloadTasks => FailedDownloadTasks;
+
+
+        public required List<IDownloadTask> DownloadTasks { get; init; }
+        public required List<IDownloadTask> FailedDownloadTasks { get; init; }
+        public int TotalTasks { get => DownloadTasks.Count; }
+
+        private int _completedTasks = 0;
+        public int CompletedTasks { get => _completedTasks; }
+
+        public required Task Task { get; set; }
+
+        public event EventHandler<IDownloadTask>? DownloadTaskCompleted;
+
+        public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
+
+        public void IncrementCompletedTasks()
+        {
+            Interlocked.Add(ref _completedTasks, 1);
+        }
+
+        public void OnDownloadTaskCompleted(IDownloadTask downloadTask)
+        {
+            DownloadTaskCompleted?.Invoke(this, downloadTask);
+        }
+    }
 
     private class DownloadTask : IDownloadTask
     {
@@ -54,9 +152,9 @@ public class MultipartDownloader : IDownloader
         public long DownloadedBytes { get => _downloadedBytes; }
 
         // Task status
-        public Task Task { get; init; }
-        public DownloadStatus Status { get; private set; } = DownloadStatus.Preparing; // Replace with a type union in future C# versions
-        public Exception? Exception { get; private set; } = null; // Set when Status is Failed
+        public required Task Task { get; set; }
+        public DownloadStatus Status { get; set; } = DownloadStatus.Preparing; // Replace with a type union in future C# versions
+        public Exception? Exception { get; set; } = null; // Set when Status is Failed
 
         #endregion
 
@@ -72,39 +170,17 @@ public class MultipartDownloader : IDownloader
 
         const int DownloadBufferSize = 4096; // 4 KB
 
-        public DownloadTask(
-            string url, string localPath,
-            DownloaderConfig config, CancellationToken cancellationToken = default)
+        public DownloadTask(string url, string localPath, DownloaderConfig config)
         {
             Url = url;
             LocalPath = localPath;
             _redirectedUrl = url;
             _config = config;
-
-            Task = DownloadFileDriverAsync(cancellationToken);
-        }
-
-        private async Task DownloadFileDriverAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                await DownloadFileAsync(cancellationToken);
-                Status = DownloadStatus.Completed;
-            }
-            catch (TaskCanceledException)
-            {
-                Status = DownloadStatus.Cancelled;
-            }
-            catch (Exception e)
-            {
-                Status = DownloadStatus.Failed;
-                Exception = e.InnerException ?? e;
-            }
         }
 
         public TaskAwaiter GetAwaiter() => Task.GetAwaiter();
 
-        private async Task DownloadFileAsync(CancellationToken cancellationToken = default)
+        public async Task DownloadFileAsync(CancellationToken cancellationToken = default)
         {
             // Try to get the size of the file
             (var response, _redirectedUrl) = await PrepareForDownloadAsync(Url, cancellationToken);

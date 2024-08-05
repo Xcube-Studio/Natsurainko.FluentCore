@@ -6,13 +6,17 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
 public interface IDownloadTask
 {
+    string Url { get; init; }
+    string LocalPath { get; init; }
+
     long DownloadedBytes { get; }
     Exception? Exception { get; }
-    string LocalPath { get; init; }
     DownloadStatus Status { get; }
-    Task Task { get; init; }
+    Task Task { get; }
     long? TotalBytes { get; }
-    string Url { get; init; }
+
+    public event EventHandler<long?>? FileSizeReceived;
+    public event EventHandler<int>? BytesDownloaded;
 
     TaskAwaiter GetAwaiter();
 }

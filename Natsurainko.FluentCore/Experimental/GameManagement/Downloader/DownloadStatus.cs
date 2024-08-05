@@ -10,7 +10,7 @@ public enum DownloadStatus
 {
     Preparing, // -> Downloading
     Downloading, // -> Paused | Completed | Failed | Cancelled
-    Paused, // -> Downloading
+    //Paused, // -> Downloading
     Completed,
     Failed,
     Cancelled
