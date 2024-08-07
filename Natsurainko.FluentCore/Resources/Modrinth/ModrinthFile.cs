@@ -8,7 +8,5 @@ public record ModrinthFile
 
     public required string Url { get; set; }
 
-    public required string Loaders { get; set; }
-
-    public string DisplayDescription => $"{Loaders}, {McVersion}";
+    public required string[] Loaders { get; set; }
 }

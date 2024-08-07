@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Resources;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -144,7 +143,7 @@ public class ModrinthClient
                     Url = fileUrl,
                     FileName = fileName,
                     McVersion = mcVersion,
-                    Loaders = string.Join(' ', loaders)
+                    Loaders = loaders.ToArray()
                 });
             }
             catch (Exception e) when (e is JsonException || e is FormatException)
