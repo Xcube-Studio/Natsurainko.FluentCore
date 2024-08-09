@@ -9,7 +9,7 @@ public record VersionManifestJsonEntity
     public required Dictionary<string, string> Latest { get; set; }
 
     [JsonPropertyName("versions")]
-    public required IEnumerable<VersionManifestItem> Versions { get; set; }
+    public required VersionManifestItem[] Versions { get; set; }
 }
 
 public record VersionManifestItem

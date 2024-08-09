@@ -35,5 +35,5 @@ public record CurseForgeResource
 
     public required string WebsiteUrl { get; set; }
 
-    public required string IconUrl { get; set; }
+    public string? IconUrl { get; set; }
 }

@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -35,7 +33,8 @@ public class CurseForgeClient
 
     public async Task<IEnumerable<CurseForgeResource>> SearchResourcesAsync(
         string searchFilter,
-        CurseForgeResourceType? resourceType = null)
+        CurseForgeResourceType? resourceType = null,
+        string? version = null)
     {
         // Build URL
         var stringBuilder = new StringBuilder(BaseUrl)
@@ -46,12 +45,15 @@ public class CurseForgeClient
         if (resourceType is not null)
             stringBuilder.Append($"&categoryId=0&classId={(int)resourceType}");
 
+        if (version is not null)
+            stringBuilder.Append($"&gameVersion={version}");
+
         stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
 
         string url = stringBuilder.ToString();
 
         // Send request
-        var request = CreateCurseForgeGetRequest(url);
+        using var request = CreateCurseForgeGetRequest(url);
         using var responseMessage = await _httpClient.SendAsync(request);
 
         // Parse response
@@ -79,7 +81,7 @@ public class CurseForgeClient
     public async Task<string> GetFileUrlAsync(CurseForgeFile file)
     {
         var url = $"{BaseUrl}mods/{file.ModId}/files/{file.FileId}";
-        var request = CreateCurseForgeGetRequest(url);
+        using var request = CreateCurseForgeGetRequest(url);
         using var responseMessage = await _httpClient.SendAsync(request);
 
         // Parse response
@@ -98,7 +100,7 @@ public class CurseForgeClient
     {
         // Create request
         string url = $"{BaseUrl}mods/featured";
-        var request = CreateCurseForgeGetRequest(url);
+        using var request = CreateCurseForgeGetRequest(url);
         request.Content = new StringContent(JsonSerializer.Serialize(new { gameId = MinecraftGameId }));
         request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
@@ -151,7 +153,7 @@ public class CurseForgeClient
     {
         // Create request
         string url = $"{BaseUrl}mods/{resourceId}/description";
-        var request = CreateCurseForgeGetRequest(url);
+        using var request = CreateCurseForgeGetRequest(url);
 
         // Send request
         using var responseMessage = await _httpClient.SendAsync(request);
@@ -179,7 +181,7 @@ public class CurseForgeClient
     {
         // Create request
         string url = $"{BaseUrl}mods/{resourceId}";
-        var request = CreateCurseForgeGetRequest(url);
+        using var request = CreateCurseForgeGetRequest(url);
 
         // Send request
         using var responseMessage = await _httpClient.SendAsync(request);
@@ -247,7 +249,7 @@ public class CurseForgeClient
             })
             .WhereNotNull();
         var websiteUrl = jsonNode["links"]?["websiteUrl"]?.GetValue<string>();
-        var iconurl = jsonNode["logo"]?["url"]?.GetValue<string>();
+        string? iconurl = jsonNode["logo"]?["url"]?.GetValue<string>();
 
         if (id is null
             || classId is null
@@ -260,7 +262,6 @@ public class CurseForgeClient
             || authors is null
             || screenshotUrls is null
             || websiteUrl is null
-            || iconurl is null
         )
             throw new FormatException();
 

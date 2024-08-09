@@ -10,8 +10,8 @@ public enum ModLoaderType
     Cauldron = 2,
     LiteLoader = 3,
     Fabric = 4,
-    OptiFine = 6,
-    Quilt = 7,
-    NeoForge = 8,
+    Quilt = 5,
+    NeoForge = 6,
+    OptiFine = 7,
     Unknown = 114514,
 }

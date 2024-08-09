@@ -18,6 +18,4 @@ public record CurseForgeFile
     public ModLoaderType ModLoaderType { get; set; }
 
     public int ModId { get; set; }
-
-    public string DisplayDescription => $"{ModLoaderType} {McVersion}";
 }
