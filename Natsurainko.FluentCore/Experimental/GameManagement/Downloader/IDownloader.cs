@@ -5,7 +5,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
 public interface IDownloader
 {
-    IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken);
+    IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken = default);
 
-    IDownloadTaskGroup DownloadFilesAsync(IEnumerable<(string url, string localPath)> files, CancellationToken cancellationToken);
+    IDownloadTaskGroup DownloadFilesAsync(IEnumerable<(string url, string localPath)> files, CancellationToken cancellationToken = default);
 }

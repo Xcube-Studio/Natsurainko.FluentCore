@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,12 @@ public class ForgeInstaller : ModLoaderInstaller
     private readonly Dictionary<string, List<string>> _outputs = new();
     private readonly Dictionary<string, List<string>> _errorOutputs = new();
 
+    private readonly IDownloader _downloader;
+
+    public ForgeInstaller(IDownloader downloader)
+    {
+        _downloader = downloader;
+    }
     public override Task<InstallationResult> ExecuteAsync() => Task.Run(() =>
     {
         ParsePackage(
@@ -209,16 +216,12 @@ public class ForgeInstaller : ModLoaderInstaller
 
     void DownloadLibraries(List<LibraryElement> _libraries)
     {
-        throw new NotImplementedException();
-        //OnProgressChanged(0.3);
+        OnProgressChanged(0.3);
 
-        //var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        //resourcesDownloader.SetLibraryElements(_libraries);
-        //resourcesDownloader.SetDownloadMirror(DownloadMirrors.Bmclapi);
+        var libs = _libraries.Select(lib => (DownloadMirrors.BmclApi.GetMirrorUrl(lib.Url!), lib.AbsolutePath));
+        _downloader.DownloadFilesAsync(libs).GetAwaiter().GetResult();
 
-        //resourcesDownloader.Download();
-
-        //OnProgressChanged(0.5);
+        OnProgressChanged(0.5);
     }
 
     void WriteFiles(ZipArchive _packageArchive, JsonNode _installProfile, string _forgeVersion, JsonNode _versionInfoJson)
