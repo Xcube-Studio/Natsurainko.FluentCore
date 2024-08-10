@@ -2,6 +2,7 @@
 using System;
 using System.Buffers;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
@@ -18,16 +20,20 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 public class MultipartDownloader : IDownloader
 {
     public long ChunkSize { get => _config.ChunkSize; }
-    public int NumberOfConcurrentTasks { get => _config.NumberOfConcurrentTasks; }
+    public int WorkersPerDownloadTask { get => _config.WorkersPerDownloadTask; }
+    public int ConcurrentDownloadTasks { get => _config.ConcurrentDownloadTasks; }
 
     private HttpClient HttpClient { get => _config.HttpClient; }
 
     private readonly DownloaderConfig _config;
 
-    public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int numConcurrentTasks = 4)
+    private readonly SemaphoreSlim _globalDownloadTasksSemaphore;
+
+    public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int workersPerDownloadTask = 16, int concurrentDownloadTasks = 5)
     {
         httpClient ??= HttpUtils.HttpClient;
-        _config = new DownloaderConfig(httpClient, chunkSize, numConcurrentTasks);
+        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks);
+        _globalDownloadTasksSemaphore = new SemaphoreSlim(0, concurrentDownloadTasks);
     }
 
     public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken)
@@ -61,6 +67,7 @@ public class MultipartDownloader : IDownloader
 
     private async Task DownloadFileDriverAsync(DownloadTask downloadTask, CancellationToken cancellationToken = default)
     {
+        await _globalDownloadTasksSemaphore.WaitAsync(cancellationToken);
         try
         {
             await downloadTask.DownloadFileAsync(cancellationToken);
@@ -75,10 +82,15 @@ public class MultipartDownloader : IDownloader
             downloadTask.Status = DownloadStatus.Failed;
             downloadTask.Exception = e.InnerException ?? e;
         }
+        finally
+        {
+            _globalDownloadTasksSemaphore.Release();
+        }
     }
 
     private async Task DownloadFileDriverAsync(DownloadTask downloadTask, DownloadTaskGroup group, CancellationToken cancellationToken = default)
     {
+        await _globalDownloadTasksSemaphore.WaitAsync(cancellationToken);
         try
         {
             await downloadTask.DownloadFileAsync(cancellationToken);
@@ -97,10 +109,11 @@ public class MultipartDownloader : IDownloader
         {
             group.OnDownloadTaskCompleted(downloadTask);
             group.IncrementCompletedTasks();
+            _globalDownloadTasksSemaphore.Release();
         }
     }
 
-    private record class DownloaderConfig(HttpClient HttpClient, long ChunkSize, int NumberOfConcurrentTasks);
+    private record class DownloaderConfig(HttpClient HttpClient, long ChunkSize, int WorkersPerDownloadTask, int ConcurrentDownloadTasks);
 
     private class DownloadTaskGroup : IDownloadTaskGroup
     {
@@ -166,7 +179,7 @@ public class MultipartDownloader : IDownloader
         private readonly DownloaderConfig _config;
         private HttpClient HttpClient => _config.HttpClient;
         private long ChunkSize => _config.ChunkSize;
-        private long NumberOfConcurrentTasks => _config.NumberOfConcurrentTasks;
+        private long WorkersPerDownloadTask => _config.WorkersPerDownloadTask;
 
         const int DownloadBufferSize = 4096; // 4 KB
 
@@ -300,7 +313,7 @@ public class MultipartDownloader : IDownloader
             fileStream.SetLength(fileSize);
 
             // Initialize workers
-            int numberOfWorkers = (int)Math.Min(NumberOfConcurrentTasks, totalChunks);
+            int numberOfWorkers = (int)Math.Min(WorkersPerDownloadTask, totalChunks);
             Task[] workers = new Task[numberOfWorkers];
             for (int i = 0; i < numberOfWorkers; i++)
             {
