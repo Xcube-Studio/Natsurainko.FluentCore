@@ -26,18 +26,23 @@ public class MultipartDownloader : IDownloader
     private HttpClient HttpClient { get => _config.HttpClient; }
 
     private readonly DownloaderConfig _config;
+    private readonly IDownloadMirror? _mirror;
 
     private readonly SemaphoreSlim _globalDownloadTasksSemaphore;
 
-    public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int workersPerDownloadTask = 16, int concurrentDownloadTasks = 5)
+    public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int workersPerDownloadTask = 16, int concurrentDownloadTasks = 5, IDownloadMirror? mirror = null)
     {
         httpClient ??= HttpUtils.HttpClient;
         _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks);
+        _mirror = mirror;
         _globalDownloadTasksSemaphore = new SemaphoreSlim(0, concurrentDownloadTasks);
     }
 
     public IDownloadTask DownloadFileAsync(string url, string localPath, CancellationToken cancellationToken)
     {
+        if (_mirror is not null)
+            url = _mirror.GetMirrorUrl(url);
+
         var downloadTask = new DownloadTask(url, localPath, _config) { Task = null! };
         downloadTask.Task = DownloadFileDriverAsync(downloadTask, cancellationToken);
         return downloadTask;
@@ -56,7 +61,11 @@ public class MultipartDownloader : IDownloader
         };
         foreach ((string url, string localPath) in files)
         {
-            var downloadTask = new DownloadTask(url, localPath, _config) { Task = null! };
+            string mirrorUrl = url;
+            if (_mirror is not null)
+                mirrorUrl = _mirror.GetMirrorUrl(url);
+
+            var downloadTask = new DownloadTask(mirrorUrl, localPath, _config) { Task = null! };
             downloadTask.Task = DownloadFileDriverAsync(downloadTask, group, cancellationToken);
             downloadTasks.Add(downloadTask);
             tasks.Add(downloadTask.Task);
