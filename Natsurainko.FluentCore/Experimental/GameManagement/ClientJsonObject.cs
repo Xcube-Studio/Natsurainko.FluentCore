@@ -30,7 +30,7 @@ internal class ClientJsonObject
     public ArgumentsJsonObject? Arguments { get; set; }
 
     /// <summary>
-    /// Used by Forge (not part of vanilla Minecraft client.json)
+    /// Used by other mod loaders (not part of vanilla Minecraft client.json)
     /// </summary>
     [JsonPropertyName("inheritsFrom")]
     public string? InheritsFrom { get; set; }
