@@ -2,7 +2,7 @@
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class GameAsset : GameDependency
+public class MinecraftAsset : MinecraftDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("assets", "objects", Sha1[0..2], Sha1);

@@ -2,7 +2,7 @@
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class GameAssetIndex : GameDependency
+public class MinecraftAssetIndex : MinecraftDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("assets", "indexes", $"{Id}.json");

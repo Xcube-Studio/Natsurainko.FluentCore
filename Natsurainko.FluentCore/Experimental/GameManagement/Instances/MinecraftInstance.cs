@@ -53,7 +53,7 @@ public abstract partial class MinecraftInstance
     #region Parse assets
 
     // Replaces DefaultAssetParser.GetAssetIndexJson
-    public GameAssetIndex GetAssetIndex()
+    public MinecraftAssetIndex GetAssetIndex()
     {
         // Identify file paths
         string clientJsonPath = ClientJsonPath;
@@ -75,7 +75,7 @@ public abstract partial class MinecraftInstance
         string sha1 = assetIndex.Sha1 ?? throw new InvalidDataException();
         int size = assetIndex.Size ?? throw new InvalidDataException();
 
-        return new GameAssetIndex
+        return new MinecraftAssetIndex
         {
             MinecraftFolderPath = MinecraftFolderPath,
             Id = id,
@@ -84,7 +84,7 @@ public abstract partial class MinecraftInstance
         };
     }
 
-    public IEnumerable<GameAsset> GetRequiredAssets()
+    public IEnumerable<MinecraftAsset> GetRequiredAssets()
     {
         // Identify file paths
         string assetIndexJsonPath = AssetIndexJsonPath;
@@ -103,7 +103,7 @@ public abstract partial class MinecraftInstance
             string hash = assetJsonNode.Hash ?? throw new InvalidDataException("Invalid asset index");
             int size = assetJsonNode.Size ?? throw new InvalidDataException();
 
-            yield return new GameAsset
+            yield return new MinecraftAsset
             {
                 MinecraftFolderPath = MinecraftFolderPath,
                 Key = key,
@@ -117,10 +117,10 @@ public abstract partial class MinecraftInstance
 
     #region Parse libraries
 
-    public (IEnumerable<GameLibrary> Libraries, IEnumerable<GameLibrary> NativeLibraries) GetRequiredLibraries()
+    public (IEnumerable<MinecraftLibrary> Libraries, IEnumerable<MinecraftLibrary> NativeLibraries) GetRequiredLibraries()
     {
-        List<GameLibrary> libs = new();
-        List<GameLibrary> nativeLibs = new();
+        List<MinecraftLibrary> libs = new();
+        List<MinecraftLibrary> nativeLibs = new();
 
         var libNodes = JsonNodeUtils.ParseFile(ClientJsonPath)?["libraries"]?
             .Deserialize<IEnumerable<LibraryJsonObject>>()
@@ -151,7 +151,7 @@ public abstract partial class MinecraftInstance
                 throw new InvalidDataException("Invalid artifact node");
 
             // Add to the list of enabled libraries
-            var gameLib = new GameLibrary(artifactNode.Url)
+            var gameLib = new MinecraftLibrary(artifactNode.Url)
             {
                 MinecraftFolderPath = MinecraftFolderPath,
                 MavenName = libNode.MavenName,

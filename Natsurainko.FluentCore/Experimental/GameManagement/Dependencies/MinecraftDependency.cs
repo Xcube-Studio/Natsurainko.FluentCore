@@ -2,7 +2,7 @@
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public abstract class GameDependency // TODO: Implement IDownloadable interface for downloading game dependencies
+public abstract class MinecraftDependency // TODO: Implement IDownloadable interface for downloading game dependencies
 {
     /// <summary>
     /// Absolute path of the .minecraft folder
