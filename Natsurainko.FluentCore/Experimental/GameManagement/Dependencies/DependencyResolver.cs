@@ -14,7 +14,7 @@ public class DependencyResolver
 {
     public IReadOnlyList<GameDependency> Dependencies { get; init; }
 
-    public event EventHandler<IDownloadTask>? DependencyDownloaded;
+    public event EventHandler<((string url, string localPath), DownloadResult)>? DependencyDownloaded;
     public event EventHandler<IEnumerable<GameDependency>>? InvalidDependenciesDetermined;
 
 
@@ -60,10 +60,11 @@ public class DependencyResolver
 
         // Download
         var downloadItems = invalidDeps.Select(dep => (dep.Url, dep.FullPath));
-        IDownloadTaskGroup taskGroup = downloader.DownloadFilesAsync(downloadItems, cancellationToken);
-        // FIXME: a task may have already completed before the event handler is attached
-        taskGroup.DownloadTaskCompleted += (_, task) => DependencyDownloaded?.Invoke(this, task);
-        await taskGroup;
+        await downloader.DownloadFilesAsync(
+            downloadItems,
+            (item, result) => { DependencyDownloaded?.Invoke(this, (item, result)); },
+            cancellationToken
+        );
     }
 
     private static async Task<bool> VerifyDependencyAsync(GameDependency dep, CancellationToken cancellationToken = default)

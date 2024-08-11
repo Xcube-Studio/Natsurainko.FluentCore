@@ -13,31 +13,37 @@ const string path = @"D:\Downloads\Natsurainko.FluentLauncher_2.2.9.0.msixbundle
 using var cts = new CancellationTokenSource();
 var delay = Task.Run(async () =>
 {
-    await Task.Delay(5000);
+    await Task.Delay(1000);
     //cts.Cancel();
 });
 
 var downloader = new MultipartDownloader(httpClient, 1048576, 16);
-var downloadTask = downloader.DownloadFileAsync(url, path, cts.Token);
+
+long? totalBytes = null;
+long downloadedBytes = 0;
 
 // Progress report
 using Timer timer = new((state) =>
 {
-    long? totalBytes = downloadTask.TotalBytes;
-    if (totalBytes is null || totalBytes == -1)
-        return;
-    Console.WriteLine($"Downloaded {downloadTask.DownloadedBytes} / {totalBytes} bytes ({100.0d * downloadTask.DownloadedBytes / totalBytes:0.##}%).");
+    if (totalBytes is null) return;
+
+    Console.WriteLine($"Downloaded {downloadedBytes} / {totalBytes} bytes ({100.0d * downloadedBytes / totalBytes:0.##}%).");
 }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
 
 // Download operation
-await downloadTask;
-if (downloadTask.Status == DownloadStatus.Cancelled)
+var result = await downloader.DownloadFileAsync(
+    url, path,
+    (size) => totalBytes = size,
+    (bytes) => Interlocked.Add(ref downloadedBytes, bytes),
+    cts.Token);
+
+if (result.Type == DownloadResultType.Cancelled)
 {
     Console.WriteLine("Download task cancelled.");
 }
-else if (downloadTask.Status == DownloadStatus.Failed)
+else if (result.Type == DownloadResultType.Failed)
 {
-    Console.WriteLine("Download task failed.\nError: " + downloadTask.Exception?.Message);
+    Console.WriteLine("Download task failed.\nError: " + result.Exception!.Message);
 }
 else
 {
