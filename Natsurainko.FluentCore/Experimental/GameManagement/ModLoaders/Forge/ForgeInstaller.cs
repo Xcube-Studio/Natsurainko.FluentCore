@@ -218,8 +218,9 @@ public class ForgeInstaller : ModLoaderInstaller
     {
         OnProgressChanged(0.3);
 
-        var libs = _libraries.Select(lib => (DownloadMirrors.BmclApi.GetMirrorUrl(lib.Url!), lib.AbsolutePath));
-        _downloader.DownloadFilesAsync(libs).GetAwaiter().GetResult();
+        var requests = _libraries.Select(lib => new DownloadRequest(DownloadMirrors.BmclApi.GetMirrorUrl(lib.Url!), lib.AbsolutePath));
+        var groupRequest = new GroupDownloadRequest(requests);
+        _downloader.DownloadFilesAsync(groupRequest).GetAwaiter().GetResult();
 
         OnProgressChanged(0.5);
     }

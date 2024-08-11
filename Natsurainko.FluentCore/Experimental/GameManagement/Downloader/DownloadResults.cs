@@ -28,7 +28,6 @@ public class DownloadResult
 
 public class GroupDownloadResult
 {
-    public required IReadOnlyList<((string url, string localPath), DownloadResult)> Failed { get; init; }
-    public required IReadOnlyList<((string url, string localPath), DownloadResult)> Cancelled { get; init; }
+    public required IReadOnlyList<(DownloadRequest, DownloadResult)> Failed { get; init; }
     public required DownloadResultType Type { get; init; }
 }

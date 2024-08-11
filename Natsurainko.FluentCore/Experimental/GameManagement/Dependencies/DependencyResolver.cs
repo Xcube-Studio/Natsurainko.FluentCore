@@ -14,9 +14,8 @@ public class DependencyResolver
 {
     public IReadOnlyList<GameDependency> Dependencies { get; init; }
 
-    public event EventHandler<((string url, string localPath), DownloadResult)>? DependencyDownloaded;
+    public event EventHandler<(DownloadRequest, DownloadResult)>? DependencyDownloaded;
     public event EventHandler<IEnumerable<GameDependency>>? InvalidDependenciesDetermined;
-
 
     public static DependencyResolverBuilder CreateBuilder() => new();
 
@@ -59,12 +58,13 @@ public class DependencyResolver
         InvalidDependenciesDetermined?.Invoke(this, invalidDeps);
 
         // Download
-        var downloadItems = invalidDeps.Select(dep => (dep.Url, dep.FullPath));
-        await downloader.DownloadFilesAsync(
-            downloadItems,
-            (item, result) => { DependencyDownloaded?.Invoke(this, (item, result)); },
-            cancellationToken
-        );
+        var downloadItems = invalidDeps.Select(dep => new DownloadRequest(dep.Url, dep.FullPath));
+        var groupRequest = new GroupDownloadRequest(downloadItems);
+        groupRequest.SingleRequestCompleted += (request, result) =>
+        {
+            DependencyDownloaded?.Invoke(this, (request, result));
+        };
+        await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 
     private static async Task<bool> VerifyDependencyAsync(GameDependency dep, CancellationToken cancellationToken = default)

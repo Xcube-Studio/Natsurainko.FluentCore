@@ -68,8 +68,9 @@ public class QuiltInstaller : ModLoaderInstaller
 
     void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
-        var libs = libraries.Select(lib => (lib.Url!, lib.AbsolutePath));
-        _downloader.DownloadFilesAsync(libs).GetAwaiter().GetResult();
+        var requests = libraries.Select(lib => new DownloadRequest (lib.Url!, lib.AbsolutePath));
+        var groupRequest = new GroupDownloadRequest(requests);
+        _downloader.DownloadFilesAsync(groupRequest).GetAwaiter().GetResult();
     }
 
     void WriteFiles(JsonNode versionInfoJson)

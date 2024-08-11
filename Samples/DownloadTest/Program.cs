@@ -31,11 +31,16 @@ using Timer timer = new((state) =>
 }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
 
 // Download operation
-var result = await downloader.DownloadFileAsync(
-    url, path,
-    (size) => totalBytes = size,
-    (bytes) => Interlocked.Add(ref downloadedBytes, bytes),
-    cts.Token);
+var request = new DownloadRequest(url, path);
+request.FileSizeReceived += (_, size) =>
+{
+    totalBytes = size;
+};
+request.BytesReceived += (_, bytes) =>
+{
+    Interlocked.Add(ref downloadedBytes, bytes);
+};
+var result = await downloader.DownloadFileAsync(request, cts.Token);
 
 if (result.Type == DownloadResultType.Cancelled)
 {
