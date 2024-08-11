@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class GameLibrary : GameDependency
+public class MinecraftLibrary : MinecraftDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("libraries", GetLibraryPath());
@@ -33,7 +33,7 @@ public class GameLibrary : GameDependency
 
     public required bool IsNativeLibrary { get; init; }
 
-    public GameLibrary(string url)
+    public MinecraftLibrary(string url)
     {
         _url = url;
     }

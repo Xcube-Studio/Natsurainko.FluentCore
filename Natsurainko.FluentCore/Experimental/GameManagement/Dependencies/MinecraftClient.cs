@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class GameClient : GameDependency
+public class MinecraftClient : MinecraftDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("versions", ClientId, $"{ClientId}.jar");
@@ -19,7 +19,7 @@ public class GameClient : GameDependency
 
     public required string ClientId { get; init; }
 
-    public GameClient(string url)
+    public MinecraftClient(string url)
     {
         _url = url;
     }

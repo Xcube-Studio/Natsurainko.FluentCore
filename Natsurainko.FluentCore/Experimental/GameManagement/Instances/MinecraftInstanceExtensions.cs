@@ -40,7 +40,7 @@ public static class MinecraftInstanceExtensions
         Directory.Delete(versionDirPath, true);
     }
 
-    public static GameClient? GetJarElement(this MinecraftInstance instance)
+    public static MinecraftClient? GetJarElement(this MinecraftInstance instance)
     {
         string clientJsonPath = instance.ClientJsonPath;
         if (instance is ModifiedMinecraftInstance { HasInheritance: true } inst)
@@ -65,7 +65,7 @@ public static class MinecraftInstanceExtensions
         if (sha1 is null || url is null || size is null)
             throw new InvalidDataException("Invalid client info");
 
-        return new GameClient(url)
+        return new MinecraftClient(url)
         {
             MinecraftFolderPath = instance.MinecraftFolderPath,
             ClientId = Path.GetFileNameWithoutExtension(clientJarPath),

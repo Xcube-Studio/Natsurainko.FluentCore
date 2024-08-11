@@ -12,16 +12,16 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
 public class DependencyResolver
 {
-    public IReadOnlyList<GameDependency> Dependencies { get; init; }
+    public IReadOnlyList<MinecraftDependency> Dependencies { get; init; }
 
     public event EventHandler<(DownloadRequest, DownloadResult)>? DependencyDownloaded;
-    public event EventHandler<IEnumerable<GameDependency>>? InvalidDependenciesDetermined;
+    public event EventHandler<IEnumerable<MinecraftDependency>>? InvalidDependenciesDetermined;
 
     public static DependencyResolverBuilder CreateBuilder() => new();
 
-    public DependencyResolver(IEnumerable<GameDependency> deps)
+    public DependencyResolver(IEnumerable<MinecraftDependency> deps)
     {
-        Dependencies = new List<GameDependency>(deps);
+        Dependencies = new List<MinecraftDependency>(deps);
     }
 
     public async Task VerifyAndDownloadDependenciesAsync(IDownloader downloader, int fileVerificationParallelism, CancellationToken cancellationToken = default)
@@ -33,7 +33,7 @@ public class DependencyResolver
         // This is IO bound operation, using TPL is inefficient
         // TODO: Test performance of this implementation
         SemaphoreSlim semaphore = new(0, fileVerificationParallelism);
-        ConcurrentBag<GameDependency> invalidDeps = new();
+        ConcurrentBag<MinecraftDependency> invalidDeps = new();
 
         var tasks = Dependencies.Select(async dep =>
         {
@@ -67,7 +67,7 @@ public class DependencyResolver
         await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 
-    private static async Task<bool> VerifyDependencyAsync(GameDependency dep, CancellationToken cancellationToken = default)
+    private static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(dep.FullPath))
             return false;
@@ -82,9 +82,9 @@ public class DependencyResolver
 
 public class DependencyResolverBuilder
 {
-    private readonly List<GameDependency> _deps = new();
+    private readonly List<MinecraftDependency> _deps = new();
 
-    public DependencyResolverBuilder AddDependencies(IEnumerable<GameDependency> deps)
+    public DependencyResolverBuilder AddDependencies(IEnumerable<MinecraftDependency> deps)
     {
         _deps.AddRange(deps);
         return this;
