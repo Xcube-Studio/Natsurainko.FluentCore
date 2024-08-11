@@ -74,7 +74,7 @@ public static class MinecraftInstanceExtensions
         };
     }
 
-    public static MinecraftInstanceStatistics GetStatistics(this MinecraftInstance instance)
+    public static GameStorageInfo GetStatistics(this MinecraftInstance instance)
     {
         var (libs, nativeLibs) = instance.GetRequiredLibraries();
         var assetIndex = instance.GetAssetIndex();
@@ -107,7 +107,7 @@ public static class MinecraftInstanceExtensions
 
         size += new FileInfo(instance.ClientJsonPath).Length;
 
-        return new MinecraftInstanceStatistics
+        return new GameStorageInfo
         {
             AssetsCount = assetCount,
             LibrariesCount = libCount,
@@ -120,7 +120,7 @@ public static class MinecraftInstanceExtensions
 /// <summary>
 /// 游戏统计数据
 /// </summary>
-public record MinecraftInstanceStatistics
+public record GameStorageInfo
 {
     /// <summary>
     /// 依赖库文件数

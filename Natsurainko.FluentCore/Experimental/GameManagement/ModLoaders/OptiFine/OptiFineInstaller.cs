@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;

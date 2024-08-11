@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using System;
 using System.Threading.Tasks;
 

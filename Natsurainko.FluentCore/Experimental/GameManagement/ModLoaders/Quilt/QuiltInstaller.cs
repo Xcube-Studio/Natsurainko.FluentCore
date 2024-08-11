@@ -1,8 +1,10 @@
-﻿using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -11,6 +13,13 @@ namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Quilt;
 public class QuiltInstaller : ModLoaderInstaller
 {
     public required QuiltInstallBuild QuiltBuild { get; set; }
+
+    private readonly IDownloader _downloader;
+
+    public QuiltInstaller(IDownloader downloader)
+    {
+        _downloader = downloader;
+    }
 
     public override Task<InstallationResult> ExecuteAsync() =>
         Task.Run(() =>
@@ -59,11 +68,9 @@ public class QuiltInstaller : ModLoaderInstaller
 
     void DownloadLibraries(IEnumerable<LibraryElement> libraries)
     {
-        throw new NotImplementedException();
-        //var resourcesDownloader = new DefaultResourcesDownloader(InheritedFrom);
-        //resourcesDownloader.SetLibraryElements(libraries);
-
-        //resourcesDownloader.Download();
+        var requests = libraries.Select(lib => new DownloadRequest (lib.Url!, lib.AbsolutePath));
+        var groupRequest = new GroupDownloadRequest(requests);
+        _downloader.DownloadFilesAsync(groupRequest).GetAwaiter().GetResult();
     }
 
     void WriteFiles(JsonNode versionInfoJson)

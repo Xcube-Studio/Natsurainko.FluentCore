@@ -60,6 +60,7 @@ public static class HttpUtils
         return responseMessage;
     }
 
+    [Obsolete]
     public static HttpResponseMessage HttpGet(
         string url,
         Dictionary<string, string> headers,
