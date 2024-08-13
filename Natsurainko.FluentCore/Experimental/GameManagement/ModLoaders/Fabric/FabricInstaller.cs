@@ -1,10 +1,12 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -23,7 +25,7 @@ public class FabricInstaller : ModLoaderInstaller
 
     public override Task<InstallationResult> ExecuteAsync() => Task.Run(() =>
         {
-            ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries);
+            ParseBuild(out JsonNode versionInfoJson, out IEnumerable<MinecraftLibrary> libraries);
 
             DownloadLibraries(libraries);
 
@@ -49,28 +51,24 @@ public class FabricInstaller : ModLoaderInstaller
             };
         });
 
-    void ParseBuild(out JsonNode versionInfoJson, out IEnumerable<LibraryElement> libraries)
+    void ParseBuild(out JsonNode clientJsonNode, out IEnumerable<MinecraftLibrary> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
             $"https://meta.fabricmc.net/v2/versions/loader/{InheritedInstance.VersionFolderName}/{FabricBuild.BuildVersion}/profile/json"
         );
-        versionInfoJson =
+        clientJsonNode =
             JsonNode.Parse(responseMessage.Content.ReadAsString())
             ?? throw new InvalidDataException("Error in parsing version info json");
 
-        var librariesJson = versionInfoJson["libraries"];
-        if (librariesJson is null)
-            throw new InvalidDataException("Error in parsing version info json");
-
-        libraries = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
-            librariesJson.AsArray(),
-            InheritedInstance.MinecraftFolderPath
-        );
+        libraries = (clientJsonNode["libraries"] as JsonArray)?
+            .Deserialize<IEnumerable<ClientJsonObject.LibraryJsonObject>>()?
+            .Select(lib => MinecraftLibrary.ParseJsonNode(lib, InheritedInstance.MinecraftFolderPath))
+            ?? throw new InvalidDataException("Error in parsing version info json");
     }
 
-    void DownloadLibraries(IEnumerable<LibraryElement> libraries)
+    void DownloadLibraries(IEnumerable<MinecraftLibrary> libraries)
     {
-        var requests = libraries.Select(lib => new DownloadRequest(lib.Url!, lib.AbsolutePath));
+        var requests = libraries.Select(lib => new DownloadRequest(lib.Url!, lib.FullPath));
         var groupRequest = new GroupDownloadRequest(requests);
         _downloader.DownloadFilesAsync(groupRequest).GetAwaiter().GetResult();
     }

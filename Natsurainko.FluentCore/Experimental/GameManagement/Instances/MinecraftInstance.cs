@@ -138,28 +138,10 @@ public abstract partial class MinecraftInstance
                     continue;
             }
 
-            // Check platform-specific library name
-            if (libNode.MavenName is null)
-                throw new InvalidDataException("Invalid library name");
-
-            if (libNode.NativeClassifierNames is not null)
-                libNode.MavenName += ":" + libNode.NativeClassifierNames[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
-
-            // Get SHA1 and URL of the library
-            DownloadArtifactJsonObject artifactNode = GetLibraryArtifactInfo(libNode);
-            if (artifactNode.Sha1 is null || artifactNode.Size is null || artifactNode.Url is null)
-                throw new InvalidDataException("Invalid artifact node");
+            // Parse library
+            var gameLib = MinecraftLibrary.ParseJsonNode(libNode, MinecraftFolderPath);
 
             // Add to the list of enabled libraries
-            var gameLib = new MinecraftLibrary(artifactNode.Url)
-            {
-                MinecraftFolderPath = MinecraftFolderPath,
-                MavenName = libNode.MavenName,
-                Sha1 = artifactNode.Sha1,
-                Size = (int)artifactNode.Size,
-                IsNativeLibrary = libNode.NativeClassifierNames != null
-            };
-
             if (gameLib.IsNativeLibrary)
                 nativeLibs.Add(gameLib);
             else
@@ -230,22 +212,6 @@ public abstract partial class MinecraftInstance
             "osx" => osx,
             _ => false,
         };
-    }
-
-    private static DownloadArtifactJsonObject GetLibraryArtifactInfo(LibraryJsonObject libNode)
-    {
-        if (libNode.DownloadInformation is null)
-            throw new InvalidDataException("The library does not contain download information");
-
-        DownloadArtifactJsonObject? artifact = libNode.DownloadInformation.Artifact;
-        if (libNode.NativeClassifierNames != null)
-        {
-            string nativeClassifier = libNode.NativeClassifierNames[EnvironmentUtils.PlatformName]
-                .Replace("${arch}", EnvironmentUtils.SystemArch);
-            artifact = libNode.DownloadInformation.Classifiers?[nativeClassifier];
-        }
-
-        return artifact ?? throw new InvalidDataException("Invalid artifact information");
     }
 
     #endregion
