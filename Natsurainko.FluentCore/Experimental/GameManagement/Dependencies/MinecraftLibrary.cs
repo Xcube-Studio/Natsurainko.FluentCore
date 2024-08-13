@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Nrk.FluentCore.Environment;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
+using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
@@ -38,7 +42,7 @@ public class MinecraftLibrary : MinecraftDependency
         _url = url;
     }
 
-    private string GetLibraryPath()
+    internal string GetLibraryPath()
     {
         string path = "";
 
@@ -63,6 +67,47 @@ public class MinecraftLibrary : MinecraftDependency
 
         return Path.Combine(path, filename);
     }
+
+    internal static MinecraftLibrary ParseJsonNode(ClientJsonObject.LibraryJsonObject libNode, string minecraftFolderPath)
+    {
+        // Check platform-specific library name
+        if (libNode.MavenName is null)
+            throw new InvalidDataException("Invalid library name");
+
+        if (libNode.NativeClassifierNames is not null)
+            libNode.MavenName += ":" + libNode.NativeClassifierNames[EnvironmentUtils.PlatformName].Replace("${arch}", EnvironmentUtils.SystemArch);
+
+        // Get SHA1 and URL of the library
+        DownloadArtifactJsonObject artifactNode = GetLibraryArtifactInfo(libNode);
+        if (artifactNode.Sha1 is null || artifactNode.Size is null || artifactNode.Url is null)
+            throw new InvalidDataException("Invalid artifact node");
+
+        return new MinecraftLibrary(artifactNode.Url)
+        {
+            MinecraftFolderPath = minecraftFolderPath,
+            MavenName = libNode.MavenName,
+            Sha1 = artifactNode.Sha1,
+            Size = (int)artifactNode.Size,
+            IsNativeLibrary = libNode.NativeClassifierNames is not null
+        };
+    }
+
+    private static DownloadArtifactJsonObject GetLibraryArtifactInfo(LibraryJsonObject libNode)
+    {
+        if (libNode.DownloadInformation is null)
+            throw new InvalidDataException("The library does not contain download information");
+
+        DownloadArtifactJsonObject? artifact = libNode.DownloadInformation.Artifact;
+        if (libNode.NativeClassifierNames is not null)
+        {
+            string nativeClassifier = libNode.NativeClassifierNames[EnvironmentUtils.PlatformName]
+                .Replace("${arch}", EnvironmentUtils.SystemArch);
+            artifact = libNode.DownloadInformation.Classifiers?[nativeClassifier];
+        }
+
+        return artifact ?? throw new InvalidDataException("Invalid artifact information");
+    }
+
 
     // <summary>
     // Parse a library from the full name of a Java library

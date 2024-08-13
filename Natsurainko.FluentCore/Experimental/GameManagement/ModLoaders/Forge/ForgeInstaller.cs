@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -37,7 +38,7 @@ public class ForgeInstaller : ModLoaderInstaller
             out JsonNode installProfile,
             out string forgeVersion,
             out JsonNode versionInfoJson,
-            out List<LibraryElement> libraries,
+            out List<MinecraftLibrary> libraries,
             out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors
         );
         WriteFiles(packageArchive, installProfile, forgeVersion, versionInfoJson);
@@ -75,7 +76,7 @@ public class ForgeInstaller : ModLoaderInstaller
         out JsonNode installProfile,
         out string forgeVersion,
         out JsonNode versionInfoJson,
-        out List<LibraryElement> libraries,
+        out List<MinecraftLibrary> libraries,
         out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors)
     {
         highVersionForgeProcessors = null; // default output
@@ -117,29 +118,35 @@ public class ForgeInstaller : ModLoaderInstaller
                 ?? throw new Exception("Failed to parse version.json");
         }
 
-        libraries = new List<LibraryElement>();
+        libraries = new List<MinecraftLibrary>();
         if (versionInfoJson["libraries"]?.AsArray() is JsonArray arr)
         {
-            var libs = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(arr, InheritedInstance.MinecraftFolderPath);
+            var libs = arr
+                .Deserialize<IEnumerable<ClientJsonObject.LibraryJsonObject>>()?
+                .Select(lib => MinecraftLibrary.ParseJsonNode(lib, InheritedInstance.MinecraftFolderPath))
+                ?? throw new InvalidDataException("Error in parsing version info json");
+
             libraries.AddRange(libs);
         }
 
-        foreach (var lib in libraries.Where(x => string.IsNullOrEmpty(x.Url)))
-        {
-            if (lib.RelativePath is null)
-                throw new Exception("Library relative path is null");
-            lib.Url = "https://bmclapi2.bangbang93.com/maven/" + lib.RelativePath.Replace("\\", "/");
-        }
+        //Config download mirror
+        //foreach (var lib in libraries.Where(x => string.IsNullOrEmpty(x.Url)))
+        //{
+        //    if (lib.GetLibraryPath() is null)
+        //        throw new Exception("Library relative path is null");
+        //    lib.Url = "https://bmclapi2.bangbang93.com/maven/" + lib.RelativePath.Replace("\\", "/");
+        //}
 
         if (_isLegacyForgeVersion)
             return;
 
         if (installProfile["libraries"]?.AsArray() is JsonArray profileLibArr)
         {
-            var libs = DefaultLibraryParser.EnumerateLibrariesFromJsonArray(
-                profileLibArr,
-                InheritedInstance.MinecraftFolderPath
-            );
+            var libs = profileLibArr
+               .Deserialize<IEnumerable<ClientJsonObject.LibraryJsonObject>>()?
+               .Select(lib => MinecraftLibrary.ParseJsonNode(lib, InheritedInstance.MinecraftFolderPath))
+               ?? throw new InvalidDataException("Error in parsing version info json");
+
             libraries.AddRange(libs);
         }
 
@@ -214,11 +221,11 @@ public class ForgeInstaller : ModLoaderInstaller
         OnProgressChanged(0.25);
     }
 
-    void DownloadLibraries(List<LibraryElement> _libraries)
+    void DownloadLibraries(List<MinecraftLibrary> _libraries)
     {
         OnProgressChanged(0.3);
 
-        var requests = _libraries.Select(lib => new DownloadRequest(DownloadMirrors.BmclApi.GetMirrorUrl(lib.Url!), lib.AbsolutePath));
+        var requests = _libraries.Select(lib => new DownloadRequest(DownloadMirrors.BmclApi.GetMirrorUrl(lib.Url!), lib.FullPath));
         var groupRequest = new GroupDownloadRequest(requests);
         _downloader.DownloadFilesAsync(groupRequest).GetAwaiter().GetResult();
 
