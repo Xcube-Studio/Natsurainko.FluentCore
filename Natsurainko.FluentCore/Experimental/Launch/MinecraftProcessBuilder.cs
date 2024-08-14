@@ -1,6 +1,8 @@
 ﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Experimental.GameManagement;
+using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Launch;
-using Nrk.FluentCore.Management;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -28,7 +30,7 @@ public class MinecraftProcessBuilder
     private string _gameDirectory;
 
     // Required, set by calling builder methods
-    private IEnumerable<LibraryElement>? _libraries;
+    private IEnumerable<MinecraftLibrary>? _libraries;
     private Account? _account;
     private string? _javaPath;
     private int? _minMemory;
@@ -39,12 +41,12 @@ public class MinecraftProcessBuilder
     private List<string> _extraVmArguments = new();
     // 不可以将两个参数合并载入，两种参数要分别放在启动参数的对应位置才能被加载
 
-    public GameInfo GameInfo { get; init; }
+    public MinecraftInstance MinecraftInstance { get; init; }
 
-    public MinecraftProcessBuilder(GameInfo gameInfo)
+    public MinecraftProcessBuilder(MinecraftInstance gameInfo)
     {
-        GameInfo = gameInfo;
-        _nativesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.AbsoluteId, "natives");
+        MinecraftInstance = gameInfo;
+        _nativesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.VersionFolderName, "natives");
         _librariesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "libraries");
         _assetsFolder = Path.Combine(gameInfo.MinecraftFolderPath, "assets");
         _gameDirectory = gameInfo.MinecraftFolderPath;
@@ -74,21 +76,21 @@ public class MinecraftProcessBuilder
         if (!CanBuild())
             throw new InvalidOperationException("Missing required parameters");
 
-        if (GameInfo.JarPath is null)
+        if (MinecraftInstance.ClientJarPath is null)
             throw new InvalidOperationException("Invalid GameInfo");
 
         // Build arguments
-        var versionJsonNode = JsonNode.Parse(File.ReadAllText(GameInfo.VersionJsonPath))
+        var versionJsonNode = JsonNode.Parse(File.ReadAllText(MinecraftInstance.ClientJsonPath))
             ?? throw new JsonException("Failed to parse version.json");
-        var entity = versionJsonNode.Deserialize<VersionJsonEntity>()
+        var entity = versionJsonNode.Deserialize<ClientJsonObject>()
             ?? throw new JsonException("Failed to parse version.json");
 
         var vmParameters = DefaultVmParameterParser.Parse(versionJsonNode);
         var gameParameters = DefaultGameParameterParser.Parse(versionJsonNode);
 
-        if (GameInfo.IsInheritedFrom)
+        if (MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true} inst)
         {
-            var inheritedVersionJsonNode = JsonNode.Parse(File.ReadAllText(GameInfo.InheritsFrom.VersionJsonPath))
+            var inheritedVersionJsonNode = JsonNode.Parse(File.ReadAllText(inst.InheritedMinecraftInstance.ClientJsonPath))
                 ?? throw new JsonException("Failed to parse version.json");
             vmParameters = DefaultVmParameterParser
                 .Parse(inheritedVersionJsonNode)
@@ -98,8 +100,9 @@ public class MinecraftProcessBuilder
                 .Union(gameParameters);
         }
 
-        var classPath = string.Join(Path.PathSeparator, _libraries.Select(lib => lib.AbsolutePath));
-        if (!string.IsNullOrEmpty(GameInfo.JarPath)) classPath += Path.PathSeparator + GameInfo.JarPath;
+        var classPath = string.Join(Path.PathSeparator, _libraries.Select(lib => lib.FullPath));
+        if (!string.IsNullOrEmpty(MinecraftInstance.ClientJarPath))
+            classPath += Path.PathSeparator + MinecraftInstance.ClientJarPath;
 
         var vmParametersReplace = new Dictionary<string, string>()
         {
@@ -110,18 +113,27 @@ public class MinecraftProcessBuilder
             { "${natives_directory}", _nativesFolder.ToPathParameter() },
             { "${classpath}", classPath.ToPathParameter() },
             {
-                "${version_name}", GameInfo.IsInheritedFrom
-                ? GameInfo.InheritsFrom.AbsoluteId
-                : GameInfo.AbsoluteId
+                "${version_name}", MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } instance
+                    ? instance.InheritedMinecraftInstance.VersionFolderName
+                    : MinecraftInstance.VersionFolderName
             },
         };
 
-        string? assetIndexPath = GameInfo.IsInheritedFrom ?
-            GameInfo.InheritsFrom.AssetsIndexJsonPath :
-            GameInfo.AssetsIndexJsonPath;
+        string? assetIndexPath = MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } instance2 ?
+            instance2.InheritedMinecraftInstance.AssetIndexJsonPath :
+            MinecraftInstance.AssetIndexJsonPath;
 
         string assetIndexFilename = Path.GetFileNameWithoutExtension(assetIndexPath)
             ?? throw new InvalidOperationException("Invalid asset index path");
+
+        string versionType = MinecraftInstance.Version.Type switch
+        {
+            MinecraftVersionType.Release => "release",
+            MinecraftVersionType.Snapshot => "snapshot",
+            MinecraftVersionType.OldBeta => "old_beta",
+            MinecraftVersionType.OldAlpha => "old_alpha",
+            _ => ""
+        };
 
         var gameParametersReplace = new Dictionary<string, string>()
         {
@@ -131,28 +143,28 @@ public class MinecraftProcessBuilder
             { "${auth_uuid}" ,_account.Uuid.ToString("N") },
             { "${user_type}" , _account.Type.Equals(AccountType.Microsoft) ? "MSA" : "Mojang" },
             { "${user_properties}" , "{}" },
-            { "${version_name}" , GameInfo.AbsoluteId.ToPathParameter() },
-            { "${version_type}" , GameInfo.Type ?? "" },
+            { "${version_name}" , MinecraftInstance.VersionFolderName.ToPathParameter() },
+            { "${version_type}" , versionType },
             { "${game_assets}" , _assetsFolder.ToPathParameter() },
             { "${assets_root}" , _assetsFolder.ToPathParameter() },
             { "${game_directory}" , _gameDirectory.ToPathParameter() },
             { "${assets_index_name}" , assetIndexFilename },
         };
 
-        var parentFolderPath = Directory.GetParent(GameInfo.MinecraftFolderPath)?.FullName
+        var parentFolderPath = Directory.GetParent(MinecraftInstance.MinecraftFolderPath)?.FullName
             ?? throw new InvalidOperationException("Invalid Minecraft folder path"); // QUESTION: is this needed?
 
         if (_isCmdMode)
         {
             yield return "@echo off";
             yield return $"\r\nset APPDATA={parentFolderPath}";
-            yield return $"\r\ncd /{GameInfo.MinecraftFolderPath[0]} {GameInfo.MinecraftFolderPath}";
+            yield return $"\r\ncd /{MinecraftInstance.MinecraftFolderPath[0]} {MinecraftInstance.MinecraftFolderPath}";
             yield return $"\r\n{_javaPath.ToPathParameter()}";
         }
 
         yield return $"-Xms{_minMemory}M";
         yield return $"-Xmx{_maxMemory}M";
-        yield return $"-Dminecraft.client.jar={GameInfo.JarPath.ToPathParameter()}";
+        yield return $"-Dminecraft.client.jar={MinecraftInstance.ClientJsonPath.ToPathParameter()}";
 
         if (_Dlog4j2_FormatMsgNoLookups) yield return "-Dlog4j2.formatMsgNoLookups=true";
 
@@ -203,11 +215,11 @@ public class MinecraftProcessBuilder
     /// <summary>
     /// 设置 加载Libraries [必须]
     /// </summary>
-    /// <param name="libraryElements"></param>
+    /// <param name="libraries"></param>
     /// <returns></returns>
-    public MinecraftProcessBuilder SetLibraries(IEnumerable<LibraryElement> libraryElements)
+    public MinecraftProcessBuilder SetLibraries(IEnumerable<MinecraftLibrary> libraries)
     {
-        _libraries = libraryElements;
+        _libraries = libraries;
         return this;
     }
 
