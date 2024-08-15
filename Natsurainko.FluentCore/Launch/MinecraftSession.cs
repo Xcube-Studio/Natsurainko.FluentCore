@@ -114,7 +114,7 @@ public class MinecraftSession
                 State = MinecraftSessionState.Authenticating;
 
                 RefreshAccountTask.Start();
-                await RefreshAccountTask;
+                Account = await RefreshAccountTask;
             }
 
             new DefaultLibraryParser(GameInfo).EnumerateLibraries(
