@@ -6,35 +6,13 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Downloader;
 
-public interface IDownloadRequest
+public class DownloadRequest
 {
-    string Url { get; }
-    string LocalPath { get; }
+    public string Url { get; set; }
+    public string LocalPath { get; set; }
 
-    void OnFileSizeReceived(long? fileSize);
-    void OnBytesDownloaded(long bytes);
-}
-
-public interface IGroupDownloadRequest
-{
-    IEnumerable<DownloadRequest> Files { get; }
-
-    void OnSingleRequestCompleted(DownloadRequest request, DownloadResult result);
-}
-
-public class DownloadRequest : IDownloadRequest
-{
-    public string Url { get; init; }
-    public string LocalPath { get; init; }
-
-    public event EventHandler<long?>? FileSizeReceived;
-    public event EventHandler<long>? BytesReceived;
-
-    void IDownloadRequest.OnFileSizeReceived(long? fileSize)
-        => FileSizeReceived?.Invoke(this, fileSize);
-
-    void IDownloadRequest.OnBytesDownloaded(long bytes)
-        => BytesReceived?.Invoke(this, bytes);
+    public Action<long?>? FileSizeReceived { get; set; }
+    public Action<long>? BytesReceived { get; set; }
 
     public DownloadRequest(string url, string localPath)
     {
@@ -43,17 +21,10 @@ public class DownloadRequest : IDownloadRequest
     }
 }
 
-
-public delegate void DownloadRequestCompletedEventHandler(DownloadRequest request, DownloadResult result);
-
-public class GroupDownloadRequest : IGroupDownloadRequest
+public class GroupDownloadRequest
 {
-    public IEnumerable<DownloadRequest> Files { get; init; }
-
-    public event DownloadRequestCompletedEventHandler? SingleRequestCompleted;
-
-    void IGroupDownloadRequest.OnSingleRequestCompleted(DownloadRequest request, DownloadResult result)
-        => SingleRequestCompleted?.Invoke(request, result);
+    public IEnumerable<DownloadRequest> Files { get; set; }
+    public Action<DownloadRequest, DownloadResult>? SingleRequestCompleted { get; set; }
 
     public GroupDownloadRequest(IEnumerable<DownloadRequest> files)
     {

@@ -36,13 +36,15 @@ public class MultipartDownloader : IDownloader
         httpClient ??= HttpUtils.HttpClient;
         _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks);
         _mirror = mirror;
-        _globalDownloadTasksSemaphore = new SemaphoreSlim(0, concurrentDownloadTasks);
+        _globalDownloadTasksSemaphore = new SemaphoreSlim(concurrentDownloadTasks, concurrentDownloadTasks);
     }
 
     public async Task<DownloadResult> DownloadFileAsync(DownloadRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
+            // Limits the number of concurrent download tasks
+            await _globalDownloadTasksSemaphore.WaitAsync(cancellationToken);
             await DownloadFileDriverAsync(request, cancellationToken);
             return new DownloadResult(DownloadResultType.Successful);
         }
@@ -57,9 +59,13 @@ public class MultipartDownloader : IDownloader
                 Exception = e
             };
         }
+        finally
+        {
+            _globalDownloadTasksSemaphore.Release();
+        }
     }
 
-    public async Task DownloadFileDriverAsync(IDownloadRequest request, CancellationToken cancellationToken = default)
+    public async Task DownloadFileDriverAsync(DownloadRequest request, CancellationToken cancellationToken = default)
     {
         string url = request.Url;
         string localPath = request.LocalPath;
@@ -97,7 +103,7 @@ public class MultipartDownloader : IDownloader
         }
 
         // Status changed
-        request.OnFileSizeReceived(states.TotalBytes);
+        request.FileSizeReceived?.Invoke(states.TotalBytes);
 
         // Ensure destination directory exists
         string? destinationDir = Path.GetDirectoryName(localPath);
@@ -132,7 +138,7 @@ public class MultipartDownloader : IDownloader
         return (response, url);
     }
 
-    private async Task DownloadSinglePartAsync(DownloadStates states, IDownloadRequest request, CancellationToken cancellationToken = default)
+    private async Task DownloadSinglePartAsync(DownloadStates states, DownloadRequest request, CancellationToken cancellationToken = default)
     {
         // Send a GET request to start downloading the file
         using var response = await HttpClient.GetAsync(states.Url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -151,17 +157,17 @@ public class MultipartDownloader : IDownloader
         ArrayPool<byte>.Shared.Return(downloadBufferArr);
     }
 
-    private async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, IDownloadRequest request, CancellationToken cancellationToken = default)
+    private async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, DownloadRequest request, CancellationToken cancellationToken = default)
     {
         int bytesRead = 0;
         while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer[0..bytesRead], cancellationToken);
-            request.OnBytesDownloaded(bytesRead);
+            request.BytesReceived?.Invoke(bytesRead);
         }
     }
 
-    private async Task DownloadMultiPartAsync(DownloadStates states, IDownloadRequest request, CancellationToken cancellationToken = default)
+    private async Task DownloadMultiPartAsync(DownloadStates states, DownloadRequest request, CancellationToken cancellationToken = default)
     {
         long fileSize = (long)states.TotalBytes!; // Not null in multipart download
 
@@ -184,7 +190,7 @@ public class MultipartDownloader : IDownloader
         await Task.WhenAll(workers);
     }
 
-    private async Task MultipartDownloadWorker(DownloadStates states, IDownloadRequest downloadRequest, CancellationToken cancellationToken = default)
+    private async Task MultipartDownloadWorker(DownloadStates states, DownloadRequest downloadRequest, CancellationToken cancellationToken = default)
     {
         // Resources for this worker only
         using var fileStream = new FileStream(states.LocalPath, FileMode.Open, FileAccess.Write, FileShare.Write);
@@ -246,7 +252,6 @@ public class MultipartDownloader : IDownloader
 
     public async Task<GroupDownloadResult> DownloadFilesAsync(GroupDownloadRequest request, CancellationToken cancellationToken = default)
     {
-        IGroupDownloadRequest groupReq = request;
         List<(DownloadRequest, DownloadResult)> failed = new();
         List<Task> downloadTasks = new();
         foreach (var req in request.Files)
@@ -257,27 +262,13 @@ public class MultipartDownloader : IDownloader
             if (_mirror is not null)
                 url = _mirror.GetMirrorUrl(url);
 
-            Task downloadTask = DownloadFileDriverAsync(req, cancellationToken).ContinueWith((t) =>
+            Task downloadTask = DownloadFileAsync(req, cancellationToken).ContinueWith((t) =>
             {
-                if (t.IsCanceled)
+                if (t.IsFaulted)
                 {
-                    var result = new DownloadResult(DownloadResultType.Cancelled);
-                    groupReq.OnSingleRequestCompleted(req, result);
+                    failed.Add((req, t.Result));
                 }
-                else if (t.IsFaulted)
-                {
-                    var result = new DownloadResult(DownloadResultType.Failed)
-                    {
-                        Exception = t.Exception
-                    };
-                    failed.Add((req, result));
-                    groupReq.OnSingleRequestCompleted(req, result);
-                }
-                else
-                {
-                    var result = new DownloadResult(DownloadResultType.Successful);
-                    groupReq.OnSingleRequestCompleted(req, result);
-                }
+                request.SingleRequestCompleted?.Invoke(req, t.Result);
             });
             downloadTasks.Add(downloadTask);
         }
