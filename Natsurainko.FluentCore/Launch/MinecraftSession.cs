@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Launch.Exceptions;
 using Nrk.FluentCore.Management;
 using Nrk.FluentCore.Management.Downloader;
 using Nrk.FluentCore.Management.Parsing;
@@ -72,6 +73,7 @@ public class MinecraftSession
     public int MinMemory { get; set; }
     public required GameInfo GameInfo { get; set; }
     public required Account Account { get; set; }
+    public bool SkipNativesDecompression { get; set; } = false;
 
     private IEnumerable<LibraryElement>? _enabledLibraries;
     private IEnumerable<LibraryElement>? _enabledNativesLibraries;
@@ -218,12 +220,15 @@ public class MinecraftSession
 
             resourcesDownloader.Download();
             if (resourcesDownloader.ErrorDownload.Count > 0)
-                throw new Exception("ResourcesDownloader.ErrorDownload.Count > 0");
+                throw new IncompleteGameResourcesException(resourcesDownloader.ErrorDownload);
         }
 
-        UnzipUtils.BatchUnzip(
-            Path.Combine(GameInfo.MinecraftFolderPath, "versions", GameInfo.AbsoluteId, "natives"),
-            _enabledNativesLibraries.Select(x => x.AbsolutePath));
+        if (!SkipNativesDecompression)
+        {
+            UnzipUtils.BatchUnzip(
+                Path.Combine(GameInfo.MinecraftFolderPath, "versions", GameInfo.AbsoluteId, "natives"),
+                _enabledNativesLibraries.Select(x => x.AbsolutePath));
+        }
     }
 
     private MinecraftProcess CreateMinecraftProcess()
