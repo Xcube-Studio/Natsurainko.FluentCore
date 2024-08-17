@@ -163,7 +163,7 @@ public class MultipartDownloader : IDownloader
         while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer[0..bytesRead], cancellationToken);
-            request.BytesReceived?.Invoke(bytesRead);
+            request.BytesDownloaded?.Invoke(bytesRead);
         }
     }
 
@@ -218,38 +218,6 @@ public class MultipartDownloader : IDownloader
         ArrayPool<byte>.Shared.Return(downloadBufferArr);
     }
 
-    // Store the states of downloading a single file
-    private class DownloadStates
-    {
-        public required string Url { get; init; }
-        public required string LocalPath { get; init; }
-        public long? TotalBytes { get; set; }
-
-        // Used by chunk organization in multipart download
-        public required long ChunkSize { get; init; }
-
-        public long _chunkScheduled = 0;
-        public long TotalChunks { get; set; } = 0;
-        private readonly object _chunkOrganizerLock = new();
-
-        // Returns the indices (inclusive) of bytes in the next chunk if there are more chunks to download
-        public (long start, long end)? NextChunk()
-        {
-            long totalBytes = (long)TotalBytes!; // Not null in multipart download
-            long start, end;
-            lock (_chunkOrganizerLock)
-            {
-                if (_chunkScheduled == TotalChunks)
-                    return null;
-                start = _chunkScheduled * ChunkSize;
-                _chunkScheduled++;
-            }
-            // Handle the last chunk
-            end = Math.Min(start + ChunkSize, totalBytes) - 1;
-            return (start, end);
-        }
-    }
-
     public async Task<GroupDownloadResult> DownloadFilesAsync(GroupDownloadRequest request, CancellationToken cancellationToken = default)
     {
         List<(DownloadRequest, DownloadResult)> failed = new();
@@ -288,5 +256,42 @@ public class MultipartDownloader : IDownloader
         };
     }
 
-    private record class DownloaderConfig(HttpClient HttpClient, long ChunkSize, int WorkersPerDownloadTask, int ConcurrentDownloadTasks);
+
+    // Store the states of downloading a single file
+    private class DownloadStates
+    {
+        public required string Url { get; init; }
+        public required string LocalPath { get; init; }
+        public long? TotalBytes { get; set; }
+
+        // Used by chunk organization in multipart download
+        public required long ChunkSize { get; init; }
+
+        public long _chunkScheduled = 0;
+        public long TotalChunks { get; set; } = 0;
+        private readonly object _chunkOrganizerLock = new();
+
+        // Returns the indices (inclusive) of bytes in the next chunk if there are more chunks to download
+        public (long start, long end)? NextChunk()
+        {
+            long totalBytes = (long)TotalBytes!; // Not null in multipart download
+            long start, end;
+            lock (_chunkOrganizerLock)
+            {
+                if (_chunkScheduled == TotalChunks)
+                    return null;
+                start = _chunkScheduled * ChunkSize;
+                _chunkScheduled++;
+            }
+            // Handle the last chunk
+            end = Math.Min(start + ChunkSize, totalBytes) - 1;
+            return (start, end);
+        }
+    }
+
+    private record class DownloaderConfig(
+        HttpClient HttpClient,
+        long ChunkSize,
+        int WorkersPerDownloadTask,
+        int ConcurrentDownloadTasks);
 }

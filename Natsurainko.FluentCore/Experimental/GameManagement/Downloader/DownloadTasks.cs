@@ -30,14 +30,15 @@ public class DownloadTask
             TotalBytes = size;
             FileSizeReceived?.Invoke(size);
         };
-        request.BytesReceived += (bytes) =>
+        request.BytesDownloaded += (bytes) =>
         {
             Interlocked.Add(ref _downloadedBytes, bytes);
             BytesDownloaded?.Invoke(bytes);
         };
     }
 
-    public Task<DownloadResult> StartAsync(CancellationToken cancellationToken = default) => _downloader.DownloadFileAsync(Request, cancellationToken);
+    public Task<DownloadResult> StartAsync(CancellationToken cancellationToken = default)
+        => _downloader.DownloadFileAsync(Request, cancellationToken);
 }
 
 public class GroupDownloadTask
@@ -65,7 +66,8 @@ public class GroupDownloadTask
         };
     }
 
-    public Task<GroupDownloadResult> StartAsync(CancellationToken cancellationToken = default) => _downloader.DownloadFilesAsync(Request, cancellationToken);
+    public Task<GroupDownloadResult> StartAsync(CancellationToken cancellationToken = default)
+        => _downloader.DownloadFilesAsync(Request, cancellationToken);
 }
 
 public static class IDownloaderExtensions

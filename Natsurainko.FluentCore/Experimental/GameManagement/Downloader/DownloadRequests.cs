@@ -12,7 +12,7 @@ public class DownloadRequest
     public string LocalPath { get; set; }
 
     public Action<long?>? FileSizeReceived { get; set; }
-    public Action<long>? BytesReceived { get; set; }
+    public Action<long>? BytesDownloaded { get; set; }
 
     public DownloadRequest(string url, string localPath)
     {
