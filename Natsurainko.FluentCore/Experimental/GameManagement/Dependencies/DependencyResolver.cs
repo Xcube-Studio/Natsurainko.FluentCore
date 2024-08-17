@@ -67,7 +67,8 @@ public class DependencyResolver
         await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 
-    private static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
+    // TODO: change to private
+    public static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(dep.FullPath))
             return false;
