@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 

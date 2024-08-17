@@ -1,6 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
-using Nrk.FluentCore.Management.Parsing;
-using Nrk.FluentCore.Utils;
+﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -235,4 +233,45 @@ public class OptiFineInstaller : ModLoaderInstaller
 
         OnProgressChanged(0.8);
     }
+}
+
+internal record LibraryJsonNode
+{
+    [JsonPropertyName("downloads")]
+    public DownloadsJsonNode? Downloads { get; set; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
+
+    [JsonPropertyName("natives")]
+    public Dictionary<string, string>? Natives { get; set; }
+}
+
+internal record DownloadsJsonNode
+{
+    [JsonPropertyName("artifact")]
+    public FileJsonNode? Artifact { get; init; }
+
+    [JsonPropertyName("classifiers")]
+    public Dictionary<string, FileJsonNode>? Classifiers { get; init; }
+
+}
+
+internal record FileJsonNode
+{
+    [JsonPropertyName("path")]
+    public string? Path { get; init; }
+
+    [JsonPropertyName("sha1")]
+    public string? Sha1 { get; init; }
+
+    [JsonPropertyName("size")]
+    public int? Size { get; init; }
+
+    [JsonPropertyName("url")]
+    public string? Url { get; init; }
+
+    //for client-x.xx.xml
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
 }
