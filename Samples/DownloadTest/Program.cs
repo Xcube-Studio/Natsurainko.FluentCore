@@ -19,28 +19,18 @@ var delay = Task.Run(async () =>
 
 var downloader = new MultipartDownloader(httpClient, 1048576, 16);
 
-long? totalBytes = null;
-long downloadedBytes = 0;
+// Download operation
+var downloadTask = downloader.CreateDownloadTask(url, path);
 
 // Progress report
 using Timer timer = new((state) =>
 {
-    if (totalBytes is null) return;
+    if (downloadTask.TotalBytes is null) return;
 
-    Console.WriteLine($"Downloaded {downloadedBytes} / {totalBytes} bytes ({100.0d * downloadedBytes / totalBytes:0.##}%).");
+    Console.WriteLine($"Downloaded {downloadTask.DownloadedBytes} / {downloadTask.TotalBytes} bytes ({100.0d * downloadTask.DownloadedBytes / downloadTask.TotalBytes:0.##}%).");
 }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
 
-// Download operation
-var request = new DownloadRequest(url, path);
-request.FileSizeReceived += (_, size) =>
-{
-    totalBytes = size;
-};
-request.BytesReceived += (_, bytes) =>
-{
-    Interlocked.Add(ref downloadedBytes, bytes);
-};
-var result = await downloader.DownloadFileAsync(request, cts.Token);
+var result = await downloadTask.StartAsync(cts.Token);
 
 if (result.Type == DownloadResultType.Cancelled)
 {
