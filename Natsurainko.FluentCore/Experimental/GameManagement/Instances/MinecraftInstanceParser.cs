@@ -64,7 +64,7 @@ public class MinecraftInstanceParser
 
                 // Remove the existing instance with the same version folder name as the one just parsed
                 // This might be the case when the instance is modified and ParseAllInstances is called again
-                int index = _parsedInstances.FindIndex(i => i.VersionFolderName == instance.VersionFolderName);
+                int index = _parsedInstances.FindIndex(i => i.InstanceId == instance.InstanceId);
                 if (index != -1)
                 {
                     _parsedInstances.RemoveAt(index);
@@ -187,7 +187,7 @@ file static class ParsingHelpers
         return new VanillaMinecraftInstance
         {
             AssetIndexJsonPath = partialData.AssetIndexJsonPath,
-            VersionFolderName = partialData.VersionFolderName,
+            InstanceId = partialData.VersionFolderName,
             Version = version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,
             ClientJsonPath = partialData.ClientJsonPath,
@@ -300,7 +300,7 @@ file static class ParsingHelpers
         return new ModifiedMinecraftInstance
         {
             AssetIndexJsonPath = partialData.AssetIndexJsonPath,
-            VersionFolderName = partialData.VersionFolderName,
+            InstanceId = partialData.VersionFolderName,
             Version = (MinecraftVersion)version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,
             ClientJsonPath = partialData.ClientJsonPath,

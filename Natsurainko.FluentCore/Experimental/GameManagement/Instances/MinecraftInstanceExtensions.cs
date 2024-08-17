@@ -37,7 +37,7 @@ public static class MinecraftInstanceExtensions
 
     public static void Delete(this MinecraftInstance instance)
     {
-        string versionDirPath = Path.Combine(instance.MinecraftFolderPath, "versions", instance.VersionFolderName);
+        string versionDirPath = Path.Combine(instance.MinecraftFolderPath, "versions", instance.InstanceId);
         Directory.Delete(versionDirPath, true);
     }
 

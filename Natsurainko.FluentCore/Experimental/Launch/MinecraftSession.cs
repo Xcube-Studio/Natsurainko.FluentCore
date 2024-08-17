@@ -219,7 +219,7 @@ public class MinecraftSession
         }
 
         UnzipUtils.BatchUnzip(
-            Path.Combine(MinecraftInstance.MinecraftFolderPath, "versions", MinecraftInstance.VersionFolderName, "natives"),
+            Path.Combine(MinecraftInstance.MinecraftFolderPath, "versions", MinecraftInstance.InstanceId, "natives"),
             _enabledNativesLibraries.Select(x => x.FullPath));
     }
 
