@@ -180,7 +180,7 @@ public class MicrosoftAuthenticator
         }
         catch (Exception e) when (e is JsonException || e is FormatException)
         {
-            throw new AuthException("Error in getting authorization token\nOAuth response:\n" + response.Content.ReadAsString());
+            throw new AuthException("Error in getting authorization token\r\nOAuth response:\r\n" + response.Content.ReadAsString());
         }
 
         return oauth2TokenResponse;

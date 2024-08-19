@@ -3,6 +3,7 @@ using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Experimental.Launch;
 using Nrk.FluentCore.Launch;
+using Nrk.FluentCore.Launch.Exceptions;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
@@ -73,6 +74,7 @@ public class MinecraftSession
     public int MinMemory { get; set; }
     public required MinecraftInstance MinecraftInstance { get; set; }
     public required Account Account { get; set; }
+    public bool SkipNativesDecompression { get; set; } = false;
 
     private IEnumerable<MinecraftLibrary>? _enabledLibraries;
     private IEnumerable<MinecraftLibrary>? _enabledNativesLibraries;
@@ -81,6 +83,7 @@ public class MinecraftSession
 
     private MinecraftProcess? _mcProcess; // TODO: Create on init, so it can be non-nullable, update argument list when needed before the process is started
     // QUESTION: Should this be public? MinecraftSession is designed to hide the underlying process, maybe should forward events instead?
+    public MinecraftProcess? McProcess => _mcProcess;
 
     // Sets to true when a Kill() is called, used for the Exited event handler to deterine state
     private bool _killRequested = false;
@@ -215,12 +218,15 @@ public class MinecraftSession
 
             var downloadResult = resourcesDownloader.VerifyAndDownloadDependenciesAsync().GetAwaiter().GetResult();
             if (downloadResult.Failed.Count > 0)
-                throw new Exception("ResourcesDownloader.ErrorDownload.Count > 0");
+                throw new IncompleteGameResourcesException(downloadResult.Failed.Select(r => r.Item2));
         }
 
-        UnzipUtils.BatchUnzip(
-            Path.Combine(MinecraftInstance.MinecraftFolderPath, "versions", MinecraftInstance.InstanceId, "natives"),
-            _enabledNativesLibraries.Select(x => x.FullPath));
+        if (!SkipNativesDecompression)
+        {
+            UnzipUtils.BatchUnzip(
+                Path.Combine(MinecraftInstance.MinecraftFolderPath, "versions", MinecraftInstance.InstanceId, "natives"),
+                _enabledNativesLibraries.Select(x => x.FullPath));
+        }
     }
 
     private MinecraftProcess CreateMinecraftProcess()
