@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Forge;
+namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 
-public record HighVersionForgeProcessorData
+public class ForgeProcessorData
 {
     [JsonPropertyName("sides")]
-    public List<string> Sides { get; set; } = new();
+    public List<string> Sides { get; set; } = [];
 
     [JsonPropertyName("jar")]
     public required string Jar { get; set; }
@@ -18,5 +18,5 @@ public record HighVersionForgeProcessorData
     public required IEnumerable<string> Args { get; set; }
 
     [JsonPropertyName("outputs")]
-    public Dictionary<string, string> Outputs { get; set; } = new();
+    public Dictionary<string, string> Outputs { get; set; } = [];
 }

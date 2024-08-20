@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Quilt;
+namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 
-public record QuiltInstallBuild
+public class QuiltInstallData
 {
     [JsonPropertyName("intermediary")]
-    public required QuiltMavenItem Intermediary { get; set; }
+    public required MavenItemJsonObject Intermediary { get; set; }
 
     [JsonPropertyName("loader")]
-    public required QuiltMavenItem Loader { get; set; }
+    public required MavenItemJsonObject Loader { get; set; }
 
     [JsonPropertyName("launcherMeta")]
     public required QuiltLauncherMeta LauncherMeta { get; set; }
@@ -21,20 +21,8 @@ public record QuiltInstallBuild
     public string BuildVersion => Loader.Version;
 }
 
-public record QuiltLauncherMeta
+public class QuiltLauncherMeta
 {
     [JsonPropertyName("mainClass")]
     public required Dictionary<string, string> MainClass { get; set; }
-}
-
-public record QuiltMavenItem
-{
-    [JsonPropertyName("separator")]
-    public string? Separator { get; set; }
-
-    [JsonPropertyName("maven")]
-    public required string Maven { get; set; }
-
-    [JsonPropertyName("version")]
-    public required string Version { get; set; }
 }
