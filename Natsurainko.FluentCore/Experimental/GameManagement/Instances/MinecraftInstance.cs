@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Environment;
 using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -18,7 +19,7 @@ public abstract partial class MinecraftInstance
     /// Name of the folder of this instance
     /// <para>This matches the client.json filename and must be unique in a <see cref="MinecraftProfile"/></para>
     /// </summary>
-    public required string VersionFolderName { get; init; }
+    public required string InstanceId { get; init; }
     // The isolated instance feature implemented by third party launchers allows multiple
     // instances of the same version id, so the "id" field in client.json may not be unique.
 

@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Management.Downloader.Data;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using System;
 using System.Collections.Generic;
 

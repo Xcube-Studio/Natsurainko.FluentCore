@@ -54,7 +54,7 @@ public class FabricInstaller : ModLoaderInstaller
     void ParseBuild(out JsonNode clientJsonNode, out IEnumerable<MinecraftLibrary> libraries)
     {
         var responseMessage = HttpUtils.HttpGet(
-            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedInstance.VersionFolderName}/{FabricBuild.BuildVersion}/profile/json"
+            $"https://meta.fabricmc.net/v2/versions/loader/{InheritedInstance.InstanceId}/{FabricBuild.BuildVersion}/profile/json"
         );
         clientJsonNode =
             JsonNode.Parse(responseMessage.Content.ReadAsString())

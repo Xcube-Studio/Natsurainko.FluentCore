@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Management.ModLoaders;
+﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using Nrk.FluentCore.Management.ModLoaders;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -77,7 +78,7 @@ internal class CurseForgeModpackJsonObject
 
                 return new ModLoaderInfo
                 {
-                    LoaderType = result,
+                    Type = result,
                     Version = items[1]
                 };
             }

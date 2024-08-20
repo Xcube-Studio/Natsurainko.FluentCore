@@ -1,4 +1,4 @@
-﻿namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+﻿namespace Nrk.FluentCore.Management.ModLoaders;
 
 /// <summary>
 /// Mod loader information

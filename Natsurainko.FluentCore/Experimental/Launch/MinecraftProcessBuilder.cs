@@ -46,7 +46,7 @@ public class MinecraftProcessBuilder
     public MinecraftProcessBuilder(MinecraftInstance gameInfo)
     {
         MinecraftInstance = gameInfo;
-        _nativesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.VersionFolderName, "natives");
+        _nativesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "versions", gameInfo.InstanceId, "natives");
         _librariesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "libraries");
         _assetsFolder = Path.Combine(gameInfo.MinecraftFolderPath, "assets");
         _gameDirectory = gameInfo.MinecraftFolderPath;
@@ -114,8 +114,8 @@ public class MinecraftProcessBuilder
             { "${classpath}", classPath.ToPathParameter() },
             {
                 "${version_name}", MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } instance
-                    ? instance.InheritedMinecraftInstance.VersionFolderName
-                    : MinecraftInstance.VersionFolderName
+                    ? instance.InheritedMinecraftInstance.InstanceId
+                    : MinecraftInstance.InstanceId
             },
         };
 
@@ -143,7 +143,7 @@ public class MinecraftProcessBuilder
             { "${auth_uuid}" ,_account.Uuid.ToString("N") },
             { "${user_type}" , _account.Type.Equals(AccountType.Microsoft) ? "MSA" : "Mojang" },
             { "${user_properties}" , "{}" },
-            { "${version_name}" , MinecraftInstance.VersionFolderName.ToPathParameter() },
+            { "${version_name}" , MinecraftInstance.InstanceId.ToPathParameter() },
             { "${version_type}" , versionType },
             { "${game_assets}" , _assetsFolder.ToPathParameter() },
             { "${assets_root}" , _assetsFolder.ToPathParameter() },
