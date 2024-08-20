@@ -1,8 +1,9 @@
 ﻿using Nrk.FluentCore.Authentication;
+using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using Nrk.FluentCore.Experimental.GameManagement.Instances;
+using Nrk.FluentCore.Experimental.Launch;
+using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Launch.Exceptions;
-using Nrk.FluentCore.Management;
-using Nrk.FluentCore.Management.Downloader;
-using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Nrk.FluentCore.Launch;
+namespace Nrk.FluentCore.Experimental.GameManagement.Launch;
 
 /// <summary>
 /// Encapsulates a launch session, holds a McProcess instance
@@ -71,12 +72,12 @@ public class MinecraftSession
     public required string GameDirectory { get; set; }
     public required int MaxMemory { get; set; }
     public int MinMemory { get; set; }
-    public required GameInfo GameInfo { get; set; }
+    public required MinecraftInstance MinecraftInstance { get; set; }
     public required Account Account { get; set; }
     public bool SkipNativesDecompression { get; set; } = false;
 
-    private IEnumerable<LibraryElement>? _enabledLibraries;
-    private IEnumerable<LibraryElement>? _enabledNativesLibraries;
+    private IEnumerable<MinecraftLibrary>? _enabledLibraries;
+    private IEnumerable<MinecraftLibrary>? _enabledNativesLibraries;
 
     #endregion
 
@@ -120,10 +121,7 @@ public class MinecraftSession
                 Account = await RefreshAccountTask;
             }
 
-            new DefaultLibraryParser(GameInfo).EnumerateLibraries(
-                out var enabledLibraries,
-                out var enabledNativesLibraries
-            );
+            var (enabledLibraries, enabledNativesLibraries) = MinecraftInstance.GetRequiredLibraries();
 
             _enabledLibraries = enabledLibraries;
             _enabledNativesLibraries = enabledNativesLibraries;
@@ -200,7 +198,7 @@ public class MinecraftSession
 
     public Task<Account>? RefreshAccountTask { get; set; }
 
-    public Func<IEnumerable<LibraryElement>, DefaultResourcesDownloader>? CreateResourcesDownloader { get; set; }
+    public Func<IEnumerable<MinecraftLibrary>, DependencyResolver>? CreateDependencyResolver { get; set; }
 
     void CheckAndCompleteDependencies()
     {
@@ -210,24 +208,24 @@ public class MinecraftSession
         if (_enabledLibraries == null)
             throw new ArgumentNullException(nameof(_enabledLibraries));
 
-        if (CreateResourcesDownloader != null)
+        if (CreateDependencyResolver != null)
         {
-            var resourcesDownloader = CreateResourcesDownloader(_enabledLibraries.Union(_enabledNativesLibraries));
-            resourcesDownloader.SingleFileDownloaded += (_, e) =>
-                SingleFileDownloaded?.Invoke(resourcesDownloader, e);
-            resourcesDownloader.DownloadElementsPosted += (_, count) =>
-                DownloadElementsPosted?.Invoke(resourcesDownloader, count);
+            var resourcesDownloader = CreateDependencyResolver(_enabledLibraries.Union(_enabledNativesLibraries));
+            resourcesDownloader.DependencyDownloaded += (_, e) =>
+                SingleFileDownloaded?.Invoke(resourcesDownloader, new EventArgs());
+            resourcesDownloader.InvalidDependenciesDetermined += (_, deps) =>
+                DownloadElementsPosted?.Invoke(resourcesDownloader, deps.Count());
 
-            resourcesDownloader.Download();
-            if (resourcesDownloader.ErrorDownload.Count > 0)
-                throw new IncompleteGameResourcesException(resourcesDownloader.ErrorDownload);
+            var downloadResult = resourcesDownloader.VerifyAndDownloadDependenciesAsync().GetAwaiter().GetResult();
+            if (downloadResult.Failed.Count > 0)
+                throw new IncompleteGameResourcesException(downloadResult.Failed.Select(r => r.Item2));
         }
 
         if (!SkipNativesDecompression)
         {
             UnzipUtils.BatchUnzip(
-                Path.Combine(GameInfo.MinecraftFolderPath, "versions", GameInfo.AbsoluteId, "natives"),
-                _enabledNativesLibraries.Select(x => x.AbsolutePath));
+                Path.Combine(MinecraftInstance.MinecraftFolderPath, "versions", MinecraftInstance.InstanceId, "natives"),
+                _enabledNativesLibraries.Select(x => x.FullPath));
         }
     }
 
@@ -236,7 +234,7 @@ public class MinecraftSession
         if (_enabledLibraries == null)
             throw new ArgumentNullException(nameof(_enabledLibraries));
 
-        var builder = new MinecraftProcessBuilder(GameInfo)
+        var builder = new MinecraftProcessBuilder(MinecraftInstance)
             .SetLibraries(_enabledLibraries)
             .SetAccountSettings(Account, UseDemoUser)
             .SetJavaSettings(JavaPath, MaxMemory, MinMemory)

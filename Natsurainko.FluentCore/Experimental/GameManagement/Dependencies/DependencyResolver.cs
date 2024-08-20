@@ -1,4 +1,5 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,10 +25,12 @@ public class DependencyResolver
         Dependencies = new List<MinecraftDependency>(deps);
     }
 
-    public async Task VerifyAndDownloadDependenciesAsync(IDownloader downloader, int fileVerificationParallelism, CancellationToken cancellationToken = default)
+    public async Task<GroupDownloadResult> VerifyAndDownloadDependenciesAsync(IDownloader? downloader = null, int fileVerificationParallelism = 10, CancellationToken cancellationToken = default)
     {
         if (fileVerificationParallelism <= 0)
             throw new ArgumentOutOfRangeException(nameof(fileVerificationParallelism));
+
+        downloader ??= HttpUtils.Downloader;
 
         // Verify
         // This is IO bound operation, using TPL is inefficient
@@ -64,10 +67,11 @@ public class DependencyResolver
         {
             DependencyDownloaded?.Invoke(this, (request, result));
         };
-        await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
+        return await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 
-    private static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
+    // TODO: change to private
+    public static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(dep.FullPath))
             return false;

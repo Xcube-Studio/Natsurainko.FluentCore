@@ -1,4 +1,6 @@
-﻿using Nrk.FluentCore.Management.Parsing;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using Nrk.FluentCore.Management.ModLoaders;
+using Nrk.FluentCore.Management.Parsing;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -29,5 +31,5 @@ public class FabricLauncherMeta
     public required JsonNode MainClass { get; set; }
 
     [JsonPropertyName("libraries")]
-    public required Dictionary<string, List<LibraryJsonNode>> Libraries { get; set; }
+    public required Dictionary<string, List<MinecraftLibrary>> Libraries { get; set; }
 }

@@ -22,20 +22,19 @@ public class MultipartDownloader : IDownloader
     public long ChunkSize { get => _config.ChunkSize; }
     public int WorkersPerDownloadTask { get => _config.WorkersPerDownloadTask; }
     public int ConcurrentDownloadTasks { get => _config.ConcurrentDownloadTasks; }
+    public IDownloadMirror? Mirror { get => _config.Mirror; }
 
     private HttpClient HttpClient { get => _config.HttpClient; }
 
     private const int DownloadBufferSize = 4096; // 4 KB
     private readonly DownloaderConfig _config;
-    private readonly IDownloadMirror? _mirror;
 
     private readonly SemaphoreSlim _globalDownloadTasksSemaphore;
 
     public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int workersPerDownloadTask = 16, int concurrentDownloadTasks = 5, IDownloadMirror? mirror = null)
     {
         httpClient ??= HttpUtils.HttpClient;
-        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks);
-        _mirror = mirror;
+        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks, mirror);
         _globalDownloadTasksSemaphore = new SemaphoreSlim(concurrentDownloadTasks, concurrentDownloadTasks);
     }
 
@@ -70,8 +69,8 @@ public class MultipartDownloader : IDownloader
         string url = request.Url;
         string localPath = request.LocalPath;
 
-        if (_mirror is not null)
-            url = _mirror.GetMirrorUrl(url);
+        if (_config.Mirror is not null)
+            url = _config.Mirror.GetMirrorUrl(url);
 
         // Try to get the size of the file
         (var response, url) = await PrepareForDownloadAsync(url, cancellationToken);
@@ -227,8 +226,8 @@ public class MultipartDownloader : IDownloader
             string url = req.Url;
             string localPath = req.LocalPath;
 
-            if (_mirror is not null)
-                url = _mirror.GetMirrorUrl(url);
+            if (_config.Mirror is not null)
+                url = _config.Mirror.GetMirrorUrl(url);
 
             Task downloadTask = DownloadFileAsync(req, cancellationToken).ContinueWith((t) =>
             {
@@ -293,5 +292,6 @@ public class MultipartDownloader : IDownloader
         HttpClient HttpClient,
         long ChunkSize,
         int WorkersPerDownloadTask,
-        int ConcurrentDownloadTasks);
+        int ConcurrentDownloadTasks,
+        IDownloadMirror? Mirror);
 }
