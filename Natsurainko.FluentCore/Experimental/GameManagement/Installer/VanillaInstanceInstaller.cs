@@ -5,17 +5,19 @@ using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using static Nrk.FluentCore.Utils.IProgressReporter;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
 /// <summary>
 /// 原版 Minecraft 实例安装器
 /// </summary>
-public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInstance>
+public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInstance>, IProgressReporter
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
@@ -32,7 +34,7 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
     public IDownloadMirror? DownloadMirror { get; set; }
 
     /// <summary>
-    /// 强制检查所有依赖必须下载
+    /// 强制检查所有依赖必须被下载
     /// </summary>
     public bool CheckAllDependencies { get; set; }
 
@@ -66,6 +68,12 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
                 versionJsonFile!.Directory!.Delete();
             }
 
+            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            throw;
+        }
+        catch
+        {
+            ProgressReporterHelper.ReportWhenExceptionThrow(this);
             throw;
         }
 
@@ -79,6 +87,8 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
     /// <returns></returns>
     async Task<FileInfo> DownloadVersionJson(CancellationToken cancellationToken)
     {
+        Progress.Report(ProgressUpdater.FromRunning("DownloadVersionJson"));
+
         string requestUrl = McVersionManifestItem.Url;
 
         if (DownloadMirror != null)
@@ -90,12 +100,14 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
         responseMessage.EnsureSuccessStatusCode();
 
         string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, McVersionManifestItem.Id, $"{McVersionManifestItem.Id}.json"));
+        var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", McVersionManifestItem.Id, $"{McVersionManifestItem.Id}.json"));
 
         if (!jsonFile.Directory!.Exists)
             jsonFile.Directory.Create();
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
+
+        Progress.Report(ProgressUpdater.FromFinished("DownloadVersionJson"));
 
         return jsonFile;
     } 
@@ -123,6 +135,8 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
     /// <returns></returns>
     async Task<FileInfo> DownloadAssetIndexJson(MinecraftInstance instance, CancellationToken cancellationToken)
     {
+        Progress.Report(ProgressUpdater.FromRunning("DownloadAssetIndexJson"));
+
         cancellationToken.ThrowIfCancellationRequested();
 
         var assetIndex = instance.GetAssetIndex();
@@ -145,6 +159,8 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
 
+        Progress.Report(ProgressUpdater.FromFinished("DownloadAssetIndexJson"));
+
         return jsonFile;
     }
 
@@ -157,13 +173,17 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadMinecraftDependencies(MinecraftInstance instance, CancellationToken cancellationToken)
     {
+        void DependencyDownloaded(object? sender, (DownloadRequest, DownloadResult) e)
+            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadMinecraftDependencies"));
+
+        Progress.Report(ProgressUpdater.FromRunning("DownloadMinecraftDependencies"));
+
         cancellationToken.ThrowIfCancellationRequested();
 
         var minecraftClient = instance.GetJarElement() ?? throw new InvalidOperationException("Unable to obtain download data for client.jar");
         (var libraries, var natives) = instance.GetRequiredLibraries();
         var minecraftAssets = instance.GetRequiredAssets();
 
-        var multipartDownloader = new MultipartDownloader(httpClient, mirror: DownloadMirror);
         var dependencyResolver = new DependencyResolverBuilder()
             .AddDependencies([minecraftClient])
             .AddDependencies(libraries)
@@ -171,9 +191,36 @@ public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInsta
             .AddDependencies(minecraftAssets)
             .Build();
 
-        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(multipartDownloader, 4, cancellationToken);
+        Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadMinecraftDependencies", dependencyResolver.Dependencies.Count));
+        dependencyResolver.DependencyDownloaded += DependencyDownloaded;
+
+        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
+
+        Progress.Report(ProgressUpdater.FromFinished("DownloadMinecraftDependencies"));
     }
+}
+
+partial class VanillaInstanceInstaller
+{
+    private readonly Progress<ProgressUpdater> _progress = new();
+
+    IProgress<ProgressUpdater> Progress => _progress;
+    IProgress<ProgressUpdater> IProgressReporter.Progress => _progress;
+
+    public event EventHandler<ProgressUpdater>? ProgressChanged
+    {
+        add => _progress.ProgressChanged += value;
+        remove => _progress.ProgressChanged -= value;
+    }
+
+    public Dictionary<string, ProgressData> Progresses { get; init; } = 
+        ProgressReporterHelper.CreateProgressesFromStringArray(
+        [
+            "DownloadVersionJson",
+            "DownloadAssetIndexJson",
+            "DownloadMinecraftDependencies"
+        ]);
 }

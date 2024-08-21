@@ -35,7 +35,7 @@ public class DependencyResolver
         // Verify
         // This is IO bound operation, using TPL is inefficient
         // TODO: Test performance of this implementation
-        SemaphoreSlim semaphore = new(0, fileVerificationParallelism);
+        SemaphoreSlim semaphore = new(fileVerificationParallelism, fileVerificationParallelism);
         ConcurrentBag<MinecraftDependency> invalidDeps = new();
 
         var tasks = Dependencies.Select(async dep =>

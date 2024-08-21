@@ -8,7 +8,7 @@ public class MinecraftAsset : MinecraftDependency
     public override string FilePath => Path.Combine("assets", "objects", Sha1[0..2], Sha1);
 
     /// <inheritdoc/>
-    public override string Url => $"https://resources.download.minecraft.net/{FilePath}";
+    public override string Url => $"https://resources.download.minecraft.net/{Sha1[0..2]}/{Sha1}";
 
     /// <summary>
     /// Key of the asset

@@ -19,8 +19,8 @@ namespace Nrk.FluentCore.Utils;
 // TOOD: use internal
 public static class HttpUtils
 {
-    public static readonly IDownloader Downloader = new MultipartDownloader(HttpClient, 1024 * 1024, 8, 64);
     public static readonly HttpClient HttpClient = new();
+    public static readonly IDownloader Downloader = new MultipartDownloader(HttpClient, 1024 * 1024, 8, 64);
     public static readonly MemoryPool<byte> MemoryPool = MemoryPool<byte>.Shared;
 
     public static HttpResponseMessage HttpGet(

@@ -126,7 +126,7 @@ file static class ParsingHelpers
         string versionFolderName = clientDir.Name;
 
         // .minecraft folder path
-        string minecraftFolderPath = clientDir.Parent?.FullName
+        string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
             ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
 
         // Asset index path

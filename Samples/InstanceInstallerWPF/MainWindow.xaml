@@ -1,0 +1,68 @@
+﻿<Window
+    x:Class="InstanceInstallerWPF.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:InstanceInstallerWPF"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="MainWindow"
+    Width="800"
+    Height="450"
+    mc:Ignorable="d">
+
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition MaxHeight="100" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+        <TextBox Text="{Binding MinecraftFolder, Mode=TwoWay}" />
+        <ListBox
+            Grid.Row="2"
+            ItemsSource="{Binding ManifestItems}"
+            ScrollViewer.VerticalScrollBarVisibility="Auto"
+            SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run Text="{Binding Id}" />
+                        <Run Text="{Binding Url}" />
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <Button Command="{Binding InstallCommand}" Content="Install" />
+            <Button
+                Margin="10,0,0,0"
+                Command="{Binding CancelCommand}"
+                Content="Cancel" />
+        </StackPanel>
+        <ListBox
+            Grid.Row="6"
+            ItemsSource="{Binding ProgressDatas}"
+            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        [<Run Text="{Binding TaskName}" />
+                        ]:<Run Text="{Binding TaskState}" />
+                        (<Run Text="{Binding FinishedTasks}" />
+                        /<Run Text="{Binding TotalTasks}" />
+                        )</TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBox
+            Grid.Row="8"
+            VerticalAlignment="Stretch"
+            IsReadOnly="True"
+            Text="{Binding Text, Mode=OneWay}" />
+    </Grid>
+</Window>
