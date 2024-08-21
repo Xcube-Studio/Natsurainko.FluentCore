@@ -15,7 +15,16 @@ public interface IInstanceInstaller<TInstance> where TInstance : MinecraftInstan
     /// </summary>
     public string MinecraftFolder { get; set; }
 
+    /// <summary>
+    /// 异步安装
+    /// </summary>
+    /// <returns></returns>
     public Task<TInstance> InstallAsync();
 
+    /// <summary>
+    /// 异步安装（支持取消）
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public Task<TInstance> InstallAsync(CancellationToken cancellationToken);
 }

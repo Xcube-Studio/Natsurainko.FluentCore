@@ -4,6 +4,7 @@ using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using Nrk.FluentCore.Experimental.GameManagement.Installer;
 using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Utils;
+using System.ComponentModel;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -27,16 +28,15 @@ public partial class MainWindow : Window
 #nullable disable
 partial class ViewModel : ObservableObject
 {
-    private CancellationTokenSource cancellationTokenSource;
-
+    private readonly HttpClient httpClient = HttpUtils.HttpClient;
     private readonly Dispatcher Dispatcher = App.Current.Dispatcher;
+
+    private CancellationTokenSource cancellationTokenSource;
 
     public ViewModel()
     {
         Task.Run(async () =>
         {
-            var httpClient = HttpUtils.HttpClient;
-
             string requestUrl = "http://launchermeta.mojang.com/mc/game/version_manifest_v2.json";
 
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
@@ -61,6 +61,12 @@ partial class ViewModel : ObservableObject
     private VersionManifestItem selectedItem;
 
     [ObservableProperty]
+    private FabricInstallData[] fabricInstallDatas;
+
+    [ObservableProperty]
+    private FabricInstallData selectedFabricInstallData;
+
+    [ObservableProperty]
     private string minecraftFolder = @"D:\Minecraft\Test\.minecraft";
 
     [ObservableProperty]
@@ -73,28 +79,58 @@ partial class ViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     private bool canCancel = false;
 
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.PropertyName == nameof(SelectedItem))
+        {
+            Task.Run(GetFabricInstallData);
+        }
+    }
+
+    async void GetFabricInstallData()
+    {
+        string requestUrl = $"https://meta.fabricmc.net/v2/versions/loader/{SelectedItem.Id}";
+
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+        using var responseMessage = await httpClient.SendAsync(requestMessage);
+        responseMessage.EnsureSuccessStatusCode();
+
+        string jsonContent = await responseMessage.Content.ReadAsStringAsync();
+        var fabricInstallDatas = JsonNode.Parse(jsonContent).Deserialize<FabricInstallData[]>()!;
+
+        Dispatcher.Invoke(() =>
+        {
+            FabricInstallDatas = fabricInstallDatas;
+            SelectedFabricInstallData = FabricInstallDatas.FirstOrDefault();
+        });
+
+    }
+
     [RelayCommand]
     Task Install() => Task.Run(async () =>
     {
         cancellationTokenSource = new CancellationTokenSource();
         Dispatcher.Invoke(() => CanCancel = true);
 
-        var vanillaInstanceInstaller = new VanillaInstanceInstaller()
+        var fabricInstanceInstaller = new FabricInstanceInstaller()
         {
             DownloadMirror = DownloadMirrors.BmclApi,
             McVersionManifestItem = SelectedItem,
             MinecraftFolder = MinecraftFolder,
-            CheckAllDependencies = true
+            CheckAllDependencies = true,
+            InstallData = SelectedFabricInstallData
         };
 
-        Dispatcher.Invoke(() => ProgressDatas = vanillaInstanceInstaller.Progresses.Values);
+        Dispatcher.Invoke(() => ProgressDatas = fabricInstanceInstaller.Progresses.Values);
 
-        vanillaInstanceInstaller.ProgressChanged += (object sender, IProgressReporter.ProgressUpdater e)
-            => Dispatcher.BeginInvoke(() => e.Update(vanillaInstanceInstaller.Progresses));
+        fabricInstanceInstaller.ProgressChanged += (object sender, IProgressReporter.ProgressUpdater e)
+            => Dispatcher.BeginInvoke(() => e.Update(fabricInstanceInstaller.Progresses));
 
         try
         {
-            var instance = await vanillaInstanceInstaller.InstallAsync(cancellationTokenSource.Token);
+            var instance = await fabricInstanceInstaller.InstallAsync(cancellationTokenSource.Token);
             Dispatcher.Invoke(() => Text = $"Minecraft {instance.InstanceId} successfully installed");
         }
         catch (Exception ex)

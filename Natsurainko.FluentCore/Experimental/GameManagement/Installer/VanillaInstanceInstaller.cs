@@ -57,15 +57,12 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
         {
             // 取消后清理产生的部分文件
 
-            versionJsonFile?.Delete();
             assetIndex?.Delete();
 
             if (instance != null)
             {
-                if (File.Exists(instance.ClientJarPath))
-                    File.Delete(instance.ClientJarPath);
-
-                versionJsonFile!.Directory!.Delete();
+                versionJsonFile!.Directory?.DeleteAllFiles();
+                versionJsonFile!.Directory?.Delete();
             }
 
             ProgressReporterHelper.ReportWhenExceptionThrow(this);
@@ -124,7 +121,7 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
         cancellationToken.ThrowIfCancellationRequested();
         var instance = MinecraftInstance.Parse(fileInfo.Directory!) as VanillaMinecraftInstance;
 
-        return instance ?? throw new InvalidOperationException("An incorrect original instance was encountered");
+        return instance ?? throw new InvalidOperationException("An incorrect vanilla instance was encountered");
     }
 
     /// <summary>

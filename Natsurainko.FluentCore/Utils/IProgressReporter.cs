@@ -101,6 +101,31 @@ public interface IProgressReporter
             });
         }
 
+        internal static ProgressUpdater FromUpdateFinishedTasks(string taskName, int finishedTasksNumber)
+        {
+            return new ProgressUpdater(progresses =>
+            {
+                var data = progresses[taskName];
+
+                data.FinishedTasks = finishedTasksNumber;
+                data.ReportPropertyChanged("FinishedTasks");
+            });
+        }
+
+        internal static ProgressUpdater FromUpdateAllTasks(string taskName, int finishedTasksNumber, int totalTasksNumber)
+        {
+            return new ProgressUpdater(progresses =>
+            {
+                var data = progresses[taskName];
+
+                data.TotalTasks = totalTasksNumber;
+                data.FinishedTasks = finishedTasksNumber;
+
+                data.ReportPropertyChanged("TotalTasks");
+                data.ReportPropertyChanged("FinishedTasks");
+            });
+        }
+
         internal static ProgressUpdater FromIncrementFinishedTasks(string taskName)
         {
             return new ProgressUpdater(progresses =>

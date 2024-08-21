@@ -1,6 +1,5 @@
 ﻿using Nrk.FluentCore.Environment;
 using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
-using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
@@ -9,7 +8,6 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
-using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 

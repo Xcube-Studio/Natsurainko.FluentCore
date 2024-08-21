@@ -13,12 +13,6 @@ public class QuiltInstallData
 
     [JsonPropertyName("launcherMeta")]
     public required QuiltLauncherMeta LauncherMeta { get; set; }
-
-    public string McVersion => Intermediary.Version;
-
-    public string DisplayVersion => $"{McVersion}-{Loader.Version}";
-
-    public string BuildVersion => Loader.Version;
 }
 
 public class QuiltLauncherMeta

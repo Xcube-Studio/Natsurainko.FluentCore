@@ -1,6 +1,4 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
-using Nrk.FluentCore.Management.ModLoaders;
-using Nrk.FluentCore.Management.Parsing;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -15,21 +13,15 @@ public class FabricInstallData
     [JsonPropertyName("loader")]
     public required MavenItemJsonObject Loader { get; set; }
 
-    [JsonPropertyName("launcherMeta")]
-    public required FabricLauncherMeta LauncherMeta { get; set; }
-
-    public string McVersion => Intermediary.Version;
-
-    public string DisplayVersion => $"{McVersion}-{Loader.Version}";
-
-    public string BuildVersion => Loader.Version;
+    //[JsonPropertyName("launcherMeta")]
+    //public required FabricLauncherMeta LauncherMeta { get; set; }
 }
 
-public class FabricLauncherMeta
-{
-    [JsonPropertyName("mainClass")]
-    public required JsonNode MainClass { get; set; }
+//public class FabricLauncherMeta
+//{
+//    [JsonPropertyName("mainClass")]
+//    public required JsonNode MainClass { get; set; }
 
-    [JsonPropertyName("libraries")]
-    public required Dictionary<string, List<MinecraftLibrary>> Libraries { get; set; }
-}
+//    [JsonPropertyName("libraries")]
+//    public required Dictionary<string, List<MinecraftLibrary>> Libraries { get; set; }
+//}

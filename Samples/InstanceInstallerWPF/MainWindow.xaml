@@ -18,25 +18,41 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="10" />
-            <RowDefinition Height="1*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="10" />
-            <RowDefinition Height="50" />
+            <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
         <TextBox Text="{Binding MinecraftFolder, Mode=TwoWay}" />
-        <ListBox
-            Grid.Row="2"
-            ItemsSource="{Binding ManifestItems}"
-            ScrollViewer.VerticalScrollBarVisibility="Auto"
-            SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock>
-                        <Run Text="{Binding Id}" />
-                        <Run Text="{Binding Url}" />
-                    </TextBlock>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <ListBox ItemsSource="{Binding ManifestItems}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding Id}" />
+                            <Run Text="{Binding Url}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox
+                Grid.Column="2"
+                ItemsSource="{Binding FabricInstallDatas}"
+                SelectedItem="{Binding SelectedFabricInstallData, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding Intermediary.Version}" />
+                            <Run Text="{Binding Loader.Version}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
         <StackPanel Grid.Row="4" Orientation="Horizontal">
             <Button Command="{Binding InstallCommand}" Content="Install" />
             <Button
