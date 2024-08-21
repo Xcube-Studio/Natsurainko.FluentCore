@@ -1,5 +1,6 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -14,7 +15,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Quilt;
 
 public class QuiltInstaller : ModLoaderInstaller
 {
-    public required QuiltInstallBuild QuiltBuild { get; set; }
+    public required QuiltInstallData QuiltBuild { get; set; }
 
     private readonly IDownloader _downloader;
 

@@ -1,5 +1,6 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -39,7 +40,7 @@ public class ForgeInstaller : ModLoaderInstaller
             out string forgeVersion,
             out JsonNode versionInfoJson,
             out List<MinecraftLibrary> libraries,
-            out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors
+            out IReadOnlyList<ForgeProcessorData>? highVersionForgeProcessors
         );
         WriteFiles(packageArchive, installProfile, forgeVersion, versionInfoJson);
         DownloadLibraries(libraries);
@@ -77,7 +78,7 @@ public class ForgeInstaller : ModLoaderInstaller
         out string forgeVersion,
         out JsonNode versionInfoJson,
         out List<MinecraftLibrary> libraries,
-        out IReadOnlyList<HighVersionForgeProcessorData>? highVersionForgeProcessors)
+        out IReadOnlyList<ForgeProcessorData>? highVersionForgeProcessors)
     {
         highVersionForgeProcessors = null; // default output
         OnProgressChanged(0.1);
@@ -191,7 +192,7 @@ public class ForgeInstaller : ModLoaderInstaller
             });
 
         highVersionForgeProcessors = installProfile["processors"]?
-            .Deserialize<IEnumerable<HighVersionForgeProcessorData>>()?
+            .Deserialize<IEnumerable<ForgeProcessorData>>()?
             .Where(x => !(x.Sides.Count == 1 && x.Sides.Contains("server")))
             .ToList();
 
@@ -280,7 +281,7 @@ public class ForgeInstaller : ModLoaderInstaller
         OnProgressChanged(0.75);
     }
 
-    void RunProcessors(IReadOnlyList<HighVersionForgeProcessorData>? _highVersionForgeProcessors)
+    void RunProcessors(IReadOnlyList<ForgeProcessorData>? _highVersionForgeProcessors)
     {
         OnProgressChanged(0.8);
 

@@ -126,7 +126,7 @@ file static class ParsingHelpers
         string versionFolderName = clientDir.Name;
 
         // .minecraft folder path
-        string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
+        string minecraftFolderPath = clientDir.Parent?.FullName
             ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
 
         // Asset index path
@@ -177,8 +177,14 @@ file static class ParsingHelpers
     {
         // Check if client.jar exists
         string clientJarPath = ReplaceJsonWithJar(partialData.ClientJsonPath);
-        if (!File.Exists(clientJarPath))
-            throw new FileNotFoundException($"{clientJarPath} not found");
+
+        // Note:
+        // client.jar 的下载地址只能从 version.json 中获取，
+        // 因此在安装新的版本时，应该先解析 version.json 到 MinecraftInstance，然后才能下载 client.jar。
+        // 所以此处不应该检查 client.jar 的存在
+
+        //if (!File.Exists(clientJarPath))
+        //    throw new FileNotFoundException($"{clientJarPath} not found");
 
         // Parse version
         string versionId = ReadVersionIdFromNonInheritingClientJson(clientJsonObject, clientJsonNode);

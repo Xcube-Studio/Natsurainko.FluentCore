@@ -20,7 +20,6 @@ internal class BmclApiMirror : IDownloadMirror
         { "https://launchermeta.mojang.com", "https://bmclapi2.bangbang93.com" },
         { "https://launcher.mojang.com" , "https://bmclapi2.bangbang93.com" },
         { "https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/maven" },
-        { "https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com" },
         { "https://maven.minecraftforge.net", "https://bmclapi2.bangbang93.com/maven" },
         { "https://files.minecraftforge.net/maven", "https://bmclapi2.bangbang93.com/maven" },
         { "https://maven.fabricmc.net", "https://bmclapi2.bangbang93.com/maven" },

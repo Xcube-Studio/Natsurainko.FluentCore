@@ -1,5 +1,6 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;
 using System;
@@ -14,7 +15,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.ModLoaders.Fabric;
 
 public class FabricInstaller : ModLoaderInstaller
 {
-    public required FabricInstallBuild FabricBuild { get; set; }
+    public required FabricInstallData FabricBuild { get; set; }
 
     private readonly IDownloader _downloader;
 

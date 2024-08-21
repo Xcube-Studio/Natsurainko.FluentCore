@@ -1,7 +1,8 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+﻿using Nrk.FluentCore.Experimental.Exceptions;
+using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
-using Nrk.FluentCore.Management.Downloader.Data;
 using Nrk.FluentCore.Utils;
 using System;
 using System.IO;
@@ -14,7 +15,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 /// <summary>
 /// 原版 Minecraft 实例安装器
 /// </summary>
-internal class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInstance>
+public class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInstance>
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
@@ -29,6 +30,11 @@ internal class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftIns
     /// 镜像源
     /// </summary>
     public IDownloadMirror? DownloadMirror { get; set; }
+
+    /// <summary>
+    /// 强制检查所有依赖必须下载
+    /// </summary>
+    public bool CheckAllDependencies { get; set; }
 
     public Task<VanillaMinecraftInstance> InstallAsync() => InstallAsync(CancellationToken.None);
 
@@ -165,6 +171,9 @@ internal class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftIns
             .AddDependencies(minecraftAssets)
             .Build();
 
-        await dependencyResolver.VerifyAndDownloadDependenciesAsync(multipartDownloader, 4, cancellationToken);
+        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(multipartDownloader, 4, cancellationToken);
+
+        if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
+            throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
     }
 }
