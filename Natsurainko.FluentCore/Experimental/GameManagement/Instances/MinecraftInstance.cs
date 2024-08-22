@@ -72,7 +72,6 @@ public abstract partial class MinecraftInstance
 
         // TODO: Handle nullable check in Json deserialization (requires .NET 9)
         string id = assetIndex.Id ?? throw new InvalidDataException();
-        id = $"{id}.json";
         string sha1 = assetIndex.Sha1 ?? throw new InvalidDataException();
         int size = assetIndex.Size ?? throw new InvalidDataException();
 

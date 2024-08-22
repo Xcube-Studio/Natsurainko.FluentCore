@@ -128,7 +128,7 @@ public class MinecraftSession
 
             State = MinecraftSessionState.CompletingResources;
 
-            CheckAndCompleteDependencies();
+            await CheckAndCompleteDependencies();
 
             State = MinecraftSessionState.BuildingArguments;
             _mcProcess = CreateMinecraftProcess();
@@ -200,7 +200,7 @@ public class MinecraftSession
 
     public Func<IEnumerable<MinecraftLibrary>, DependencyResolver>? CreateDependencyResolver { get; set; }
 
-    void CheckAndCompleteDependencies()
+    private async Task CheckAndCompleteDependencies()
     {
         if (_enabledNativesLibraries == null)
             throw new ArgumentNullException(nameof(_enabledNativesLibraries));
@@ -216,7 +216,7 @@ public class MinecraftSession
             resourcesDownloader.InvalidDependenciesDetermined += (_, deps) =>
                 DownloadElementsPosted?.Invoke(resourcesDownloader, deps.Count());
 
-            var downloadResult = resourcesDownloader.VerifyAndDownloadDependenciesAsync().GetAwaiter().GetResult();
+            var downloadResult = await resourcesDownloader.VerifyAndDownloadDependenciesAsync();
             if (downloadResult.Failed.Count > 0)
                 throw new IncompleteGameResourcesException(downloadResult.Failed.Select(r => r.Item2));
         }
