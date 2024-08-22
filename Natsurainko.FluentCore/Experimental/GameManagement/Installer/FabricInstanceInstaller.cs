@@ -189,21 +189,20 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadFabricLibraries(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        void DependencyDownloaded(object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadFabricLibraries"));
-
         Progress.Report(ProgressUpdater.FromRunning("DownloadFabricLibraries"));
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        (var libraries, var _) = instance.GetRequiredLibraries();
+        var dependencyResolver = new DependencyResolver(instance)
+        {
+            AllowInheritedDependencies = false,
+            AllowVerifyAssets = false,
+        };
 
-        var dependencyResolver = new DependencyResolverBuilder()
-            .AddDependencies(libraries)
-            .Build();
-
-        Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadFabricLibraries", dependencyResolver.Dependencies.Count));
-        dependencyResolver.DependencyDownloaded += DependencyDownloaded;
+        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e)
+            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadFabricLibraries", e.Count()));
+        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
+            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadFabricLibraries"));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 

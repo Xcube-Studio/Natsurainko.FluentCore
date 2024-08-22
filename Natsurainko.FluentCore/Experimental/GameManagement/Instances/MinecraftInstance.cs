@@ -55,13 +55,9 @@ public abstract partial class MinecraftInstance
     public MinecraftAssetIndex GetAssetIndex()
     {
         // Identify file paths
-        string clientJsonPath = ClientJsonPath;
-        string assetIndexJsonPath = AssetIndexJsonPath;
-        if (this is ModifiedMinecraftInstance { HasInheritance: true } instance)
-        {
-            clientJsonPath = instance.InheritedMinecraftInstance.ClientJsonPath;
-            assetIndexJsonPath = instance.InheritedMinecraftInstance.AssetIndexJsonPath;
-        }
+        string clientJsonPath = this is ModifiedMinecraftInstance { HasInheritance: true } instance 
+            ? instance.InheritedMinecraftInstance.AssetIndexJsonPath
+            : ClientJsonPath;
 
         // Parse client.json
         JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(clientJsonPath));

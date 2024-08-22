@@ -68,7 +68,7 @@ public class MinecraftLibrary : MinecraftDependency
         return Path.Combine(path, filename);
     }
 
-    internal static MinecraftLibrary ParseJsonNode(ClientJsonObject.LibraryJsonObject libNode, string minecraftFolderPath)
+    internal static MinecraftLibrary ParseJsonNode(LibraryJsonObject libNode, string minecraftFolderPath)
     {
         // Check platform-specific library name
         if (libNode.MavenName is null)

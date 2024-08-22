@@ -39,10 +39,10 @@ internal class ClientJsonObject
     public required string? Type { get; set; }
 
     [JsonPropertyName("assets")]
-    public required string? Assets { get; set; }
+    public string? Assets { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public required AssstIndexJsonObject? AssetIndex { get; set; }
+    public AssstIndexJsonObject? AssetIndex { get; set; }
 
     [JsonPropertyName("libraries")]
     public required IEnumerable<LibraryJsonObject>? Libraries { get; set; }
@@ -213,7 +213,7 @@ internal class ClientJsonObject
         [JsonPropertyName("name")]
         public required string? MavenName { get; set; }
 
-        // Used by Forge
+        // Used by Forge, Fabric, Quilt..
         [JsonPropertyName("url")]
         public string? MavenUrl { get; set; }
 

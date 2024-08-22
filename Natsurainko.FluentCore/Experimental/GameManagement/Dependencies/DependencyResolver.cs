@@ -14,11 +14,21 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
 public class DependencyResolver
 {
+    private readonly List<MinecraftDependency> _dependencies = [];
+    private readonly MinecraftInstance _instance;
+
     public event EventHandler<(DownloadRequest, DownloadResult)>? DependencyDownloaded;
     public event EventHandler<IEnumerable<MinecraftDependency>>? InvalidDependenciesDetermined;
 
-    private readonly List<MinecraftDependency> _dependencies = new();
-    private readonly MinecraftInstance _instance;
+    /// <summary>
+    /// 允许检查继承的依赖
+    /// </summary>
+    public bool AllowInheritedDependencies { get; init; } = true;
+
+    /// <summary>
+    /// 允许检查 Assets (包含 AssetIndex 文件的检查与下载)
+    /// </summary>
+    public bool AllowVerifyAssets { get; init; } = true;
 
     public DependencyResolver(MinecraftInstance instance, IEnumerable<MinecraftDependency>? extraDependencies = null)
     {
@@ -41,47 +51,60 @@ public class DependencyResolver
 
         // 1. Find all dependencies
 
-        // 1.1 Libraries
+        #region 1.1 Libraries & Inherited Libraries
+
         var (libs, nativeLibs) = _instance.GetRequiredLibraries();
         _dependencies.AddRange(libs);
         _dependencies.AddRange(nativeLibs);
 
-        if (_instance is ModifiedMinecraftInstance modInstance)
+        if (AllowInheritedDependencies 
+            && _instance is ModifiedMinecraftInstance modInstance 
+            && modInstance.HasInheritance)
         {
-            if (modInstance.HasInheritance)
-            {
-                (libs, nativeLibs) = modInstance.InheritedMinecraftInstance.GetRequiredLibraries();
-                _dependencies.AddRange(libs);
-                _dependencies.AddRange(nativeLibs);
-            }
+            (libs, nativeLibs) = modInstance.InheritedMinecraftInstance.GetRequiredLibraries();
+            _dependencies.AddRange(libs);
+            _dependencies.AddRange(nativeLibs);
         }
 
-        // 1.2 Asset index
-        var assetIndex = _instance.GetAssetIndex();
-        bool isAssetIndexValid = await VerifyDependencyAsync(assetIndex, cancellationToken);
-        if (!isAssetIndexValid)
-        {
-            var result = await downloader.CreateDownloadTask(assetIndex.Url, assetIndex.FullPath).StartAsync();
+        #endregion
 
-            if (result.Type == DownloadResultType.Failed)
-                throw new Exception("依赖材质索引文件获取失败");
-        }
+        #region 1.2 Client.jar
 
-        // 1.3 Assets
-        var assets = _instance.GetRequiredAssets();
-        _dependencies.AddRange(assets);
-
-        // 1.3 Client Jar
         var jar = _instance.GetJarElement();
         if (jar != null)
+        {
             _dependencies.Add(jar);
+        }
+
+        #endregion
+
+        #region 1.3 AssetIndex & Assets
+
+        if (AllowVerifyAssets)
+        {
+            var assetIndex = _instance.GetAssetIndex();
+
+            if (!await VerifyDependencyAsync(assetIndex, cancellationToken))
+            {
+                var result = await downloader.CreateDownloadTask(assetIndex.Url, assetIndex.FullPath).StartAsync(cancellationToken);
+
+                if (result.Type == DownloadResultType.Failed)
+                {
+                    throw new Exception("Failed to obtain the dependent material index file");
+                }
+            }
+
+            _dependencies.AddRange(_instance.GetRequiredAssets());
+        }
+
+        #endregion
 
         // 2. Verify dependencies
 
         // This is IO bound operation, using TPL is inefficient
         // TODO: Test performance of this implementation
         SemaphoreSlim semaphore = new(fileVerificationParallelism, fileVerificationParallelism);
-        ConcurrentBag<MinecraftDependency> invalidDeps = new();
+        ConcurrentBag<MinecraftDependency> invalidDeps = [];
 
         var tasks = _dependencies.Select(async dep =>
         {
@@ -107,11 +130,10 @@ public class DependencyResolver
 
         // 3. Download invalid dependencies
         var downloadItems = invalidDeps.Select(dep => new DownloadRequest(dep.Url, dep.FullPath));
+
         var groupRequest = new GroupDownloadRequest(downloadItems);
-        groupRequest.SingleRequestCompleted += (request, result) =>
-        {
-            DependencyDownloaded?.Invoke(this, (request, result));
-        };
+        groupRequest.SingleRequestCompleted += (request, result) => DependencyDownloaded?.Invoke(this, (request, result));
+
         return await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 

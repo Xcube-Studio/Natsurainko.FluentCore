@@ -189,21 +189,15 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadQuiltLibraries(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        void DependencyDownloaded(object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadQuiltLibraries"));
-
         Progress.Report(ProgressUpdater.FromRunning("DownloadQuiltLibraries"));
-
         cancellationToken.ThrowIfCancellationRequested();
 
-        (var libraries, var _) = instance.GetRequiredLibraries();
+        var dependencyResolver = new DependencyResolver(instance);
 
-        var dependencyResolver = new DependencyResolverBuilder()
-            .AddDependencies(libraries)
-            .Build();
-
-        Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadQuiltLibraries", dependencyResolver.Dependencies.Count));
-        dependencyResolver.DependencyDownloaded += DependencyDownloaded;
+        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e)
+            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadQuiltLibraries", e.Count()));
+        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
+            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadQuiltLibraries"));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 

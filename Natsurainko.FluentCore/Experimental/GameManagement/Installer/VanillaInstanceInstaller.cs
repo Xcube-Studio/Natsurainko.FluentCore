@@ -7,6 +7,7 @@ using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,6 +86,7 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     async Task<FileInfo> DownloadVersionJson(CancellationToken cancellationToken)
     {
         Progress.Report(ProgressUpdater.FromRunning("DownloadVersionJson"));
+        cancellationToken.ThrowIfCancellationRequested();
 
         string requestUrl = McVersionManifestItem.Url;
 
@@ -133,7 +135,6 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     async Task<FileInfo> DownloadAssetIndexJson(MinecraftInstance instance, CancellationToken cancellationToken)
     {
         Progress.Report(ProgressUpdater.FromRunning("DownloadAssetIndexJson"));
-
         cancellationToken.ThrowIfCancellationRequested();
 
         var assetIndex = instance.GetAssetIndex();
@@ -170,26 +171,15 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadMinecraftDependencies(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        void DependencyDownloaded(object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadMinecraftDependencies"));
-
         Progress.Report(ProgressUpdater.FromRunning("DownloadMinecraftDependencies"));
-
         cancellationToken.ThrowIfCancellationRequested();
 
-        var minecraftClient = instance.GetJarElement() ?? throw new InvalidOperationException("Unable to obtain download data for client.jar");
-        (var libraries, var natives) = instance.GetRequiredLibraries();
-        var minecraftAssets = instance.GetRequiredAssets();
+        var dependencyResolver = new DependencyResolver(instance);
 
-        var dependencyResolver = new DependencyResolverBuilder()
-            .AddDependencies([minecraftClient])
-            .AddDependencies(libraries)
-            .AddDependencies(natives)
-            .AddDependencies(minecraftAssets)
-            .Build();
-
-        Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadMinecraftDependencies", dependencyResolver.Dependencies.Count));
-        dependencyResolver.DependencyDownloaded += DependencyDownloaded;
+        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e) 
+            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadMinecraftDependencies", e.Count()));
+        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
+            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadMinecraftDependencies"));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
