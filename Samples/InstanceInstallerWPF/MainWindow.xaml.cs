@@ -73,7 +73,7 @@ partial class ViewModel : ObservableObject
     private string text;
 
     [ObservableProperty]
-    private IEnumerable<IProgressReporter.ProgressData> progressDatas;
+    private IEnumerable<InstallerStageViewModel> progressDatas;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]

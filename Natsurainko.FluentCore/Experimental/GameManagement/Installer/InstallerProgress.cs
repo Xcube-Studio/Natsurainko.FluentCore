@@ -13,7 +13,7 @@ public enum VanillaInstallationStage
 {
     DownloadVersionJson,
     DownloadAssetIndexJson,
-    DownloadMinecraftDependencies
+    DownloadMinecraftDependencies,
 }
 
 // public enum ForgeInstallationStage
@@ -27,7 +27,8 @@ public enum ProgressType
     UpdateTotalTasks,
     UpdateFinishedTasks,
     UpdateAllTasks,
-    IncrementFinishedTasks
+    IncrementFinishedTasks,
+    Error
 }
 
 public record struct InstallerProgressPayload(ProgressType Type, int? FinishedTasks, int? TotalTasks);
