@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
@@ -115,7 +115,8 @@ public class DependencyResolver
         return await downloader.DownloadFilesAsync(groupRequest, cancellationToken);
     }
 
-    private static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
+    // TODO: change to private
+    public static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(dep.FullPath))
             return false;
