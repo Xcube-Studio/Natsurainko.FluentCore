@@ -16,35 +16,31 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 /// <summary>
 /// 原版 Minecraft 实例安装器
 /// </summary>
-public class VanillaInstanceInstaller // : IInstanceInstaller<VanillaMinecraftInstance>
+public class VanillaInstanceInstaller : IInstanceInstaller
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
-    public required string MinecraftFolder { get; set; }
+    public required string MinecraftFolder { get; init; }
+
+    public IDownloadMirror? DownloadMirror { get; init; }
+
+    public bool CheckAllDependencies { get; init; }
 
     /// <summary>
     /// 原版 Minecraft 版本清单项
     /// </summary>
-    public required VersionManifestItem McVersionManifestItem { get; set; }
-
-    /// <summary>
-    /// 镜像源
-    /// </summary>
-    public IDownloadMirror? DownloadMirror { get; set; }
-
-    /// <summary>
-    /// 强制检查所有依赖必须被下载
-    /// </summary>
-    public bool CheckAllDependencies { get; set; }
+    public required VersionManifestItem McVersionManifestItem { get; init; }
 
     public IProgress<InstallerProgress<VanillaInstallationStage>>? Progress { get; init; }
+
+    Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
+        => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance(t) => t.Result);
 
     public async Task<VanillaMinecraftInstance> InstallAsync(CancellationToken cancellationToken = default)
     {
         FileInfo? versionJsonFile = null;
         FileInfo? assetIndex = null;
         VanillaMinecraftInstance? instance = null;
-
 
         var stage = VanillaInstallationStage.DownloadVersionJson;
         try
@@ -209,7 +205,7 @@ public class VanillaInstanceInstaller // : IInstanceInstaller<VanillaMinecraftIn
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
-            throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
+            throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");
 
         Progress?.Report(new(
             VanillaInstallationStage.DownloadMinecraftDependencies,
@@ -217,11 +213,10 @@ public class VanillaInstanceInstaller // : IInstanceInstaller<VanillaMinecraftIn
         ));
     }
 
-}
-
-public enum VanillaInstallationStage
-{
-    DownloadVersionJson,
-    DownloadAssetIndexJson,
-    DownloadMinecraftDependencies,
+    public enum VanillaInstallationStage
+    {
+        DownloadVersionJson,
+        DownloadAssetIndexJson,
+        DownloadMinecraftDependencies,
+    }
 }

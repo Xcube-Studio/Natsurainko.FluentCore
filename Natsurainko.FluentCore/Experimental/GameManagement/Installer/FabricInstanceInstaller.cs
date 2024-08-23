@@ -8,54 +8,54 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using static Nrk.FluentCore.Experimental.GameManagement.Installer.VanillaInstanceInstaller;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
 /// <summary>
 /// Fabric 实例安装器
 /// </summary>
-public partial class FabricInstanceInstaller // : IInstanceInstaller<ModifiedMinecraftInstance>
+public partial class FabricInstanceInstaller : IInstanceInstaller
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
-    public required string MinecraftFolder { get; set; }
+    public required string MinecraftFolder { get; init; }
+
+    public IDownloadMirror? DownloadMirror { get; init; }
+
+    public bool CheckAllDependencies { get; init; }
 
     /// <summary>
     /// Fabric 安装所需数据
     /// </summary>
-    public required FabricInstallData InstallData { get; set; }
+    public required FabricInstallData InstallData { get; init; }
 
     /// <summary>
     /// 原版 Minecraft 版本清单项
     /// </summary>
-    public required VersionManifestItem McVersionManifestItem { get; set; }
-
-    /// <summary>
-    /// 镜像源
-    /// </summary>
-    public IDownloadMirror? DownloadMirror { get; set; }
-
-    /// <summary>
-    /// 强制检查所有依赖必须被下载
-    /// </summary>
-    public bool CheckAllDependencies { get; set; }
+    public required VersionManifestItem McVersionManifestItem { get; init; }
 
     /// <summary>
     /// 继承的原版实例（可选）
     /// </summary>
-    public VanillaMinecraftInstance? InheritedInstance { get; set; }
+    public VanillaMinecraftInstance? InheritedInstance { get; init; }
 
     /// <summary>
     /// 自定义安装实例的 Id
     /// </summary>
-    public string? CustomizedInstanceId { get; set; }
+    public string? CustomizedInstanceId { get; init; }
 
     public IProgress<InstallerProgress<FabricInstallationStage>>? Progress { get; init; }
 
     public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+
+    Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
+        => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
 
     public async Task<ModifiedMinecraftInstance> InstallAsync(CancellationToken cancellationToken = default)
     {
@@ -163,7 +163,12 @@ public partial class FabricInstanceInstaller // : IInstanceInstaller<ModifiedMin
         if (!jsonFile.Directory!.Exists)
             jsonFile.Directory.Create();
 
-        await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
+        await File.WriteAllTextAsync(jsonFile.FullName, 
+            JsonNode.Parse(jsonContent)!.ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            }), cancellationToken);
 
         Progress?.Report(new(
             FabricInstallationStage.DownloadFabricClientJson,
@@ -223,18 +228,18 @@ public partial class FabricInstanceInstaller // : IInstanceInstaller<ModifiedMin
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
-            throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
+            throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");
 
         Progress?.Report(new(
             FabricInstallationStage.DownloadFabricLibraries,
             InstallerStageProgress.Finished()
         ));
     }
-}
 
-public enum FabricInstallationStage
-{
-    ParseOrInstallVanillaInstance,
-    DownloadFabricClientJson,
-    DownloadFabricLibraries,
+    public enum FabricInstallationStage
+    {
+        ParseOrInstallVanillaInstance,
+        DownloadFabricClientJson,
+        DownloadFabricLibraries,
+    }
 }

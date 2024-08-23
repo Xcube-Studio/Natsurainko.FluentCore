@@ -10,6 +10,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Threading;
+using static Nrk.FluentCore.Experimental.GameManagement.Installer.FabricInstanceInstaller;
+using static Nrk.FluentCore.Experimental.GameManagement.Installer.VanillaInstanceInstaller;
 
 namespace InstanceInstallerWPF;
 
@@ -123,7 +125,7 @@ partial class ViewModel : ObservableObject
     };
 
     [RelayCommand]
-    async Task Install()
+    Task Install() => Task.Run(async () =>
     {
         cancellationTokenSource = new CancellationTokenSource();
         Dispatcher.Invoke(() => CanCancel = true);
@@ -162,7 +164,9 @@ partial class ViewModel : ObservableObject
         {
             Dispatcher.Invoke(() => Text = ex.ToString());
         }
-    }
+
+        Dispatcher.Invoke(() => CanCancel = false);
+    });
 
     [RelayCommand(CanExecute = nameof(CanCancel))]
     void Cancel() 

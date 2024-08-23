@@ -112,7 +112,7 @@ public class OptiFineInstaller : ModLoaderInstaller
                 }
             },
             mainClass = "net.minecraft.launchwrapper.Launch",
-            minecraftArguments = "  --tweakClass optifine.OptiFineTweaker"
+            minecraftArguments = "--tweakClass optifine.OptiFineTweaker"
         };
 
         var jsonFilePath = Path.Combine(
