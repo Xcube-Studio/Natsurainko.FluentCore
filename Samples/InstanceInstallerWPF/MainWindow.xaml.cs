@@ -73,7 +73,7 @@ partial class ViewModel : ObservableObject
     private string text;
 
     [ObservableProperty]
-    private IEnumerable<InstallerStageViewModel> progressDatas;
+    private IEnumerable<InstallationStageViewModel> progressDatas;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
@@ -108,11 +108,39 @@ partial class ViewModel : ObservableObject
 
     }
 
+    private static readonly Dictionary<FabricInstallationStage, string> s_fabricInstallationStageNames = new()
+    {
+        {FabricInstallationStage.ParseOrInstallVanillaInstance, "Parse or install vanilla instance" },
+        {FabricInstallationStage.DownloadFabricClientJson, "Download Fabric client.json" },
+        {FabricInstallationStage.DownloadFabricLibraries, "Download Fabric libraries" },
+    };
+
+    private static readonly Dictionary<VanillaInstallationStage, string> s_vanillaInstallationStageNames = new()
+    {
+        {VanillaInstallationStage.DownloadVersionJson, "Download client.json" },
+        {VanillaInstallationStage.DownloadAssetIndexJson, "Download asset_index.json" },
+        {VanillaInstallationStage.DownloadMinecraftDependencies, "Download Minecraft dependencies" },
+    };
+
     [RelayCommand]
-    Task Install() => Task.Run(async () =>
+    async Task Install()
     {
         cancellationTokenSource = new CancellationTokenSource();
         Dispatcher.Invoke(() => CanCancel = true);
+
+        InstallationViewModel<FabricInstallationStage> stagesViewModel = new(s_fabricInstallationStageNames);
+        InstallationViewModel<VanillaInstallationStage> vanillaStagesViewModel = new(s_vanillaInstallationStageNames);
+        IEnumerable<InstallationStageViewModel> stages = [
+            stagesViewModel.Stages[FabricInstallationStage.ParseOrInstallVanillaInstance],
+
+            vanillaStagesViewModel.Stages[VanillaInstallationStage.DownloadVersionJson],
+            vanillaStagesViewModel.Stages[VanillaInstallationStage.DownloadAssetIndexJson],
+            vanillaStagesViewModel.Stages[VanillaInstallationStage.DownloadMinecraftDependencies],
+
+            stagesViewModel.Stages[FabricInstallationStage.DownloadFabricClientJson],
+            stagesViewModel.Stages[FabricInstallationStage.DownloadFabricLibraries],
+        ];
+        Dispatcher.Invoke(() => ProgressDatas = stages);
 
         var fabricInstanceInstaller = new FabricInstanceInstaller()
         {
@@ -120,13 +148,10 @@ partial class ViewModel : ObservableObject
             McVersionManifestItem = SelectedItem,
             MinecraftFolder = MinecraftFolder,
             CheckAllDependencies = true,
-            InstallData = SelectedFabricInstallData
+            InstallData = SelectedFabricInstallData,
+            Progress = stagesViewModel,
+            VanillaInstallationProgress = vanillaStagesViewModel
         };
-
-        Dispatcher.Invoke(() => ProgressDatas = fabricInstanceInstaller.Progresses.Values);
-
-        fabricInstanceInstaller.ProgressChanged += (object sender, IProgressReporter.ProgressUpdater e)
-            => Dispatcher.BeginInvoke(() => e.Update(fabricInstanceInstaller.Progresses));
 
         try
         {
@@ -137,7 +162,7 @@ partial class ViewModel : ObservableObject
         {
             Dispatcher.Invoke(() => Text = ex.ToString());
         }
-    });
+    }
 
     [RelayCommand(CanExecute = nameof(CanCancel))]
     void Cancel() 

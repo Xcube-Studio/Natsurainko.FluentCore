@@ -10,7 +10,6 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.Utils.IProgressReporter;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 

@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.Utils.IProgressReporter.ProgressData;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
-// Generic
 public enum InstallerStageProgressType
 {
     Starting,
@@ -44,60 +42,3 @@ public readonly record struct InstallerProgress<TStage>(
     TStage Stage,
     InstallerStageProgress StageProgress)
     where TStage : notnull;
-
-// Used in Launcher
-public class InstallerProgressReporter<TStage> : IProgress<InstallerProgress<TStage>>
-    where TStage : notnull
-{
-    public Dictionary<TStage, InstallerStageViewModel> Stages { get; } = new();
-
-    public InstallerProgressReporter(IReadOnlyDictionary<TStage, string> stageNames)
-    {
-        // Init stage view models
-        foreach (var (stage, name) in stageNames)
-        {
-            Stages.Add(stage, new InstallerStageViewModel { TaskName = name });
-        }
-    }
-
-    public void Report(InstallerProgress<TStage> value)
-    {
-        var vm = Stages[value.Stage];
-        vm.UpdateProgress(value.StageProgress);
-    }
-}
-
-public class InstallerStageViewModel // INotifyPropertyChanged
-{
-    public required string TaskName { get; init; }
-
-    public State TaskState { get; set; } = State.Prepared;
-
-    public int TotalTasks { get; set; } = 1;
-
-    public int FinishedTasks { get; set; }
-
-    public void UpdateProgress(InstallerStageProgress payload)
-    {
-        switch (payload.Type)
-        {
-            case InstallerStageProgressType.Starting:
-                break;
-
-            case InstallerStageProgressType.UpdateTotalTasks:
-                break;
-            case InstallerStageProgressType.UpdateFinishedTasks:
-                break;
-            case InstallerStageProgressType.IncrementFinishedTasks:
-                break;
-
-            case InstallerStageProgressType.Finished:
-                break;
-            case InstallerStageProgressType.Failed:
-                break;
-
-            default:
-                break;
-        }
-    }
-}
