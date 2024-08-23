@@ -242,10 +242,10 @@ internal class OptiFineInstanceInstaller : IInstanceInstaller
             time,
             releaseTime = time,
             type = "release",
-            libraries = new LibraryJsonNode[]
+            libraries = new[]
             {
-                new() { Name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Patch}" },
-                new() { Name = launchwrapperName }
+                new { name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Patch}" },
+                new { name = launchwrapperName }
             },
             mainClass = "net.minecraft.launchwrapper.Launch",
             minecraftArguments = "--tweakClass optifine.OptiFineTweaker"
