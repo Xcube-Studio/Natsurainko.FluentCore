@@ -8,37 +8,42 @@ using static Nrk.FluentCore.Utils.IProgressReporter.ProgressData;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
-// Installer specific
-public enum VanillaInstallationStage
-{
-    DownloadVersionJson,
-    DownloadAssetIndexJson,
-    DownloadMinecraftDependencies,
-}
-
-// public enum ForgeInstallationStage
-
 // Generic
-public enum ProgressType
+public enum InstallerStageProgressType
 {
-    Finished,
-    Failed,
-    Running,
+    Starting,
+
     UpdateTotalTasks,
     UpdateFinishedTasks,
-    UpdateAllTasks,
     IncrementFinishedTasks,
-    Error
+
+    Finished,
+    Failed,
 }
 
-public record struct InstallerProgressPayload(ProgressType Type, int? FinishedTasks, int? TotalTasks);
-
-public struct InstallerProgress<TStage> where TStage : notnull
+public readonly record struct InstallerStageProgress(
+    InstallerStageProgressType Type,
+    int? FinishedTasks,
+    int? TotalTasks)
 {
-    public TStage Stage { get; init; }
-
-    public InstallerProgressPayload Payload { get; init; }
+    internal static InstallerStageProgress Starting()
+        => new(InstallerStageProgressType.Starting, null, null);
+    internal static InstallerStageProgress UpdateTotalTasks(int totalTasks)
+        => new(InstallerStageProgressType.UpdateTotalTasks, null, totalTasks);
+    internal static InstallerStageProgress UpdateFinishedTasks(int finishedTasks)
+        => new(InstallerStageProgressType.UpdateFinishedTasks, finishedTasks, null);
+    internal static InstallerStageProgress IncrementFinishedTasks()
+        => new(InstallerStageProgressType.IncrementFinishedTasks, null, null);
+    internal static InstallerStageProgress Finished()
+        => new(InstallerStageProgressType.Finished, null, null);
+    internal static InstallerStageProgress Failed()
+        => new(InstallerStageProgressType.Failed, null, null);
 }
+
+public readonly record struct InstallerProgress<TStage>(
+    TStage Stage,
+    InstallerStageProgress StageProgress)
+    where TStage : notnull;
 
 // Used in Launcher
 public class InstallerProgressReporter<TStage> : IProgress<InstallerProgress<TStage>>
@@ -46,16 +51,25 @@ public class InstallerProgressReporter<TStage> : IProgress<InstallerProgress<TSt
 {
     public Dictionary<TStage, InstallerStageViewModel> Stages { get; } = new();
 
+    public InstallerProgressReporter(IReadOnlyDictionary<TStage, string> stageNames)
+    {
+        // Init stage view models
+        foreach (var (stage, name) in stageNames)
+        {
+            Stages.Add(stage, new InstallerStageViewModel { TaskName = name });
+        }
+    }
+
     public void Report(InstallerProgress<TStage> value)
     {
         var vm = Stages[value.Stage];
-        vm.UpdateProgress(value.Payload);
+        vm.UpdateProgress(value.StageProgress);
     }
 }
 
 public class InstallerStageViewModel // INotifyPropertyChanged
 {
-    public string TaskName { get; set; } = "";
+    public required string TaskName { get; init; }
 
     public State TaskState { get; set; } = State.Prepared;
 
@@ -63,24 +77,25 @@ public class InstallerStageViewModel // INotifyPropertyChanged
 
     public int FinishedTasks { get; set; }
 
-    public void UpdateProgress(InstallerProgressPayload payload)
+    public void UpdateProgress(InstallerStageProgress payload)
     {
         switch (payload.Type)
         {
-            case ProgressType.Finished:
+            case InstallerStageProgressType.Starting:
                 break;
-            case ProgressType.Failed:
+
+            case InstallerStageProgressType.UpdateTotalTasks:
                 break;
-            case ProgressType.Running:
+            case InstallerStageProgressType.UpdateFinishedTasks:
                 break;
-            case ProgressType.UpdateTotalTasks:
+            case InstallerStageProgressType.IncrementFinishedTasks:
                 break;
-            case ProgressType.UpdateFinishedTasks:
+
+            case InstallerStageProgressType.Finished:
                 break;
-            case ProgressType.UpdateAllTasks:
+            case InstallerStageProgressType.Failed:
                 break;
-            case ProgressType.IncrementFinishedTasks:
-                break;
+
             default:
                 break;
         }
