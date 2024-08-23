@@ -2,7 +2,6 @@
 using Nrk.FluentCore.Experimental.GameManagement.Downloader;
 using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
-using Nrk.FluentCore.Experimental.GameManagement.ModLoaders.OptiFine;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
