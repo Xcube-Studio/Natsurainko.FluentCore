@@ -5,21 +5,19 @@ using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.Utils.IProgressReporter;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
 /// <summary>
 /// Fabric 实例安装器
 /// </summary>
-public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecraftInstance>, IProgressReporter
+public partial class FabricInstanceInstaller // : IInstanceInstaller<ModifiedMinecraftInstance>
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
@@ -55,18 +53,25 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
     /// </summary>
     public string? CustomizedInstanceId { get; set; }
 
-    public Task<ModifiedMinecraftInstance> InstallAsync() => InstallAsync(CancellationToken.None);
+    public IProgress<InstallerProgress<FabricInstallationStage>>? Progress { get; init; }
 
-    public async Task<ModifiedMinecraftInstance> InstallAsync(CancellationToken cancellationToken)
+    public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+
+    public async Task<ModifiedMinecraftInstance> InstallAsync(CancellationToken cancellationToken = default)
     {
         VanillaMinecraftInstance? vanillaInstance;
         FileInfo? fabricClientJson = null;
         ModifiedMinecraftInstance? instance = null;
 
+        var stage = FabricInstallationStage.ParseOrInstallVanillaInstance;
         try
         {
             vanillaInstance = await ParseOrInstallVanillaInstance(cancellationToken);
+
+            stage = FabricInstallationStage.DownloadFabricClientJson;
             fabricClientJson = await DownloadFabricClientJson(vanillaInstance, cancellationToken);
+
+            stage = FabricInstallationStage.DownloadFabricLibraries;
             instance = ParseModifiedMinecraftInstance(fabricClientJson, cancellationToken);
             await DownloadFabricLibraries(instance, cancellationToken);
         }
@@ -80,12 +85,12 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
                 fabricClientJson!.Directory?.Delete();
             }
 
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
 
@@ -99,7 +104,10 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
     /// <returns></returns>
     async Task<VanillaMinecraftInstance> ParseOrInstallVanillaInstance(CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("ParseOrInstallVanillaInstance"));
+        Progress?.Report(new(
+            FabricInstallationStage.ParseOrInstallVanillaInstance,
+            InstallerStageProgress.Starting()
+        ));
 
         if (InheritedInstance != null)
             return InheritedInstance;
@@ -109,22 +117,16 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
             DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
-            CheckAllDependencies = true
-        };
-
-        vanillaInstanceInstaller.ProgressChanged += (object? sender, ProgressUpdater e) =>
-        {
-            e.Update(vanillaInstanceInstaller.Progresses);
-
-            int totalTasks = vanillaInstanceInstaller.Progresses.Values.Select(x => x.TotalTasks).Sum();
-            int totalFinishedTasks = vanillaInstanceInstaller.Progresses.Values.Select(x => x.FinishedTasks).Sum();
-
-            Progress.Report(ProgressUpdater.FromUpdateAllTasks("ParseOrInstallVanillaInstance", totalFinishedTasks, totalTasks));
+            CheckAllDependencies = true,
+            Progress = VanillaInstallationProgress
         };
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("ParseOrInstallVanillaInstance"));
+        Progress?.Report(new(
+            FabricInstallationStage.ParseOrInstallVanillaInstance,
+            InstallerStageProgress.Finished()
+        ));
 
         return instance;
     }
@@ -137,7 +139,10 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
     /// <returns></returns>
     async Task<FileInfo> DownloadFabricClientJson(VanillaMinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadFabricClientJson"));
+        Progress?.Report(new(
+            FabricInstallationStage.DownloadFabricClientJson,
+            InstallerStageProgress.Starting()
+        ));
 
         string requestUrl = $"https://meta.fabricmc.net/v2/versions/loader/{instance.InstanceId}/{InstallData.Loader.Version}/profile/json";
 
@@ -150,17 +155,20 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
         responseMessage.EnsureSuccessStatusCode();
 
         string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        string instanceId = CustomizedInstanceId ?? 
+        string instanceId = CustomizedInstanceId ??
             (JsonNode.Parse(jsonContent)!["id"]?.GetValue<string>() ?? $"fabric-loader-{InstallData.Loader.Version}-{instance.InstanceId}");
 
         var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
-        
+
         if (!jsonFile.Directory!.Exists)
             jsonFile.Directory.Create();
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadFabricClientJson"));
+        Progress?.Report(new(
+            FabricInstallationStage.DownloadFabricClientJson,
+            InstallerStageProgress.Finished()
+        ));
 
         return jsonFile;
     }
@@ -189,8 +197,10 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadFabricLibraries(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadFabricLibraries"));
-
+        Progress?.Report(new(
+            FabricInstallationStage.DownloadFabricLibraries,
+            InstallerStageProgress.Starting()
+        ));
         cancellationToken.ThrowIfCancellationRequested();
 
         var dependencyResolver = new DependencyResolver(instance)
@@ -199,38 +209,32 @@ public partial class FabricInstanceInstaller : IInstanceInstaller<ModifiedMinecr
             AllowVerifyAssets = false,
         };
 
-        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e)
-            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadFabricLibraries", e.Count()));
-        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadFabricLibraries"));
+        dependencyResolver.InvalidDependenciesDetermined += (_, e)
+            => Progress?.Report(new(
+                FabricInstallationStage.DownloadFabricLibraries,
+                InstallerStageProgress.UpdateTotalTasks(e.Count())
+            ));
+        dependencyResolver.DependencyDownloaded += (_, _)
+            => Progress?.Report(new(
+                FabricInstallationStage.DownloadFabricLibraries,
+                InstallerStageProgress.IncrementFinishedTasks()
+            ));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadFabricLibraries"));
+        Progress?.Report(new(
+            FabricInstallationStage.DownloadFabricLibraries,
+            InstallerStageProgress.Finished()
+        ));
     }
 }
 
-partial class FabricInstanceInstaller
+public enum FabricInstallationStage
 {
-    private readonly Progress<ProgressUpdater> _progress = new();
-
-    IProgress<ProgressUpdater> Progress => _progress;
-    IProgress<ProgressUpdater> IProgressReporter.Progress => _progress;
-
-    public event EventHandler<ProgressUpdater>? ProgressChanged
-    {
-        add => _progress.ProgressChanged += value;
-        remove => _progress.ProgressChanged -= value;
-    }
-
-    public Dictionary<string, ProgressData> Progresses { get; init; } =
-        ProgressReporterHelper.CreateProgressesFromStringArray(
-        [
-            "ParseOrInstallVanillaInstance",
-            "DownloadFabricClientJson",
-            "DownloadFabricLibraries"
-        ]);
+    ParseOrInstallVanillaInstance,
+    DownloadFabricClientJson,
+    DownloadFabricLibraries,
 }

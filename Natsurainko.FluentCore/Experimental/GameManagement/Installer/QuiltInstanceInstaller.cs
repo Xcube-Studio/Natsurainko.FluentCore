@@ -5,21 +5,19 @@ using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.Utils.IProgressReporter;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
 /// <summary>
 /// Quilt 实例安装器
 /// </summary>
-public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecraftInstance>, IProgressReporter
+public partial class QuiltInstanceInstaller // : IInstanceInstaller<ModifiedMinecraftInstance>
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
@@ -55,18 +53,25 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
     /// </summary>
     public string? CustomizedInstanceId { get; set; }
 
-    public Task<ModifiedMinecraftInstance> InstallAsync() => InstallAsync(CancellationToken.None);
+    public IProgress<InstallerProgress<QuiltInstallationStage>>? Progress { get; init; }
 
-    public async Task<ModifiedMinecraftInstance> InstallAsync(CancellationToken cancellationToken)
+    public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+
+    public async Task<ModifiedMinecraftInstance> InstallAsync(CancellationToken cancellationToken = default)
     {
         VanillaMinecraftInstance? vanillaInstance;
         FileInfo? quiltClientJson = null;
         ModifiedMinecraftInstance? instance = null;
 
+        var stage = QuiltInstallationStage.ParseOrInstallVanillaInstance;
         try
         {
             vanillaInstance = await ParseOrInstallVanillaInstance(cancellationToken);
+
+            stage = QuiltInstallationStage.DownloadQuiltClientJson;
             quiltClientJson = await DownloadQuiltClientJson(vanillaInstance, cancellationToken);
+
+            stage = QuiltInstallationStage.DownloadQuiltLibraries;
             instance = ParseModifiedMinecraftInstance(quiltClientJson, cancellationToken);
             await DownloadQuiltLibraries(instance, cancellationToken);
         }
@@ -80,12 +85,12 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
                 quiltClientJson!.Directory?.Delete();
             }
 
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
 
@@ -99,7 +104,10 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
     /// <returns></returns>
     async Task<VanillaMinecraftInstance> ParseOrInstallVanillaInstance(CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("ParseOrInstallVanillaInstance"));
+        Progress?.Report(new(
+            QuiltInstallationStage.ParseOrInstallVanillaInstance,
+            InstallerStageProgress.Starting()
+        ));
 
         if (InheritedInstance != null)
             return InheritedInstance;
@@ -109,22 +117,16 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
             DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
-            CheckAllDependencies = true
-        };
-
-        vanillaInstanceInstaller.ProgressChanged += (object? sender, ProgressUpdater e) =>
-        {
-            e.Update(vanillaInstanceInstaller.Progresses);
-
-            int totalTasks = vanillaInstanceInstaller.Progresses.Values.Select(x => x.TotalTasks).Sum();
-            int totalFinishedTasks = vanillaInstanceInstaller.Progresses.Values.Select(x => x.FinishedTasks).Sum();
-
-            Progress.Report(ProgressUpdater.FromUpdateAllTasks("ParseOrInstallVanillaInstance", totalFinishedTasks, totalTasks));
+            CheckAllDependencies = true,
+            Progress = VanillaInstallationProgress
         };
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("ParseOrInstallVanillaInstance"));
+        Progress?.Report(new(
+            QuiltInstallationStage.ParseOrInstallVanillaInstance,
+            InstallerStageProgress.Finished()
+        ));
 
         return instance;
     }
@@ -137,7 +139,10 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
     /// <returns></returns>
     async Task<FileInfo> DownloadQuiltClientJson(VanillaMinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadQuiltClientJson"));
+        Progress?.Report(new(
+            QuiltInstallationStage.DownloadQuiltClientJson,
+            InstallerStageProgress.Starting()
+        ));
 
         string requestUrl = $"https://meta.quiltmc.org/v3/versions/loader/{instance.InstanceId}/{InstallData.Loader.Version}/profile/json";
 
@@ -150,18 +155,20 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
         responseMessage.EnsureSuccessStatusCode();
 
         string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        string instanceId = CustomizedInstanceId ?? 
+        string instanceId = CustomizedInstanceId ??
             (JsonNode.Parse(jsonContent)!["id"]?.GetValue<string>() ?? $"quilt-loader-{InstallData.Loader.Version}-{instance.InstanceId}");
 
         var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
-        
+
         if (!jsonFile.Directory!.Exists)
             jsonFile.Directory.Create();
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadQuiltClientJson"));
-
+        Progress?.Report(new(
+            QuiltInstallationStage.DownloadQuiltClientJson,
+            InstallerStageProgress.Finished()
+        ));
         return jsonFile;
     }
 
@@ -189,44 +196,44 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller<ModifiedMinecra
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadQuiltLibraries(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadQuiltLibraries"));
+        Progress?.Report(new(
+            QuiltInstallationStage.DownloadQuiltLibraries,
+            InstallerStageProgress.Starting()
+        ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        var dependencyResolver = new DependencyResolver(instance);
+        var dependencyResolver = new DependencyResolver(instance)
+        {
+            AllowInheritedDependencies = false,
+            AllowVerifyAssets = false,
+        };
 
-        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e)
-            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadQuiltLibraries", e.Count()));
-        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadQuiltLibraries"));
+        dependencyResolver.InvalidDependenciesDetermined += (_, e)
+            => Progress?.Report(new(
+                QuiltInstallationStage.DownloadQuiltLibraries,
+                InstallerStageProgress.UpdateTotalTasks(e.Count())
+            ));
+        dependencyResolver.DependencyDownloaded += (_, _)
+            => Progress?.Report(new(
+                QuiltInstallationStage.DownloadQuiltLibraries,
+                InstallerStageProgress.IncrementFinishedTasks()
+            ));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadQuiltLibraries"));
+        Progress?.Report(new(
+            QuiltInstallationStage.DownloadQuiltLibraries,
+            InstallerStageProgress.Finished()
+        ));
     }
 }
 
-partial class QuiltInstanceInstaller
+public enum QuiltInstallationStage
 {
-    private readonly Progress<ProgressUpdater> _progress = new();
-
-    IProgress<ProgressUpdater> Progress => _progress;
-    IProgress<ProgressUpdater> IProgressReporter.Progress => _progress;
-
-    public event EventHandler<ProgressUpdater>? ProgressChanged
-    {
-        add => _progress.ProgressChanged += value;
-        remove => _progress.ProgressChanged -= value;
-    }
-
-    public Dictionary<string, ProgressData> Progresses { get; init; } =
-        ProgressReporterHelper.CreateProgressesFromStringArray(
-        [
-            "ParseOrInstallVanillaInstance",
-            "DownloadQuiltClientJson",
-            "ParseModifiedMinecraftInstance",
-            "DownloadQuiltLibraries"
-        ]);
+    ParseOrInstallVanillaInstance,
+    DownloadQuiltClientJson,
+    DownloadQuiltLibraries
 }

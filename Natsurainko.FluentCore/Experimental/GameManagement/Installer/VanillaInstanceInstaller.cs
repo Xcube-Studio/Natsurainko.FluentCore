@@ -5,20 +5,18 @@ using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.Utils.IProgressReporter;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 
 /// <summary>
 /// 原版 Minecraft 实例安装器
 /// </summary>
-public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecraftInstance>, IProgressReporter
+public class VanillaInstanceInstaller // : IInstanceInstaller<VanillaMinecraftInstance>
 {
     private readonly HttpClient httpClient = HttpUtils.HttpClient;
 
@@ -39,19 +37,25 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     /// </summary>
     public bool CheckAllDependencies { get; set; }
 
-    public Task<VanillaMinecraftInstance> InstallAsync() => InstallAsync(CancellationToken.None);
+    public IProgress<InstallerProgress<VanillaInstallationStage>>? Progress { get; init; }
 
-    public async Task<VanillaMinecraftInstance> InstallAsync(CancellationToken cancellationToken)
+    public async Task<VanillaMinecraftInstance> InstallAsync(CancellationToken cancellationToken = default)
     {
         FileInfo? versionJsonFile = null;
         FileInfo? assetIndex = null;
         VanillaMinecraftInstance? instance = null;
 
+
+        var stage = VanillaInstallationStage.DownloadVersionJson;
         try
         {
             versionJsonFile = await DownloadVersionJson(cancellationToken);
             instance = ParseVanillaMinecraftInstance(versionJsonFile, cancellationToken);
+
+            stage = VanillaInstallationStage.DownloadAssetIndexJson;
             assetIndex = await DownloadAssetIndexJson(instance, cancellationToken);
+
+            stage = VanillaInstallationStage.DownloadMinecraftDependencies;
             await DownloadMinecraftDependencies(instance, cancellationToken);
         }
         catch (OperationCanceledException) 
@@ -66,12 +70,12 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
                 versionJsonFile!.Directory?.Delete();
             }
 
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            ProgressReporterHelper.ReportWhenExceptionThrow(this);
+            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
             throw;
         }
 
@@ -85,7 +89,10 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     /// <returns></returns>
     async Task<FileInfo> DownloadVersionJson(CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadVersionJson"));
+        Progress?.Report(new(
+            VanillaInstallationStage.DownloadVersionJson,
+            InstallerStageProgress.Starting()
+        ));
         cancellationToken.ThrowIfCancellationRequested();
 
         string requestUrl = McVersionManifestItem.Url;
@@ -106,8 +113,11 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadVersionJson"));
-
+        Progress?.Report(new(
+            VanillaInstallationStage.DownloadVersionJson,
+            InstallerStageProgress.Finished()
+        ));
+        
         return jsonFile;
     } 
 
@@ -134,7 +144,10 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     /// <returns></returns>
     async Task<FileInfo> DownloadAssetIndexJson(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadAssetIndexJson"));
+        Progress?.Report(new(
+            VanillaInstallationStage.DownloadAssetIndexJson,
+            InstallerStageProgress.Starting()
+        ));
         cancellationToken.ThrowIfCancellationRequested();
 
         var assetIndex = instance.GetAssetIndex();
@@ -157,7 +170,10 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
 
         await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadAssetIndexJson"));
+        Progress?.Report(new(
+             VanillaInstallationStage.DownloadAssetIndexJson,
+             InstallerStageProgress.Finished()
+        ));
 
         return jsonFile;
     }
@@ -171,43 +187,41 @@ public partial class VanillaInstanceInstaller : IInstanceInstaller<VanillaMinecr
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadMinecraftDependencies(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress.Report(ProgressUpdater.FromRunning("DownloadMinecraftDependencies"));
+        Progress?.Report(new(
+            VanillaInstallationStage.DownloadMinecraftDependencies,
+            InstallerStageProgress.Starting()
+        ));
         cancellationToken.ThrowIfCancellationRequested();
 
         var dependencyResolver = new DependencyResolver(instance);
 
-        dependencyResolver.InvalidDependenciesDetermined += (object? _, IEnumerable<MinecraftDependency> e) 
-            => Progress.Report(ProgressUpdater.FromUpdateTotalTasks("DownloadMinecraftDependencies", e.Count()));
-        dependencyResolver.DependencyDownloaded += (object? sender, (DownloadRequest, DownloadResult) e)
-            => Progress.Report(ProgressUpdater.FromIncrementFinishedTasks("DownloadMinecraftDependencies"));
+        dependencyResolver.InvalidDependenciesDetermined += (_, e)
+            => Progress?.Report(new(
+                VanillaInstallationStage.DownloadMinecraftDependencies,
+                InstallerStageProgress.UpdateTotalTasks(e.Count())
+            ));
+        dependencyResolver.DependencyDownloaded += (_, _)
+            => Progress?.Report(new(
+                VanillaInstallationStage.DownloadMinecraftDependencies,
+                InstallerStageProgress.IncrementFinishedTasks()
+            ));
 
         var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Dependency files are incomplete");
 
-        Progress.Report(ProgressUpdater.FromFinished("DownloadMinecraftDependencies"));
+        Progress?.Report(new(
+            VanillaInstallationStage.DownloadMinecraftDependencies,
+            InstallerStageProgress.Finished()
+        ));
     }
+
 }
 
-partial class VanillaInstanceInstaller
+public enum VanillaInstallationStage
 {
-    private readonly Progress<ProgressUpdater> _progress = new();
-
-    IProgress<ProgressUpdater> Progress => _progress;
-    IProgress<ProgressUpdater> IProgressReporter.Progress => _progress;
-
-    public event EventHandler<ProgressUpdater>? ProgressChanged
-    {
-        add => _progress.ProgressChanged += value;
-        remove => _progress.ProgressChanged -= value;
-    }
-
-    public Dictionary<string, ProgressData> Progresses { get; init; } = 
-        ProgressReporterHelper.CreateProgressesFromStringArray(
-        [
-            "DownloadVersionJson",
-            "DownloadAssetIndexJson",
-            "DownloadMinecraftDependencies"
-        ]);
+    DownloadVersionJson,
+    DownloadAssetIndexJson,
+    DownloadMinecraftDependencies,
 }
