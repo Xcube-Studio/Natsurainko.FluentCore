@@ -42,8 +42,17 @@ public class MultipartDownloader : IDownloader
     {
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // Limits the number of concurrent download tasks
             await _globalDownloadTasksSemaphore.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return new DownloadResult(DownloadResultType.Cancelled);
+        }
+
+        try
+        {
             await DownloadFileDriverAsync(request, cancellationToken);
             return new DownloadResult(DownloadResultType.Successful);
         }
@@ -217,6 +226,14 @@ public class MultipartDownloader : IDownloader
         ArrayPool<byte>.Shared.Return(downloadBufferArr);
     }
 
+    private async Task DownloadFileInGroupAsync(DownloadRequest request, GroupDownloadRequest groupRequest, List<(DownloadRequest, DownloadResult)> failed, CancellationToken cancellationToken)
+    {
+        DownloadResult result = await DownloadFileAsync(request, cancellationToken);
+        if (result.Type == DownloadResultType.Failed)
+            failed.Add((request, result));
+        groupRequest.SingleRequestCompleted?.Invoke(request, result);
+    }
+
     public async Task<GroupDownloadResult> DownloadFilesAsync(GroupDownloadRequest request, CancellationToken cancellationToken = default)
     {
         List<(DownloadRequest, DownloadResult)> failed = new();
@@ -229,15 +246,7 @@ public class MultipartDownloader : IDownloader
             if (_config.Mirror is not null)
                 url = _config.Mirror.GetMirrorUrl(url);
 
-            Task downloadTask = DownloadFileAsync(req, cancellationToken).ContinueWith((t) =>
-            {
-                if (t.IsFaulted)
-                {
-                    failed.Add((req, t.Result));
-                }
-                request.SingleRequestCompleted?.Invoke(req, t.Result);
-            });
-            downloadTasks.Add(downloadTask);
+            downloadTasks.Add(DownloadFileInGroupAsync(req, request, failed, cancellationToken));
         }
 
         await Task.WhenAll(downloadTasks);
