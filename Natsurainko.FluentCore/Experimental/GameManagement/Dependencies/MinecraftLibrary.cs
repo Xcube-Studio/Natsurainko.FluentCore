@@ -1,10 +1,9 @@
 ﻿using Nrk.FluentCore.Environment;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
+using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
@@ -107,6 +106,16 @@ public class MinecraftLibrary : MinecraftDependency
 
         return artifact ?? throw new InvalidDataException("Invalid artifact information");
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is MinecraftLibrary library)
+            return library.FullPath.Equals(this.FullPath);
+
+        return false;
+    }
+
+    public override int GetHashCode() => this.FullPath.GetHashCode();
 
 
     // <summary>

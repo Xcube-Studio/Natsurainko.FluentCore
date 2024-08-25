@@ -1,7 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
-using System.Collections.Generic;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 

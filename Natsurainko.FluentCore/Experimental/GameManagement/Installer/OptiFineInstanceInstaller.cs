@@ -92,8 +92,6 @@ internal class OptiFineInstanceInstaller : IInstanceInstaller
         {
             // 取消后清理产生的部分文件
 
-            optifinePackageFile?.Delete();
-
             if (instance != null)
             {
                 optifineClientJson!.Directory?.DeleteAllFiles();
@@ -111,6 +109,7 @@ internal class OptiFineInstanceInstaller : IInstanceInstaller
         finally
         {
             packageArchive?.Dispose();
+            optifinePackageFile?.Delete();
         }
 
         return instance ?? throw new ArgumentNullException(nameof(instance), "Unexpected null reference to variable");
@@ -185,7 +184,8 @@ internal class OptiFineInstanceInstaller : IInstanceInstaller
     /// <param name="packageFilePath"></param>
     /// <param name="cancellationToken"></param>
     /// <param name="packageArchive"></param>
-    /// <param name="launchwrapper"></param>
+    /// <param name="launchwrapperVersion"></param>
+    /// <param name="launchwrapperName"></param>
     static void ParseOptiFinePackage(string packageFilePath, CancellationToken cancellationToken, 
         out ZipArchive packageArchive, out string launchwrapperVersion, out string launchwrapperName)
     {

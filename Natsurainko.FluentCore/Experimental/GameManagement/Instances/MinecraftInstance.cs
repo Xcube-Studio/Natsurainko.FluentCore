@@ -1,6 +1,6 @@
 ﻿using Nrk.FluentCore.Environment;
 using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
-using Nrk.FluentCore.Management.ModLoaders;
+using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

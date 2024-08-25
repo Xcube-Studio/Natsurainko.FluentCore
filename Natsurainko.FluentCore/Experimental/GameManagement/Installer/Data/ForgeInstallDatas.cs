@@ -3,6 +3,18 @@ using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
 
+public class ForgeInstallData
+{
+    [JsonPropertyName("mcversion")]
+    public required string McVersion {  get; set; }
+
+    [JsonPropertyName("version")]
+    public required string Version { get; set; }
+
+    [JsonPropertyName("branch")]
+    public string? Branch { get; set; }
+}
+
 public class ForgeProcessorData
 {
     [JsonPropertyName("sides")]

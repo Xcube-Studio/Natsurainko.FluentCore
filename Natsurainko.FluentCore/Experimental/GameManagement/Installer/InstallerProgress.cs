@@ -9,6 +9,7 @@ public enum InstallerStageProgressType
     IncrementFinishedTasks,
 
     Finished,
+    Skiped,
     Failed,
 }
 
@@ -29,6 +30,9 @@ public readonly record struct InstallerStageProgress(
         => new(InstallerStageProgressType.Finished, null, null);
     internal static InstallerStageProgress Failed()
         => new(InstallerStageProgressType.Failed, null, null);
+
+    internal static InstallerStageProgress Skiped()
+        => new(InstallerStageProgressType.Skiped, null, null);
 }
 
 public readonly record struct InstallerProgress<TStage>(
