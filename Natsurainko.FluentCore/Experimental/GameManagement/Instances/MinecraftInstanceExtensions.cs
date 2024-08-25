@@ -62,10 +62,11 @@ public static class MinecraftInstanceExtensions
         if (sha1 is null || url is null || size is null)
             throw new InvalidDataException("Invalid client info");
 
-        return new MinecraftClient(url)
+        return new MinecraftClient
         {
             MinecraftFolderPath = instance.MinecraftFolderPath,
             ClientId = Path.GetFileNameWithoutExtension(clientJarPath),
+            Url = url,
             Size = (int)size,
             Sha1 = sha1
         };

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+﻿namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
 public interface IDownloadableDependency
 {
@@ -12,4 +6,6 @@ public interface IDownloadableDependency
     /// URL to download the file
     /// </summary>
     string Url { get; }
+
+    string FullPath { get; }
 }

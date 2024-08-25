@@ -18,6 +18,8 @@ public class MinecraftAssetIndex : MinecraftDependency, IDownloadableDependency,
     /// <inheritdoc/>
     public required long Size { get; init; }
 
+    long? IVerifiableDependency.Size => this.Size;
+
     /// <inheritdoc/>
     public required string Sha1 { get; init; }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
@@ -19,6 +14,8 @@ public class MinecraftClient : MinecraftDependency, IDownloadableDependency, IVe
 
     /// <inheritdoc/>
     public required long Size { get; init; }
+
+    long? IVerifiableDependency.Size => this.Size;
 
     /// <inheritdoc/>
     public required string Sha1 { get; init; }

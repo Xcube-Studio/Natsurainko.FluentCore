@@ -129,7 +129,9 @@ public class DependencyResolver
         InvalidDependenciesDetermined?.Invoke(this, invalidDeps);
 
         // 3. Download invalid dependencies
-        var downloadItems = invalidDeps.Select(dep => new DownloadRequest(dep.Url, dep.FullPath));
+        var downloadItems = invalidDeps.Where(dep => dep is IDownloadableDependency)
+            .OfType<IDownloadableDependency>()
+            .Select(dep => new DownloadRequest(dep.Url, dep.FullPath));
 
         var groupRequest = new GroupDownloadRequest(downloadItems);
         groupRequest.SingleRequestCompleted += (request, result) => DependencyDownloaded?.Invoke(this, (request, result));
@@ -143,10 +145,24 @@ public class DependencyResolver
         if (!File.Exists(dep.FullPath))
             return false;
 
-        using var fileStream = File.OpenRead(dep.FullPath);
-        byte[] sha1Bytes = await SHA1.HashDataAsync(fileStream, cancellationToken);
-        string sha1Str = BitConverter.ToString(sha1Bytes).Replace("-", string.Empty).ToLower();
+        if (dep is not IVerifiableDependency verifiableDependency)
+            return true;
 
-        return sha1Str == dep.Sha1;
+        if (verifiableDependency.Sha1 != null)
+        {
+            using var fileStream = File.OpenRead(dep.FullPath);
+            byte[] sha1Bytes = await SHA1.HashDataAsync(fileStream, cancellationToken);
+            string sha1Str = BitConverter.ToString(sha1Bytes).Replace("-", string.Empty).ToLower();
+
+            return sha1Str == verifiableDependency.Sha1;
+        }
+
+        if (verifiableDependency.Size != null)
+        {
+            var file = new FileInfo(dep.FullPath);
+            return verifiableDependency.Size == file.Length;
+        }
+
+        return true;
     }
 }

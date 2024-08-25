@@ -217,6 +217,22 @@ internal class ClientJsonObject
         [JsonPropertyName("url")]
         public string? MavenUrl { get; set; }
 
+        // Used by Fabric
+        [JsonPropertyName("sha1")]
+        public string? Sha1 { get; set; }
+
+        // Used by Fabric
+        [JsonPropertyName("size")]
+        public long? Size { get; set; }
+
+        // Used by Forge
+        [JsonPropertyName("clientreq")]
+        public bool? ClientRequest { get; set; }
+
+        // Used by Forge
+        [JsonPropertyName("serverreq")]
+        public bool? ServerRequest { get; set; }
+
         // This field may not exist for libraries used by mod loaders
         [JsonPropertyName("downloads")]
         public DownloadInformationJsonObject? DownloadInformation { get; set; }
@@ -252,7 +268,7 @@ internal class ClientJsonObject
             public required string? Sha1 { get; set; }
 
             [JsonPropertyName("size")]
-            public required int? Size { get; set; }
+            public required long? Size { get; set; }
         }
     }
 

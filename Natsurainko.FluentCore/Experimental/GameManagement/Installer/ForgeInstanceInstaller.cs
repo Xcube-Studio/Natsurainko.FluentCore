@@ -334,8 +334,12 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         var dependencies = new List<MinecraftLibrary>();
 
         var libraries = instance.GetRequiredLibraries().Libraries.ToList();
-        foreach (var lib in libraries.Where(x => x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}") 
-            || x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}:client") || x.Url == null))
+        //foreach (var lib in libraries.Where(x => x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}") 
+        //    || x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}:client") || x.Url == null))
+        //    libraries.Remove(lib);
+
+        foreach (var lib in libraries.Where(x => x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}")
+            || x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}:client") || x is not IDownloadableDependency))
             libraries.Remove(lib);
 
         dependencies.AddRange(libraries);
@@ -357,7 +361,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             ForgeInstallationStage.DownloadForgeDependencies,
             InstallerStageProgress.UpdateTotalTasks(dependencies.Count)));
 
-        var groupDownloadRequest = new GroupDownloadRequest(dependencies.Select(x => new DownloadRequest(
+        var groupDownloadRequest = new GroupDownloadRequest(dependencies.OfType<IDownloadableDependency>().Select(x => new DownloadRequest(
             DownloadMirror != null ? DownloadMirror.GetMirrorUrl(x.Url) : x.Url, x.FullPath)));
 
         groupDownloadRequest.SingleRequestCompleted += (_, _) 
