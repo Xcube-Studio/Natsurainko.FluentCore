@@ -7,20 +7,19 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class MinecraftClient : MinecraftDependency
+public class MinecraftClient : MinecraftDependency, IDownloadableDependency, IVerifiableDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("versions", ClientId, $"{ClientId}.jar");
 
-    /// <inheritdoc/>
-    public override string Url => _url;
-
-    private readonly string _url;
-
     public required string ClientId { get; init; }
 
-    public MinecraftClient(string url)
-    {
-        _url = url;
-    }
+    /// <inheritdoc/>
+    public required string Url { get; init; }
+
+    /// <inheritdoc/>
+    public required long Size { get; init; }
+
+    /// <inheritdoc/>
+    public required string Sha1 { get; init; }
 }

@@ -7,17 +7,10 @@ using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.Library
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 
-public class MinecraftLibrary : MinecraftDependency
+public abstract class MinecraftLibrary : MinecraftDependency
 {
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("libraries", GetLibraryPath());
-
-    /// <inheritdoc/>
-    //public override string Url => $"https://libraries.minecraft.net/{GetLibraryPath()}";
-
-    public override string Url => _url;
-
-    private readonly string _url;
 
     /// <summary>
     /// Full package name of the Java library in the format "group_id:artifact_id:version[:classifier]"
@@ -35,11 +28,6 @@ public class MinecraftLibrary : MinecraftDependency
     //public string? Classifier { get; init; }
 
     public required bool IsNativeLibrary { get; init; }
-
-    public MinecraftLibrary(string url)
-    {
-        _url = url;
-    }
 
     internal string GetLibraryPath()
     {
@@ -140,4 +128,50 @@ public class MinecraftLibrary : MinecraftDependency
     //    if (match.Groups["classifier"].Success)
     //        Classifier = match.Groups["classifier"].Value;
     //}
+}
+
+public class VanillaLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiableDependency
+{
+    /// <inheritdoc/>
+    public string Url { get => $"https://libraries.minecraft.net/{GetLibraryPath().Replace(@"\\", "/")}"; }
+
+    /// <inheritdoc/>
+    public required long Size { get; init; }
+
+    /// <inheritdoc/>
+    public required string Sha1 { get; init; }
+}
+
+public class ForgeLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiableDependency
+{
+    /// <inheritdoc/>
+    public required string Url { get; init; }
+
+    /// <inheritdoc/>
+    public required long Size { get; init; }
+
+    /// <inheritdoc/>
+    public required string Sha1 { get; init; }
+}
+
+public class OldForgeLibrary : MinecraftLibrary { }
+
+public class OptiFineLibrary : MinecraftLibrary { }
+
+public class FabricLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiableDependency
+{
+    /// <inheritdoc/>
+    public string Url { get => $"https://maven.fabricmc.net/{GetLibraryPath().Replace(@"\\", "/")}"; }
+
+    /// <inheritdoc/>
+    public required long Size { get; init; }
+
+    /// <inheritdoc/>
+    public required string Sha1 { get; init; }
+}
+
+public class QuiltLibrary : MinecraftLibrary, IDownloadableDependency
+{
+    /// <inheritdoc/>
+    public string Url { get => $"https://maven.quiltmc.org/{GetLibraryPath().Replace(@"\\", "/")}"; }
 }
