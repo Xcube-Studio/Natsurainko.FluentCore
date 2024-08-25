@@ -155,8 +155,8 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
         #region OptiFine Pattern
 
-        if (libNode.MavenName.StartsWith("optifine:Optifine")
-            || libNode.MavenName.StartsWith("optifine:launchwrapper-of"))
+        if (libNode.MavenName.ToLower().StartsWith("optifine:optifine")
+            || libNode.MavenName.ToLower().StartsWith("optifine:launchwrapper-of"))
         {
             return new OptiFineLibrary
             { 

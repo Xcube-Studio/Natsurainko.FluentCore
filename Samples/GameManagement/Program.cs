@@ -16,8 +16,9 @@ foreach (var instance in instances)
 
     Console.WriteLine($"\r\n{instance.InstanceId}");
 
-
     Console.ReadKey();
+    Console.WriteLine("\x1b[3J");
+
     Console.Clear();
 }
 
