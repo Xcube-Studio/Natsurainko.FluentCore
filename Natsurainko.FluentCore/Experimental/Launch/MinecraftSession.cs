@@ -12,8 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-/*
-
 namespace Nrk.FluentCore.Experimental.GameManagement.Launch;
 
 /// <summary>
@@ -185,8 +183,8 @@ public class MinecraftSession
         if (_mcProcess is null)
             throw new InvalidOperationException();
 
-        _mcProcess._process.Refresh();
-        return _mcProcess._process.MainWindowHandle;
+        _mcProcess.Process.Refresh();
+        return _mcProcess.Process.MainWindowHandle;
     }
 
     #region Step Methods
@@ -237,7 +235,7 @@ public class MinecraftSession
             throw new ArgumentNullException(nameof(_enabledLibraries));
 
         var builder = new MinecraftProcessBuilder(MinecraftInstance)
-            .SetLibraries(_enabledLibraries)
+            //.SetLibraries(_enabledLibraries)
             .SetAccountSettings(Account, UseDemoUser)
             .SetJavaSettings(JavaPath, MaxMemory, MinMemory)
             .SetGameDirectory(GameDirectory);
@@ -277,5 +275,3 @@ public class MinecraftSessionStateChagnedEventArgs(MinecraftSessionState oldStat
 
     public MinecraftSessionState NewState { get; } = newState;
 }
-
-*/
