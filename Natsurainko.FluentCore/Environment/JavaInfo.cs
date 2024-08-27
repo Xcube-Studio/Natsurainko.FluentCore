@@ -7,6 +7,8 @@ namespace Nrk.FluentCore.Environment;
 /// </summary>
 public record JavaInfo
 {
+    public required string FilePath { get; init; }
+
     /// <summary>
     /// 版本
     /// </summary>

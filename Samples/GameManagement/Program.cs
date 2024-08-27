@@ -14,7 +14,7 @@ foreach (var instance in instances)
     foreach (var item in libs.NativeLibraries)
         Console.WriteLine($"{item.GetType()}, Native,{item.MavenName}");
 
-    Console.WriteLine($"\r\n{instance.InstanceId}");
+    Console.WriteLine($"\r\n{instance.InstanceId} {instance.GetType()}");
 
     Console.ReadKey();
     Console.WriteLine("\x1b[3J");

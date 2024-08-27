@@ -89,7 +89,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             forgeClientFile = await WriteDependenciesAndVersionFiles(isLegacyForgeVersion, installProfileJsonNode, packageArchive, cancellationToken);
 
             stage = ForgeInstallationStage.DownloadForgeDependencies;
-            instance = ParseModifiedMinecraftInstance(forgePackageFile, cancellationToken);
+            instance = ParseModifiedMinecraftInstance(forgeClientFile, cancellationToken);
             await DownloadForgeDependencies(isLegacyForgeVersion, installProfileJsonNode, instance, cancellationToken);
 
             if (!isLegacyForgeVersion)
@@ -193,7 +193,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
 
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, fileName));
 
-        var downloadRequest = new DownloadRequest(packageFile.FullName, packageUrl);
+        var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
         var downloadResult = await HttpUtils.Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
 
         if (downloadResult.Type == DownloadResultType.Failed)
@@ -264,8 +264,8 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         if (isLegacyForgeVersion)
         {
             var universalFilePath = installProfileJsonNode["install"]?["filePath"]?.GetValue<string>()
-                ?? throw new Exception();
-            var universalFileEntry = packageArchive.GetEntry(universalFilePath) ?? throw new Exception();
+                ?? throw new InvalidDataException("Unable to resolve location of universal file in archive");
+            var universalFileEntry = packageArchive.GetEntry(universalFilePath) ?? throw new FileNotFoundException("The universal file was not found in the archive");
             universalFileEntry.ExtractTo(Path.Combine(forgeLibsFolder, universalFileEntry.Name));
         }
 
@@ -279,14 +279,16 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             ? installProfileJsonNode["versionInfo"]!.GetValue<string>()
             : packageArchive.GetEntry("version.json")?.ReadAsString())
             ?? throw new Exception("Failed to read version.json");
+        var jsonNode = JsonNode.Parse(jsonContent);
 
-        string instanceId = CustomizedInstanceId ?? $"{McVersionManifestItem.Id}-forge-{InstallData.Version}";
+        string instanceId = CustomizedInstanceId ?? $"{McVersionManifestItem.Id}-{(IsNeoForgeInstaller ? "neoforge" : "forge")}-{InstallData.Version}";
         var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
 
         if (!jsonFile.Directory!.Exists)
             jsonFile.Directory.Create();
 
-        await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
+        jsonNode!["id"] = instanceId;
+        await File.WriteAllTextAsync(jsonFile.FullName, jsonNode.ToJsonString(), cancellationToken);
 
         Progress?.Report(new(
             ForgeInstallationStage.WriteDependenciesAndVersionFiles,
@@ -339,7 +341,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         //    libraries.Remove(lib);
 
         foreach (var lib in libraries.Where(x => x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}")
-            || x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}:client") || x is not IDownloadableDependency))
+            || x.MavenName.Equals($"net.minecraftforge:forge:{forgeVersion}:client") || x is not IDownloadableDependency).ToArray())
             libraries.Remove(lib);
 
         dependencies.AddRange(libraries);
@@ -440,7 +442,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             .Deserialize<IEnumerable<ForgeProcessorData>>()?
             .Where(x => !(x.Sides.Count == 1 && x.Sides.Contains("server")))
             .ToArray() 
-            ?? throw new Exception();
+            ?? throw new InvalidDataException("Unable to parse Forge Processors");
 
         Progress?.Report(new(
             ForgeInstallationStage.RunCompileProcess,
@@ -473,7 +475,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                 .Split("\r\n".ToCharArray())
                 .First(x => x.Contains("Main-Class: "))
                 .Replace("Main-Class: ", string.Empty)
-                ?? throw new ArgumentNullException();
+                ?? throw new InvalidDataException("Unable to find MainClass for Processor");
 
             string classPath = string.Join(Path.PathSeparator.ToString(), new List<string>() { fileName }
                 .Concat(processor.Classpath.Select(x => Path.Combine(MinecraftFolder, "libraries", StringExtensions.FormatLibraryNameToRelativePath(x)))));

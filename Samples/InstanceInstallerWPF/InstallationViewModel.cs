@@ -14,13 +14,15 @@ class InstallationViewModel<TStage> : IProgress<InstallerProgress<TStage>>
 {
     public Dictionary<TStage, InstallationStageViewModel> Stages { get; } = new();
 
-    public InstallationViewModel(IReadOnlyDictionary<TStage, string> stageNames)
+    public InstallationViewModel()
     {
         // Init stage view models
-        foreach (var (stage, name) in stageNames)
+        foreach (var name in Enum.GetNames(typeof(TStage)))
         {
-            Stages.Add(stage, new InstallationStageViewModel { TaskName = name });
+            Stages.Add((TStage)Enum.Parse(typeof(TStage), name), new InstallationStageViewModel { TaskName = name });
         }
+
+
     }
 
     public void Report(InstallerProgress<TStage> value)

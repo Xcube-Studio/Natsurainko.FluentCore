@@ -12,6 +12,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+/*
+
 namespace Nrk.FluentCore.Experimental.GameManagement.Launch;
 
 /// <summary>
@@ -275,3 +277,5 @@ public class MinecraftSessionStateChagnedEventArgs(MinecraftSessionState oldStat
 
     public MinecraftSessionState NewState { get; } = newState;
 }
+
+*/

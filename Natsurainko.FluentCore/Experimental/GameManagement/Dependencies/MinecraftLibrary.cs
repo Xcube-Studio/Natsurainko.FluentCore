@@ -102,6 +102,23 @@ public abstract class MinecraftLibrary : MinecraftDependency
             }
 
             #endregion
+
+            #region NeoForge Pattern
+
+            if (artifactNode.Url.StartsWith("https://maven.neoforged.net/"))
+            {
+                return new NeoForgeLibrary()
+                {
+                    MinecraftFolderPath = minecraftFolderPath,
+                    MavenName = libNode.MavenName,
+                    Sha1 = artifactNode.Sha1,
+                    Size = (long)artifactNode.Size,
+                    Url = artifactNode.Url,
+                    IsNativeLibrary = false
+                };
+            }
+
+            #endregion
         }
 
         #region Legacy Forge Pattern
@@ -253,6 +270,8 @@ public class ForgeLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiab
     public required string Sha1 { get; init; }
 }
 
+public class NeoForgeLibrary : ForgeLibrary { }
+
 public class LegacyForgeLibrary : MinecraftLibrary { }
 
 public class OptiFineLibrary : MinecraftLibrary { }
@@ -274,7 +293,7 @@ public class FabricLibrary : MinecraftLibrary, IDownloadableDependency //, IVeri
 public class QuiltLibrary : MinecraftLibrary, IDownloadableDependency
 {
     /// <inheritdoc/>
-    public string Url { get => $"https://maven.quiltmc.org/{GetLibraryPath().Replace("\\", "/")}"; }
+    public string Url { get => $"https://maven.quiltmc.org/repository/release/{GetLibraryPath().Replace("\\", "/")}"; }
 }
 
 public class UnknownLibrary : MinecraftLibrary { }

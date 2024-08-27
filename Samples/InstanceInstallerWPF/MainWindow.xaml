@@ -6,9 +6,13 @@
     xmlns:local="clr-namespace:InstanceInstallerWPF"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="MainWindow"
-    Width="800"
-    Height="450"
+    Width="525"
+    Height="800"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
+    <Window.Resources>
+        <local:LoaderConverter x:Key="LoaderConverter" />
+    </Window.Resources>
 
     <Grid Margin="25">
         <Grid.RowDefinitions>
@@ -39,19 +43,24 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <ListBox
-                Grid.Column="2"
-                ItemsSource="{Binding FabricInstallDatas}"
-                SelectedItem="{Binding SelectedFabricInstallData, Mode=TwoWay}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock>
-                            <Run Text="{Binding Intermediary.Version}" />
-                            <Run Text="{Binding Loader.Version}" />
-                        </TextBlock>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <ComboBox ItemsSource="{Binding Loaders}" SelectedItem="{Binding SelectedLoader, Mode=TwoWay}" />
+                <ListBox
+                    Grid.Row="2"
+                    ItemsSource="{Binding InstallDatas}"
+                    SelectedItem="{Binding SelectedInstallData, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource LoaderConverter}}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
         </Grid>
         <StackPanel Grid.Row="4" Orientation="Horizontal">
             <Button Command="{Binding InstallCommand}" Content="Install" />

@@ -54,11 +54,11 @@ internal class ClientJsonObject
     {
         [JsonPropertyName("game")]
         [JsonConverter(typeof(ClientArgumentsConverter<GameArgumentRule>))]
-        public required IEnumerable<ClientArgument> GameArguments { get; set; } = [];
+        public IEnumerable<ClientArgument>? GameArguments { get; set; } = [];
 
         [JsonPropertyName("jvm")]
         [JsonConverter(typeof(ClientArgumentsConverter<OsRule>))]
-        public required IEnumerable<ClientArgument> JvmArguments { get; set; } = [];
+        public IEnumerable<ClientArgument>? JvmArguments { get; set; } = [];
 
         public abstract class ClientArgument { }
 

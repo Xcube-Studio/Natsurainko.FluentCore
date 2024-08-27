@@ -19,7 +19,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Installer;
 /// <summary>
 /// OptiFine 实例安装器
 /// </summary>
-internal class OptiFineInstanceInstaller : IInstanceInstaller
+public class OptiFineInstanceInstaller : IInstanceInstaller
 {
     public required string MinecraftFolder { get; init; }
 
