@@ -1,11 +1,10 @@
-﻿using System;
+﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Nodes;
 using System.Text.Json;
-using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
-using Nrk.FluentCore.Management.ModLoaders;
+using System.Text.Json.Nodes;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 
@@ -13,9 +12,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 using PartialData = (
     string VersionFolderName,
     string MinecraftFolderPath,
-    string ClientJsonPath,
-    string AssetIndexJsonPath
-    );
+    string ClientJsonPath);
 
 // TODO: Consider upgrading to MinecraftInstanceManager?
 public class MinecraftInstanceParser
@@ -129,12 +126,7 @@ file static class ParsingHelpers
         string minecraftFolderPath = clientDir.Parent?.Parent?.FullName
             ?? throw new DirectoryNotFoundException($"Failed to find .minecraft folder for {clientDir.FullName}");
 
-        // Asset index path
-        string assetIndexId = clientJsonObject.AssetIndex?.Id
-            ?? throw new InvalidDataException("Asset index ID does not exist in client.json");
-        string assetIndexJsonPath = Path.Combine(minecraftFolderPath, "assets", "indexes", $"{assetIndexId}.json");
-
-        PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath, assetIndexJsonPath);
+        PartialData partialData = (versionFolderName, minecraftFolderPath, clientJsonPath);
 
         // Create MinecraftInstance
         return IsVanilla(clientJsonObject)
@@ -177,16 +169,27 @@ file static class ParsingHelpers
     {
         // Check if client.jar exists
         string clientJarPath = ReplaceJsonWithJar(partialData.ClientJsonPath);
-        if (!File.Exists(clientJarPath))
-            throw new FileNotFoundException($"{clientJarPath} not found");
+
+        // Note:
+        // client.jar 的下载地址只能从 version.json 中获取，
+        // 因此在安装新的版本时，应该先解析 version.json 到 MinecraftInstance，然后才能下载 client.jar。
+        // 所以此处不应该检查 client.jar 的存在
+
+        //if (!File.Exists(clientJarPath))
+        //    throw new FileNotFoundException($"{clientJarPath} not found");
 
         // Parse version
         string versionId = ReadVersionIdFromNonInheritingClientJson(clientJsonObject, clientJsonNode);
         MinecraftVersion version = MinecraftVersion.Parse(versionId);
 
+        // Asset index path
+        string assetIndexId = clientJsonObject.AssetIndex?.Id
+            ?? throw new InvalidDataException("Asset index ID does not exist in client.json");
+        string assetIndexJsonPath = Path.Combine(partialData.MinecraftFolderPath, "assets", "indexes", $"{assetIndexId}.json");
+
         return new VanillaMinecraftInstance
         {
-            AssetIndexJsonPath = partialData.AssetIndexJsonPath,
+            AssetIndexJsonPath = assetIndexJsonPath,
             InstanceId = partialData.VersionFolderName,
             Version = version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,
@@ -247,12 +250,21 @@ file static class ParsingHelpers
             }
         }
 
+        string assetIndexJsonPath = hasInheritance
+            ? inheritedInstance.AssetIndexJsonPath
+            : clientJsonObject.AssetIndex?.Id == null 
+                ? throw new InvalidDataException("Asset index ID does not exist in client.json")
+                : Path.Combine(partialData.MinecraftFolderPath, "assets", "indexes", $"{clientJsonObject.AssetIndex.Id}.json");
+
+        // throw new InvalidDataException("Asset index ID does not exist in client.json");
+
         // Check if client.jar exists
         string clientJarPath = hasInheritance
             ? inheritedInstance.ClientJarPath // Use inherited client.jar path if has inheritance
             : ReplaceJsonWithJar(partialData.ClientJsonPath); // If there is no inheritance, replace .json with .jar file extension
-        if (!File.Exists(clientJarPath))
-            throw new FileNotFoundException($"{clientJarPath} not found");
+
+        //if (!File.Exists(clientJarPath))
+        //    throw new FileNotFoundException($"{clientJarPath} not found");
 
         // Parse version
         MinecraftVersion? version;
@@ -299,7 +311,7 @@ file static class ParsingHelpers
 
         return new ModifiedMinecraftInstance
         {
-            AssetIndexJsonPath = partialData.AssetIndexJsonPath,
+            AssetIndexJsonPath = assetIndexJsonPath,
             InstanceId = partialData.VersionFolderName,
             Version = (MinecraftVersion)version,
             MinecraftFolderPath = partialData.MinecraftFolderPath,

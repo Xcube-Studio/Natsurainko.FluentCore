@@ -1,7 +1,6 @@
 ﻿using Nrk.FluentCore.Environment;
 using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
-using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,7 +8,6 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject;
-using static Nrk.FluentCore.Experimental.GameManagement.ClientJsonObject.LibraryJsonObject;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 
@@ -57,13 +55,9 @@ public abstract partial class MinecraftInstance
     public MinecraftAssetIndex GetAssetIndex()
     {
         // Identify file paths
-        string clientJsonPath = ClientJsonPath;
-        string assetIndexJsonPath = AssetIndexJsonPath;
-        if (this is ModifiedMinecraftInstance { HasInheritance: true } instance)
-        {
-            clientJsonPath = instance.InheritedMinecraftInstance.ClientJsonPath;
-            assetIndexJsonPath = instance.InheritedMinecraftInstance.AssetIndexJsonPath;
-        }
+        string clientJsonPath = this is ModifiedMinecraftInstance { HasInheritance: true } instance 
+            ? instance.InheritedMinecraftInstance.AssetIndexJsonPath
+            : ClientJsonPath;
 
         // Parse client.json
         JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(clientJsonPath));

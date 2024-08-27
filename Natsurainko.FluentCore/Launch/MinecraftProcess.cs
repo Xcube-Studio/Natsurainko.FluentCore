@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 
 namespace Nrk.FluentCore.Launch;
 
@@ -56,9 +58,11 @@ public class MinecraftProcess : IDisposable
     /// </summary>
     public IEnumerable<string> ArgumentList { get; init; }
 
-    internal Process _process;
+    public Process Process { get; private set; }
 
-    #region Events for _process
+    public IReadOnlyList<MinecraftLibrary> Natives { get; private set; }
+
+    #region Events for Process
 
     /// <summary>
     /// Raised when Minecraft exits normally, crashes, or is killed
@@ -70,18 +74,18 @@ public class MinecraftProcess : IDisposable
     /// </summary>
     public event EventHandler? Started;
 
-    // Forwarded from _process
+    // Forwarded from Process
     public event DataReceivedEventHandler? OutputDataReceived
     {
-        add => _process.OutputDataReceived += value;
-        remove => _process.OutputDataReceived -= value;
+        add => Process.OutputDataReceived += value;
+        remove => Process.OutputDataReceived -= value;
     }
 
-    // Forwarded from _process
+    // Forwarded from Process
     public event DataReceivedEventHandler? ErrorDataReceived
     {
-        add => _process.ErrorDataReceived += value;
-        remove => _process.ErrorDataReceived -= value;
+        add => Process.ErrorDataReceived += value;
+        remove => Process.ErrorDataReceived -= value;
     }
 
     #endregion
@@ -92,12 +96,13 @@ public class MinecraftProcess : IDisposable
     /// <param name="javaPath">Java path to use for running Minecraft</param>
     /// <param name="workingDir"></param>
     /// <param name="launchArgs">Launch arguments to pass to the Minecraft process</param>
-    public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs)
+    public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs, IReadOnlyList<MinecraftLibrary> natives)
     {
+        Natives = natives;
         JavaPath = javaPath;
         ArgumentList = launchArgs;
 
-        _process = new Process
+        Process = new Process
         {
             StartInfo = new ProcessStartInfo(javaPath)
             {
@@ -111,29 +116,59 @@ public class MinecraftProcess : IDisposable
         };
         State = MinecraftProcessState.Created;
 
-        _process.Exited += MCProcess_Exited;
+        Process.Exited += MCProcess_Exited;
+    }
+
+    /// <summary>
+    /// Create a new Minecraft process
+    /// </summary>
+    /// <param name="javaPath">Java path to use for running Minecraft</param>
+    /// <param name="workingDir"></param>
+    /// <param name="launchArgs">Launch arguments to pass to the Minecraft process</param>
+    [SupportedOSPlatform("windows")]
+    public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs, IReadOnlyList<MinecraftLibrary> natives, bool isCmdMode)
+    {
+        Natives = natives;
+        JavaPath = javaPath;
+        ArgumentList = launchArgs;
+
+        Process = new Process
+        {
+            StartInfo = new ProcessStartInfo(isCmdMode ? "cmd.exe" : javaPath)
+            {
+                WorkingDirectory = workingDir,
+                Arguments = string.Join(' ', launchArgs),
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            },
+            EnableRaisingEvents = true,
+        };
+        State = MinecraftProcessState.Created;
+
+        Process.Exited += MCProcess_Exited;
     }
 
     private void MCProcess_Exited(object? sender, EventArgs e)
     {
         State = MinecraftProcessState.Exited;
-        Exited?.Invoke(this, new MinecraftProcessExitedEventArgs(_process.ExitCode));
+        Exited?.Invoke(this, new MinecraftProcessExitedEventArgs(Process.ExitCode));
     }
 
     public void Start()
     {
-        _process.Start();
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
+        Process.Start();
+        Process.BeginOutputReadLine();
+        Process.BeginErrorReadLine();
         State = MinecraftProcessState.Running;
         Started?.Invoke(this, EventArgs.Empty);
     }
 
     public void Kill()
     {
-        _process.Kill(); // Will raise Exited event in the handler MCProcess_Exited
+        Process.Kill(); // Will raise Exited event in the handler MCProcess_Exited
         State = MinecraftProcessState.Exited;
     }
 
-    public void Dispose() => _process.Dispose();
+    public void Dispose() => Process.Dispose();
 }

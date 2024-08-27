@@ -39,10 +39,10 @@ internal class ClientJsonObject
     public required string? Type { get; set; }
 
     [JsonPropertyName("assets")]
-    public required string? Assets { get; set; }
+    public string? Assets { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public required AssstIndexJsonObject? AssetIndex { get; set; }
+    public AssstIndexJsonObject? AssetIndex { get; set; }
 
     [JsonPropertyName("libraries")]
     public required IEnumerable<LibraryJsonObject>? Libraries { get; set; }
@@ -54,11 +54,11 @@ internal class ClientJsonObject
     {
         [JsonPropertyName("game")]
         [JsonConverter(typeof(ClientArgumentsConverter<GameArgumentRule>))]
-        public required IEnumerable<ClientArgument> GameArguments { get; set; } = [];
+        public IEnumerable<ClientArgument>? GameArguments { get; set; } = [];
 
         [JsonPropertyName("jvm")]
         [JsonConverter(typeof(ClientArgumentsConverter<OsRule>))]
-        public required IEnumerable<ClientArgument> JvmArguments { get; set; } = [];
+        public IEnumerable<ClientArgument>? JvmArguments { get; set; } = [];
 
         public abstract class ClientArgument { }
 
@@ -213,9 +213,25 @@ internal class ClientJsonObject
         [JsonPropertyName("name")]
         public required string? MavenName { get; set; }
 
-        // Used by Forge
+        // Used by Forge, Fabric, Quilt..
         [JsonPropertyName("url")]
         public string? MavenUrl { get; set; }
+
+        // Used by Fabric
+        [JsonPropertyName("sha1")]
+        public string? Sha1 { get; set; }
+
+        // Used by Fabric
+        [JsonPropertyName("size")]
+        public long? Size { get; set; }
+
+        // Used by Forge
+        [JsonPropertyName("clientreq")]
+        public bool? ClientRequest { get; set; }
+
+        // Used by Forge
+        [JsonPropertyName("serverreq")]
+        public bool? ServerRequest { get; set; }
 
         // This field may not exist for libraries used by mod loaders
         [JsonPropertyName("downloads")]
@@ -252,7 +268,7 @@ internal class ClientJsonObject
             public required string? Sha1 { get; set; }
 
             [JsonPropertyName("size")]
-            public required int? Size { get; set; }
+            public required long? Size { get; set; }
         }
     }
 

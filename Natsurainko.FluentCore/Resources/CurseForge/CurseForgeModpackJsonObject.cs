@@ -1,5 +1,4 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
-using Nrk.FluentCore.Management.ModLoaders;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;

@@ -1,5 +1,4 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
-using Nrk.FluentCore.Management.ModLoaders;
 using System;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Mods;

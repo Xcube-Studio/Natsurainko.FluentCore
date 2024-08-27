@@ -1,14 +1,10 @@
 ﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
 using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
-using Nrk.FluentCore.Management.ModLoaders;
 using Nrk.FluentCore.Utils;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
 
@@ -66,10 +62,11 @@ public static class MinecraftInstanceExtensions
         if (sha1 is null || url is null || size is null)
             throw new InvalidDataException("Invalid client info");
 
-        return new MinecraftClient(url)
+        return new MinecraftClient
         {
             MinecraftFolderPath = instance.MinecraftFolderPath,
             ClientId = Path.GetFileNameWithoutExtension(clientJarPath),
+            Url = url,
             Size = (int)size,
             Sha1 = sha1
         };

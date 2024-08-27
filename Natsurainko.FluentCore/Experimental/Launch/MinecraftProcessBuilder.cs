@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -30,16 +31,18 @@ public class MinecraftProcessBuilder
     private string _gameDirectory;
 
     // Required, set by calling builder methods
-    private IEnumerable<MinecraftLibrary>? _libraries;
+    private IReadOnlyList<MinecraftLibrary>? _libraries;
+    private IReadOnlyList<MinecraftLibrary>? _natives;
+
     private Account? _account;
     private string? _javaPath;
     private int? _minMemory;
     private int? _maxMemory;
     private bool _enableDemoUser = false;
 
+    // 不可以将两个参数合并载入，两种参数要分别放在启动参数的对应位置才能被加载
     private List<string> _extraGameArguments = new();
     private List<string> _extraVmArguments = new();
-    // 不可以将两个参数合并载入，两种参数要分别放在启动参数的对应位置才能被加载
 
     public MinecraftInstance MinecraftInstance { get; init; }
 
@@ -50,6 +53,8 @@ public class MinecraftProcessBuilder
         _librariesFolder = Path.Combine(gameInfo.MinecraftFolderPath, "libraries");
         _assetsFolder = Path.Combine(gameInfo.MinecraftFolderPath, "assets");
         _gameDirectory = gameInfo.MinecraftFolderPath;
+
+        SetLibraries();
     }
 
     public MinecraftProcess Build()
@@ -57,10 +62,17 @@ public class MinecraftProcessBuilder
         if (!CanBuild())
             throw new InvalidOperationException("Missing required parameters");
 
-        return new MinecraftProcess(_javaPath, _gameDirectory, BuildArguments());
+        if (_isCmdMode)
+        {
+#pragma warning disable CA1416
+            return new MinecraftProcess(_javaPath, _gameDirectory, BuildArguments(), _natives, true);
+#pragma warning restore CA1416
+        }
+
+        return new MinecraftProcess(_javaPath, _gameDirectory, BuildArguments(), _natives);
     }
 
-    [MemberNotNullWhen(true, nameof(_libraries), nameof(_account), nameof(_javaPath), nameof(_minMemory), nameof(_maxMemory))]
+    [MemberNotNullWhen(true, nameof(_libraries), nameof(_account), nameof(_javaPath), nameof(_minMemory), nameof(_maxMemory), nameof(_natives))]
     private bool CanBuild()
     {
         return _libraries != null && _account != null && _javaPath != null && _minMemory != null && _maxMemory != null;
@@ -172,7 +184,7 @@ public class MinecraftProcessBuilder
         foreach (var arg in vmParameters) yield return arg.ReplaceFromDictionary(vmParametersReplace);
         foreach (var arg in _extraVmArguments) yield return arg;
 
-        yield return entity.MainClass;
+        yield return entity.MainClass!;
 
         foreach (var arg in gameParameters) yield return arg.ReplaceFromDictionary(gameParametersReplace);
         foreach (var arg in _extraGameArguments) yield return arg;
@@ -213,17 +225,6 @@ public class MinecraftProcessBuilder
     }
 
     /// <summary>
-    /// 设置 加载Libraries [必须]
-    /// </summary>
-    /// <param name="libraries"></param>
-    /// <returns></returns>
-    public MinecraftProcessBuilder SetLibraries(IEnumerable<MinecraftLibrary> libraries)
-    {
-        _libraries = libraries;
-        return this;
-    }
-
-    /// <summary>
     /// 设置 额外游戏参数 [可选]
     /// </summary>
     /// <param name="args">额外游戏参数</param>
@@ -256,9 +257,39 @@ public class MinecraftProcessBuilder
         return this;
     }
 
+    [SupportedOSPlatform("windows")]
     public MinecraftProcessBuilder SetCmdMode(bool isCmdMode)
     {
         _isCmdMode = isCmdMode;
         return this;
+    }
+
+
+    /// <summary>
+    /// 设置 加载Libraries [必须]
+    /// </summary>
+    private void SetLibraries()
+    {
+        var libraries = new List<MinecraftLibrary>();
+        var natives = new List<MinecraftLibrary>();
+
+        if (MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } modifiedMinecraftInstance)
+        {
+            (var inheritedLibs, var inheritedNatives) = modifiedMinecraftInstance.InheritedMinecraftInstance.GetRequiredLibraries();
+
+            libraries.AddRange(inheritedLibs);
+            natives.AddRange(inheritedNatives);
+        }
+
+        (var libs, var nats) = MinecraftInstance.GetRequiredLibraries();
+
+        foreach (var item in libs.Where(libraries.Contains).ToArray())
+            libraries.Remove(item);
+
+        libraries.AddRange(libs);
+        natives.AddRange(nats);
+
+        _libraries = libraries;
+        _natives = natives;
     }
 }

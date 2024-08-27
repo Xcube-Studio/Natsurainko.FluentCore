@@ -163,6 +163,7 @@ public static class JavaUtils
 
         var runtimeInfo = new JavaInfo
         {
+            FilePath = file,
             Name = name,
             ProductName = fileVersionInfo.ProductName,
             Company = fileVersionInfo.CompanyName,
