@@ -171,4 +171,6 @@ public class MinecraftProcess : IDisposable
     }
 
     public void Dispose() => Process.Dispose();
+
+    public nint MainWindowHandle { get => Process.MainWindowHandle; }
 }
