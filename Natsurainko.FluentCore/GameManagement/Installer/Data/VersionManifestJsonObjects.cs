@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.Installer.Data;
+namespace Nrk.FluentCore.GameManagement.Installer;
 
 public class VersionManifestJsonObject
 {

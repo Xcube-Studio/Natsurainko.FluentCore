@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.Installer.Data;
+namespace Nrk.FluentCore.GameManagement.Installer;
 
 /// <summary>
 /// Shared by Fabric, Quilt's installation Json
