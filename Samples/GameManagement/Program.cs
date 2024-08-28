@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
+﻿using Nrk.FluentCore.GameManagement.Instances;
 
 var mcFolderPath = @"D:\Minecraft\.minecraft";
 var minecraftInstanceParser = new MinecraftInstanceParser(mcFolderPath);

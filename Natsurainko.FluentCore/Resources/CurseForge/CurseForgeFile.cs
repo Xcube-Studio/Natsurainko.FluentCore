@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.ModLoaders;
+﻿using Nrk.FluentCore.GameManagement.Installer;
 using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Resources;

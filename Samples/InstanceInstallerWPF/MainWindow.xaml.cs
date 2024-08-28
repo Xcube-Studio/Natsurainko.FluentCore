@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nrk.FluentCore.Environment;
-using Nrk.FluentCore.Experimental.GameManagement.Downloader;
-using Nrk.FluentCore.Experimental.GameManagement.Installer;
-using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
+using Nrk.FluentCore.GameManagement.Downloader;
+using Nrk.FluentCore.GameManagement.Installer;
 using Nrk.FluentCore.Utils;
 using System.ComponentModel;
 using System.Net.Http;
@@ -11,11 +10,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Threading;
-using static Nrk.FluentCore.Experimental.GameManagement.Installer.FabricInstanceInstaller;
-using static Nrk.FluentCore.Experimental.GameManagement.Installer.ForgeInstanceInstaller;
-using static Nrk.FluentCore.Experimental.GameManagement.Installer.OptiFineInstanceInstaller;
-using static Nrk.FluentCore.Experimental.GameManagement.Installer.QuiltInstanceInstaller;
-using static Nrk.FluentCore.Experimental.GameManagement.Installer.VanillaInstanceInstaller;
+using static Nrk.FluentCore.GameManagement.Installer.FabricInstanceInstaller;
+using static Nrk.FluentCore.GameManagement.Installer.ForgeInstanceInstaller;
+using static Nrk.FluentCore.GameManagement.Installer.OptiFineInstanceInstaller;
+using static Nrk.FluentCore.GameManagement.Installer.QuiltInstanceInstaller;
+using static Nrk.FluentCore.GameManagement.Installer.VanillaInstanceInstaller;
 
 namespace InstanceInstallerWPF;
 

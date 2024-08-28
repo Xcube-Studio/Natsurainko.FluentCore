@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Installer.Data;
+﻿using Nrk.FluentCore.GameManagement.Installer;
 using System.Globalization;
 using System.Windows.Data;
 
