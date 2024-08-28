@@ -14,7 +14,7 @@ public static class MinecraftInstanceExtensions
     public static string GetSuitableJavaVersion(this MinecraftInstance instance)
     {
         if (instance is ModifiedMinecraftInstance { HasInheritance: true } inst)
-            return inst.GetSuitableJavaVersion();
+            return inst.InheritedMinecraftInstance.GetSuitableJavaVersion();
 
         JsonNode? majorJavaVersionNode = JsonNodeUtils.ParseFile(instance.ClientJsonPath)["javaVersion"]?["majorVersion"];
 
