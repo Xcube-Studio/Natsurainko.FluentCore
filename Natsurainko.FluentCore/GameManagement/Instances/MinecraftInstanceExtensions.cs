@@ -76,8 +76,25 @@ public static class MinecraftInstanceExtensions
     public static GameStorageInfo GetStatistics(this MinecraftInstance instance)
     {
         var (libs, nativeLibs) = instance.GetRequiredLibraries();
-        var assetIndex = instance.GetAssetIndex();
-        var assets = instance.GetRequiredAssets();
+        MinecraftAssetIndex? assetIndex = null;
+        IEnumerable<MinecraftAsset> assets = [];
+
+        if (instance is ModifiedMinecraftInstance { HasInheritance : true } modifiedMinecraftInstance)
+        {
+            if (File.Exists(modifiedMinecraftInstance.InheritedMinecraftInstance.AssetIndexJsonPath))
+            {
+                assetIndex = modifiedMinecraftInstance.InheritedMinecraftInstance.GetAssetIndex();
+                assets = modifiedMinecraftInstance.InheritedMinecraftInstance.GetRequiredAssets();
+            }
+        }
+        else
+        {
+            if (File.Exists(instance.AssetIndexJsonPath))
+            {
+                assetIndex = instance.GetAssetIndex();
+                assets = instance.GetRequiredAssets();
+            }
+        }
 
         long size = 0;
         int assetCount = 0;
@@ -99,7 +116,8 @@ public static class MinecraftInstanceExtensions
             }
         }
 
-        size += new FileInfo(assetIndex.FullPath).Length;
+        if (assetIndex != null)
+            size += new FileInfo(assetIndex.FullPath).Length;
 
         if (File.Exists(instance.ClientJarPath))
             size += new FileInfo(instance.ClientJarPath).Length;
