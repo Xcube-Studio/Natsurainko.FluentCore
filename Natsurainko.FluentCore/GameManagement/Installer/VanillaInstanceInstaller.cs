@@ -31,6 +31,8 @@ public class VanillaInstanceInstaller : IInstanceInstaller
 
     public IProgress<InstallerProgress<VanillaInstallationStage>>? Progress { get; init; }
 
+    public bool CleanAfterCancelled { get; init; } = true;
+
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
 
@@ -55,13 +57,15 @@ public class VanillaInstanceInstaller : IInstanceInstaller
         catch (OperationCanceledException)
         {
             // 取消后清理产生的部分文件
-
-            assetIndex?.Delete();
-
-            if (instance != null)
+            if (CleanAfterCancelled)
             {
-                versionJsonFile!.Directory?.DeleteAllFiles();
-                versionJsonFile!.Directory?.Delete();
+                assetIndex?.Delete();
+
+                if (instance != null)
+                {
+                    versionJsonFile!.Directory?.DeleteAllFiles();
+                    versionJsonFile!.Directory?.Delete();
+                }
             }
 
             Progress?.Report(new(stage, InstallerStageProgress.Failed()));

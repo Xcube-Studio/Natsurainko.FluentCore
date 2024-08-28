@@ -134,7 +134,8 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
             CheckAllDependencies = true,
-            Progress = VanillaInstallationProgress
+            Progress = VanillaInstallationProgress,
+            CleanAfterCancelled = false
         };
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
