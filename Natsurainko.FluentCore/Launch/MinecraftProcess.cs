@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
+﻿using Nrk.FluentCore.GameManagement.Dependencies;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

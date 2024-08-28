@@ -1,8 +1,8 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+﻿using Nrk.FluentCore.GameManagement.Downloader;
 using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.Launch.Exceptions;
+namespace Nrk.FluentCore.Launch;
 
 public class IncompleteGameResourcesException : Exception
 {
