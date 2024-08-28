@@ -1,5 +1,4 @@
 ﻿using Nrk.FluentCore.Environment;
-using Nrk.FluentCore.GameManagement;
 using Nrk.FluentCore.GameManagement.Dependencies;
 using Nrk.FluentCore.GameManagement.Installer;
 using Nrk.FluentCore.Utils;

@@ -1,18 +1,12 @@
 ﻿using Nrk.FluentCore.Utils;
 using System;
 using System.Buffers;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.GameManagement.Downloader;
