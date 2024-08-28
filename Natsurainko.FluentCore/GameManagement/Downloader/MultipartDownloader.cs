@@ -90,18 +90,19 @@ public class MultipartDownloader : IDownloader
         if (response.Content.Headers.ContentLength is long contentLength)
         {
             states.TotalBytes = contentLength;
+            // Commented: some servers return AcceptRange="bytes" while they return 404 for range requests
             // Check support for range requests
-            if (response.Headers.AcceptRanges.Contains("bytes")) // Check if the server supports range requests by checking the Accept-Ranges header
-            {
-                useMultiPart = true;
-            }
-            else // Check if the server supports range requests by sending a range request
-            {
+            //if (response.Headers.AcceptRanges.Contains("bytes")) // Check if the server supports range requests by checking the Accept-Ranges header
+            //{
+            //    useMultiPart = true;
+            //}
+            //else // Check if the server supports range requests by sending a range request
+            //{
                 var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
                 rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
                 var rangeResponse = await HttpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
-            }
+            //}
         }
 
         // Status changed
