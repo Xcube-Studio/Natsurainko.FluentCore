@@ -1,6 +1,6 @@
 ﻿using Nrk.FluentCore.Authentication;
 using Nrk.FluentCore.Environment;
-using Nrk.FluentCore.Experimental.GameManagement.Instances;
+using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Experimental.Launch;
 using Nrk.FluentCore.Utils;
 

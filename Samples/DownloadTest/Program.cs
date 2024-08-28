@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Downloader;
+﻿using Nrk.FluentCore.GameManagement.Downloader;
 
 using var httpClient = new HttpClient();
 //MultipartDownloader downloader = new(1048576, 8, httpClient);

@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Nrk.FluentCore.Experimental.GameManagement.Installer;
+using Nrk.FluentCore.GameManagement.Installer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
