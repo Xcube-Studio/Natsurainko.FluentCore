@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
+namespace Nrk.FluentCore.GameManagement.Instances;
 
 // Temporary data structure for parsing Minecraft instances
 using PartialData = (

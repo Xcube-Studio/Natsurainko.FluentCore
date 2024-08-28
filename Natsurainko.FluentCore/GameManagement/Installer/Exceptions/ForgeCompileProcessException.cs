@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.GameManagement.Exceptions;
+namespace Nrk.FluentCore.GameManagement.Installer;
 
 public class ForgeCompileProcessException(List<string> errorOutput)
     : Exception("An exception occurred in the Forge compilation process")

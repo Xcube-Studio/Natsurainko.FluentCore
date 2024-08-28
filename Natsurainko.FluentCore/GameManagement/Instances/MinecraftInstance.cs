@@ -10,7 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using static Nrk.FluentCore.GameManagement.ClientJsonObject;
 
-namespace Nrk.FluentCore.Experimental.GameManagement.Instances;
+namespace Nrk.FluentCore.GameManagement.Instances;
 
 public abstract partial class MinecraftInstance
 {

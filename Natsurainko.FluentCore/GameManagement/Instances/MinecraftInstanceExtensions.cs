@@ -1,13 +1,13 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
-using Nrk.FluentCore.GameManagement.Dependencies;
+﻿using Nrk.FluentCore.GameManagement.Dependencies;
 using Nrk.FluentCore.GameManagement.Installer;
+using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.GameManagement.Instances;
+namespace Nrk.FluentCore.GameManagement;
 
 public static class MinecraftInstanceExtensions
 {

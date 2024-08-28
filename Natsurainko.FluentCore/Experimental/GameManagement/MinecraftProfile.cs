@@ -1,4 +1,4 @@
-﻿using Nrk.FluentCore.Experimental.GameManagement.Instances;
+﻿using Nrk.FluentCore.GameManagement.Instances;
 using System;
 using System.Collections.Generic;
 

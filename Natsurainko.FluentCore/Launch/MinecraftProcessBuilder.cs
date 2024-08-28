@@ -1,7 +1,7 @@
 ﻿using Nrk.FluentCore.Authentication;
-using Nrk.FluentCore.Experimental.GameManagement.Instances;
 using Nrk.FluentCore.GameManagement;
 using Nrk.FluentCore.GameManagement.Dependencies;
+using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Launch;
 using Nrk.FluentCore.Management.Parsing;
 using Nrk.FluentCore.Utils;

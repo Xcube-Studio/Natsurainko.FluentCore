@@ -1,8 +1,7 @@
-﻿using Nrk.FluentCore.Experimental.Exceptions;
-using Nrk.FluentCore.Experimental.GameManagement.Dependencies;
-using Nrk.FluentCore.Experimental.GameManagement.Instances;
+﻿using Nrk.FluentCore.GameManagement.Dependencies;
 using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Installer.Data;
+using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;
 using System.IO;
