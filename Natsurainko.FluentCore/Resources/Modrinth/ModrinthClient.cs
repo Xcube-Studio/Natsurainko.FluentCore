@@ -60,7 +60,7 @@ public class ModrinthClient
         {
             modrinthResources = responseJson
                 .ToJsonNode()?["hits"]?
-                .Deserialize<IEnumerable<ModrinthResource?>>()?
+                .Deserialize(ResourcesJsonSerializerContext.Default.IEnumerableModrinthResource)?
                 .WhereNotNull()
                 ?? throw new FormatException();
         }

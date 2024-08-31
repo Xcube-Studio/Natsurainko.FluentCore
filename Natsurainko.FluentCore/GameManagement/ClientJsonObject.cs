@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Nrk.FluentCore.GameManagement;
 
@@ -12,10 +13,12 @@ namespace Nrk.FluentCore.GameManagement;
 internal class ClientJsonObject
 {
     [JsonPropertyName("id")]
-    public required string? Id { get; set; }
+    [JsonRequired]
+    public string? Id { get; set; } = null;
 
     [JsonPropertyName("mainClass")]
-    public required string? MainClass { get; set; }
+    [JsonRequired]
+    public string? MainClass { get; set; } = null;
 
     /// <summary>
     /// Replaced by <see cref="Arguments"/> since 1.13 (17w43a)
@@ -36,16 +39,18 @@ internal class ClientJsonObject
     public string? InheritsFrom { get; set; }
 
     [JsonPropertyName("type")]
-    public required string? Type { get; set; }
+    [JsonRequired]
+    public string? Type { get; set; } = null;
 
     [JsonPropertyName("assets")]
     public string? Assets { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public AssstIndexJsonObject? AssetIndex { get; set; }
+    public AssetIndexJsonObject? AssetIndex { get; set; }
 
     [JsonPropertyName("libraries")]
-    public required IEnumerable<LibraryJsonObject>? Libraries { get; set; }
+    [JsonRequired]
+    public IEnumerable<LibraryJsonObject>? Libraries { get; set; } = null;
 
     /// <summary>
     /// client.json 下 arguments 键 对应的实体类
@@ -71,18 +76,22 @@ internal class ClientJsonObject
         {
             [JsonPropertyName("value")]
             [JsonConverter(typeof(ArgumentValuesConverter))]
-            public required IEnumerable<string>? Values { get; set; }
+            [JsonRequired]
+            public IEnumerable<string>? Values { get; set; }
 
             [JsonPropertyName("rules")]
-            public required IEnumerable<TRule>? Conditions { get; set; }
+            [JsonRequired]
+            public IEnumerable<TRule>? Conditions { get; set; }
         }
         public class GameArgumentRule
         {
             [JsonPropertyName("action")]
-            public required string Action { get; set; }
+            [JsonRequired]
+            public string Action { get; set; } = null!;
 
             [JsonPropertyName("features")]
-            public required RuleFeatures Features { get; set; }
+            [JsonRequired]
+            public RuleFeatures Features { get; set; } = null!;
 
             public class RuleFeatures
             {
@@ -131,7 +140,9 @@ internal class ClientJsonObject
                     }
                     else if (reader.TokenType == JsonTokenType.StartObject) // The argument is a conditional argument
                     {
-                        var obj = JsonSerializer.Deserialize<ConditionalClientArgument<TRule>>(ref reader, options);
+                        var obj =
+                            JsonSerializer.Deserialize(ref reader, typeof(ConditionalClientArgument<TRule>), MinecraftJsonSerializerContext.Default)
+                            as ConditionalClientArgument<TRule>;
                         if (obj is not null)
                         {
                             arguments.Add(obj);
@@ -153,7 +164,7 @@ internal class ClientJsonObject
                     }
                     else if (arg is ConditionalClientArgument<TRule> conditionalArg)
                     {
-                        JsonSerializer.Serialize(writer, conditionalArg, options);
+                        JsonSerializer.Serialize(writer, conditionalArg, typeof(ConditionalClientArgument<TRule>), MinecraftJsonSerializerContext.Default);
                     }
                 }
                 writer.WriteEndArray();
@@ -171,7 +182,9 @@ internal class ClientJsonObject
                 }
                 else if (reader.TokenType == JsonTokenType.StartArray)
                 {
-                    var array = JsonSerializer.Deserialize<IEnumerable<string>>(ref reader, options);
+                    var array =
+                        JsonSerializer.Deserialize(ref reader, typeof(IEnumerable<string>), MinecraftJsonSerializerContext.Default)
+                        as IEnumerable<string>;
                     return array ?? [];
                 }
                 else
@@ -182,7 +195,7 @@ internal class ClientJsonObject
 
             public override void Write(Utf8JsonWriter writer, IEnumerable<string> value, JsonSerializerOptions options)
             {
-                JsonSerializer.Serialize(writer, value, options);
+                JsonSerializer.Serialize(writer, value, typeof(IEnumerable<string>), MinecraftJsonSerializerContext.Default);
             }
         }
     }
@@ -190,28 +203,34 @@ internal class ClientJsonObject
     /// <summary>
     /// client.json 下 assetIndex 键 对应的实体类
     /// </summary>
-    internal class AssstIndexJsonObject
+    internal class AssetIndexJsonObject
     {
         [JsonPropertyName("url")]
-        public required string? Url { get; set; }
+        [JsonRequired]
+        public string? Url { get; set; }
 
         [JsonPropertyName("id")]
-        public required string? Id { get; set; }
+        [JsonRequired]
+        public string? Id { get; set; }
 
         [JsonPropertyName("sha1")]
-        public required string? Sha1 { get; set; }
+        [JsonRequired]
+        public string? Sha1 { get; set; }
 
         [JsonPropertyName("size")]
-        public required int? Size { get; set; }
+        [JsonRequired]
+        public int? Size { get; set; }
 
         [JsonPropertyName("totalSize")]
-        public required int? TotalSize { get; set; }
+        [JsonRequired]
+        public int? TotalSize { get; set; }
     }
 
     internal class LibraryJsonObject
     {
         [JsonPropertyName("name")]
-        public required string? MavenName { get; set; }
+        [JsonRequired]
+        public string? MavenName { get; set; }
 
         // Used by Forge, Fabric, Quilt..
         [JsonPropertyName("url")]
@@ -253,22 +272,26 @@ internal class ClientJsonObject
             // Possible keys: "javadoc", "sources" and "natives-*"
             // Keys for native libraries are declared in the "natives" field in LibraryJsonObject
             [JsonPropertyName("classifiers")]
-            public Dictionary<string, DownloadArtifactJsonObject>? Classifiers { get; init; }
+            public Dictionary<string, DownloadArtifactJsonObject>? Classifiers { get; set; }
         }
 
         public class DownloadArtifactJsonObject
         {
             [JsonPropertyName("path")]
-            public required string? Path { get; set; }
+            [JsonRequired]
+            public string? Path { get; set; }
 
             [JsonPropertyName("url")]
-            public required string? Url { get; set; }
+            [JsonRequired]
+            public string? Url { get; set; }
 
             [JsonPropertyName("sha1")]
-            public required string? Sha1 { get; set; }
+            [JsonRequired]
+            public string? Sha1 { get; set; }
 
             [JsonPropertyName("size")]
-            public required long? Size { get; set; }
+            [JsonRequired]
+            public long? Size { get; set; }
         }
     }
 
@@ -297,8 +320,10 @@ internal class ClientJsonObject
 public record AssetJsonNode
 {
     [JsonPropertyName("hash")]
-    public required string? Hash { get; set; }
+    [JsonRequired]
+    public string? Hash { get; set; }
 
     [JsonPropertyName("size")]
-    public required int? Size { get; set; }
+    [JsonRequired]
+    public int? Size { get; set; }
 }

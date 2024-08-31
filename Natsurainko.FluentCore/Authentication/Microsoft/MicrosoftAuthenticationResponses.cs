@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -22,10 +23,12 @@ public class OAuth2TokenResponse
     public string? Scope { get; set; }
 
     [JsonPropertyName("access_token")]
-    public required string AccessToken { get; set; }
+    [JsonRequired]
+    public string AccessToken { get; set; } = null!;
 
     [JsonPropertyName("refresh_token")]
-    public required string RefreshToken { get; set; }
+    [JsonRequired]
+    public string RefreshToken { get; set; } = null!;
 
     [JsonPropertyName("user_id")]
     public string? UserId { get; set; }
@@ -43,7 +46,8 @@ public class XBLAuthenticateResponse
     public string? NotAfter { get; set; }
 
     [JsonPropertyName("Token")]
-    public required string Token { get; set; }
+    [JsonRequired]
+    public string Token { get; set; } = null!;
 
     [JsonPropertyName("DisplayClaims")]
     public DisplayClaims? DisplayClaims { get; set; }
@@ -115,19 +119,23 @@ public class SkinModel
 public class OAuth2DeviceCodeResponse
 {
     [JsonPropertyName("user_code")]
-    public required string UserCode { get; set; }
+    [JsonRequired]
+    public string UserCode { get; set; } = null!;
 
     [JsonPropertyName("device_code")]
-    public required string DeviceCode { get; set; }
+    [JsonRequired]
+    public string DeviceCode { get; set; } = null!;
 
     [JsonPropertyName("verification_uri")]
     public string? VerificationUrl { get; set; }
 
     [JsonPropertyName("expires_in")]
-    public required int ExpiresIn { get; set; } = -1;
+    [JsonRequired]
+    public int ExpiresIn { get; set; } = -1;
 
     [JsonPropertyName("interval")]
-    public required int Interval { get; set; } = -1;
+    [JsonRequired]
+    public int Interval { get; set; } = -1;
 
     [JsonPropertyName("message")]
     public string? Message { get; set; }

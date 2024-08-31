@@ -7,37 +7,48 @@ namespace Nrk.FluentCore.Resources;
 public record ModrinthResource
 {
     [JsonPropertyName("project_id")]
-    public required string Id { get; set; }
+    [JsonRequired]
+    public string Id { get; set; } = null!;
 
     [JsonPropertyName("slug")]
-    public required string Slug { get; set; }
+    [JsonRequired]
+    public string Slug { get; set; } = null!;
 
     [JsonPropertyName("project_type")]
-    public required string ProjectType { get; set; }
+    [JsonRequired]
+    public string ProjectType { get; set; } = null!;
 
     [JsonPropertyName("title")]
-    public required string Name { get; set; }
+    [JsonRequired]
+    public string Name { get; set; } = null!;
 
     [JsonPropertyName("description")]
-    public required string Summary { get; set; }
+    [JsonRequired]
+    public string Summary { get; set; } = null!;
 
     [JsonPropertyName("downloads")]
-    public required int DownloadCount { get; set; }
+    [JsonRequired]
+    public int DownloadCount { get; set; }
 
     [JsonPropertyName("date_modified")]
-    public required DateTime DateModified { get; set; }
+    [JsonRequired]
+    public DateTime DateModified { get; set; }
 
     [JsonPropertyName("author")]
-    public required string Author { get; set; }
+    [JsonRequired]
+    public string Author { get; set; } = null!;
 
     [JsonPropertyName("display_categories")]
-    public required IEnumerable<string> Categories { get; set; }
+    [JsonRequired]
+    public IEnumerable<string> Categories { get; set; } = null!;
 
     [JsonPropertyName("gallery")]
-    public required IEnumerable<string> ScreenshotUrls { get; set; }
+    [JsonRequired]
+    public IEnumerable<string> ScreenshotUrls { get; set; } = null!;
 
     [JsonPropertyName("icon_url")]
-    public required string IconUrl { get; set; }
+    [JsonRequired]
+    public string IconUrl { get; set; } = null!;
 
     public string WebLink => $"https://modrinth.com/{ProjectType}/{Slug}";
 }

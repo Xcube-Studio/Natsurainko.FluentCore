@@ -8,13 +8,8 @@
     <AssemblyName>Natsurainko.FluentCore</AssemblyName>
     <RootNamespace>Nrk.FluentCore</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Services\**" />
-    <EmbeddedResource Remove="Services\**" />
-    <None Remove="Services\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Tomlyn" Version="0.16.2" />

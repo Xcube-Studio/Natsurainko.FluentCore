@@ -101,7 +101,10 @@ public class CurseForgeClient
         // Create request
         string url = $"{BaseUrl}mods/featured";
         using var request = CreateCurseForgeGetRequest(url);
-        request.Content = new StringContent(JsonSerializer.Serialize(new { gameId = MinecraftGameId }));
+        var gameIdNode = new JsonObject();
+        gameIdNode["gameId"] = MinecraftGameId;
+
+        request.Content = new StringContent(gameIdNode.ToString());
         request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
         // Send request
@@ -243,7 +246,8 @@ public class CurseForgeClient
             .WhereNotNull()
             .Select(x =>
             {
-                var file = x.Deserialize<CurseForgeFile>() ?? throw new InvalidOperationException();
+                var file = x.Deserialize(ResourcesJsonSerializerContext.Default.CurseForgeFile)
+                    ?? throw new InvalidOperationException();
                 file.ModId = id.GetValueOrDefault();
                 return file;
             })

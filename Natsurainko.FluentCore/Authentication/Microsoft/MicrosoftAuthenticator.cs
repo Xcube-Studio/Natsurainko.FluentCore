@@ -171,7 +171,7 @@ public class MicrosoftAuthenticator
         {
             oauth2TokenResponse = await response
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<OAuth2TokenResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.OAuth2TokenResponse);
 
             if (oauth2TokenResponse is null)
                 throw new FormatException("Response is null");
@@ -197,14 +197,15 @@ public class MicrosoftAuthenticator
 
         using var xblResponseMessage = await _httpClient.PostAsJsonAsync(
             "https://user.auth.xboxlive.com/user/authenticate",
-            xblRequest);
+            xblRequest,
+            AuthenticationJsonSerializerContext.Default.XBLAuthenticateRequest);
 
         // Parse response
         XBLAuthenticateResponse? xblResponse = null;
         try {
             xblResponse = await xblResponseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<XBLAuthenticateResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XBLAuthenticateResponse);
 
             if (xblResponse is null)
                 throw new FormatException("Response is null");
@@ -228,13 +229,14 @@ public class MicrosoftAuthenticator
 
         using var xstsResponseMessage = await _httpClient.PostAsJsonAsync(
             "https://xsts.auth.xboxlive.com/xsts/authorize",
-            xstsAuthRequest);
+            xstsAuthRequest,
+            AuthenticationJsonSerializerContext.Default.XSTSAuthenticateRequest);
 
         // Handle errors
         if (xstsResponseMessage.StatusCode.Equals(HttpStatusCode.Unauthorized))
         {
             var xstsErrorResponse = await xstsResponseMessage.Content
-                .ReadFromJsonAsync<XSTSAuthenticateErrorModel>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateErrorModel);
 
             string message = "An error occurred while verifying with Xbox Live";
             if (!string.IsNullOrEmpty(xstsErrorResponse?.Message))
@@ -268,7 +270,7 @@ public class MicrosoftAuthenticator
         {
             xstsResponse = await xstsResponseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<XSTSAuthenticateResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateResponse);
 
             if (xstsResponse is null)
                 throw new FormatException("Response is null");
@@ -295,7 +297,9 @@ public class MicrosoftAuthenticator
         }
         catch (Exception e) when (e is FormatException || e is InvalidOperationException)
         {
-            throw new AuthException("Error in authenticating with XBL\n" + JsonSerializer.Serialize(xblResponse));
+            throw new AuthException(
+                "Error in authenticating with XBL\n"
+                + JsonSerializer.Serialize(xblResponse, AuthenticationJsonSerializerContext.Default.XBLAuthenticateResponse));
         }
 
         string requestContent = $"{{\"identityToken\":\"XBL3.0 x={x};{xstsToken}\"}}";
@@ -375,7 +379,7 @@ public class MicrosoftAuthenticator
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<MicrosoftAuthenticationResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.MicrosoftAuthenticationResponse);
 
             // Check errors
             if (response is null ||
@@ -410,7 +414,7 @@ public class MicrosoftAuthenticator
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<OAuth2DeviceCodeResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.OAuth2DeviceCodeResponse);
 
             if (response is null)
                 throw new FormatException("Response is null");
@@ -463,7 +467,7 @@ public class MicrosoftAuthenticator
         {
             oauthResponse = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<OAuth2TokenResponse>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.OAuth2TokenResponse);
 
             if (oauthResponse is null)
                 throw new FormatException("Response is null");

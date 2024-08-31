@@ -114,7 +114,7 @@ file static class ParsingHelpers
         var clientJsonNode = JsonNode.Parse(clientJson)
             ?? throw new JsonException($"Failed to parse {clientJsonPath}");
 
-        var clientJsonObject = clientJsonNode.Deserialize<ClientJsonObject>()
+        var clientJsonObject = clientJsonNode.Deserialize(MinecraftJsonSerializerContext.Default.ClientJsonObject)
             ?? throw new JsonException($"Failed to deserialize {clientJsonPath} into {typeof(ClientJsonObject)}");
 
         // Parse MinecraftInstance data common to both vanilla, modified and inheriting instances

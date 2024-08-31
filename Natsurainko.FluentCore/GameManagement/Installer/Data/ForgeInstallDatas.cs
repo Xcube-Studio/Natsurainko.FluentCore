@@ -21,13 +21,16 @@ public class ForgeProcessorData
     public List<string> Sides { get; set; } = [];
 
     [JsonPropertyName("jar")]
-    public required string Jar { get; set; }
+    [JsonRequired]
+    public string Jar { get; set; } = null!;
 
     [JsonPropertyName("classpath")]
-    public required IEnumerable<string> Classpath { get; set; }
+    [JsonRequired]
+    public IEnumerable<string> Classpath { get; set; } = null!;
 
     [JsonPropertyName("args")]
-    public required IEnumerable<string> Args { get; set; }
+    [JsonRequired]
+    public IEnumerable<string> Args { get; set; } = null!;
 
     [JsonPropertyName("outputs")]
     public Dictionary<string, string> Outputs { get; set; } = [];

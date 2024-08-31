@@ -44,7 +44,11 @@ public class YggdrasilAuthenticator
 
         using var response = await _httpClient.PostAsync(
             $"{_serverUrl}/authserver/authenticate",
-            new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+            new StringContent(
+                JsonSerializer.Serialize(request, AuthenticationJsonSerializerContext.Default.YggdrasilLoginRequest),
+                Encoding.UTF8,
+                "application/json")
+            );
 
         return await ParseResponseAsync(response);
     }
@@ -65,7 +69,10 @@ public class YggdrasilAuthenticator
 
         using var response = await _httpClient.PostAsync(
             $"{_serverUrl}/authserver/refresh",
-            new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
+            new StringContent(JsonSerializer.Serialize(request, AuthenticationJsonSerializerContext.Default.YggdrasilRefreshRequest),
+                Encoding.UTF8,
+                "application/json")
+            );
 
         return await ParseResponseAsync(response);
     }
@@ -78,12 +85,12 @@ public class YggdrasilAuthenticator
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync<YggdrasilResponseModel>();
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.YggdrasilResponseModel);
 
             if (response?.AvailableProfiles is null)
                 throw new FormatException("Response does not contain any profile");
         }
-        catch (Exception e) // when (e is JsonException || e is FormatException)
+        catch (Exception)
         {
             throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
         }
