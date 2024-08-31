@@ -349,7 +349,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         {
             var processorLibraries = installProfileJsonNode["libraries"]!
                 .AsArray()
-                .Deserialize<IEnumerable<ClientJsonObject.LibraryJsonObject>>()?
+                .Deserialize(MinecraftJsonSerializerContext.Default.IEnumerableLibraryJsonObject)?
                 .Select(lib => MinecraftLibrary.ParseJsonNode(lib, MinecraftFolder))
                 ?? throw new InvalidDataException();
 
@@ -405,8 +405,8 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        var forgeDataDictionary = installProfileJsonNode["data"]
-            .Deserialize<Dictionary<string, Dictionary<string, string>>>()
+        Dictionary<string, Dictionary<string, string>> forgeDataDictionary = installProfileJsonNode["data"]
+            .Deserialize(MinecraftJsonSerializerContext.Default.DictionaryStringDictionaryStringString)
             ?? throw new Exception("Failed to parse install profile data");
 
         string forgeVersion = $"{InstallData.McVersion}-{InstallData.Version}";
@@ -438,7 +438,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             });
 
         var forgeProcessors = installProfileJsonNode["processors"]?
-            .Deserialize<IEnumerable<ForgeProcessorData>>()?
+            .Deserialize(MinecraftJsonSerializerContext.Default.IEnumerableForgeProcessorData)?
             .Where(x => !(x.Sides.Count == 1 && x.Sides.Contains("server")))
             .ToArray()
             ?? throw new InvalidDataException("Unable to parse Forge Processors");
