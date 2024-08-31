@@ -6,13 +6,16 @@ namespace Nrk.FluentCore.Resources;
 public record CurseForgeFile
 {
     [JsonPropertyName("fileId")]
-    public required int FileId { get; set; }
+    [JsonRequired]
+    public int FileId { get; set; }
 
     [JsonPropertyName("gameVersion")]
-    public required string McVersion { get; set; }
+    [JsonRequired]
+    public string McVersion { get; set; } = null!;
 
     [JsonPropertyName("filename")]
-    public required string FileName { get; set; }
+    [JsonRequired]
+    public string FileName { get; set; } = null!;
 
     [JsonPropertyName("modLoader")]
     public ModLoaderType ModLoaderType { get; set; }

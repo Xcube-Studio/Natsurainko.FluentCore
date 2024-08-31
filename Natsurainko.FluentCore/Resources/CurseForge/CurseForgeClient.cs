@@ -243,7 +243,8 @@ public class CurseForgeClient
             .WhereNotNull()
             .Select(x =>
             {
-                var file = x.Deserialize<CurseForgeFile>() ?? throw new InvalidOperationException();
+                var file = x.Deserialize(ResourcesJsonSerializerContext.Default.CurseForgeFile)
+                    ?? throw new InvalidOperationException();
                 file.ModId = id.GetValueOrDefault();
                 return file;
             })
