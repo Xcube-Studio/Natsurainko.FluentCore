@@ -8,25 +8,30 @@ public class YggdrasilLoginRequest
     public Agent Agent { get; set; } = new Agent();
 
     [JsonPropertyName("username")]
-    public required string UserName { get; set; }
+    [JsonRequired]
+    public string UserName { get; set; } = null!;
 
     [JsonPropertyName("password")]
-    public required string Password { get; set; }
+    [JsonRequired]
+    public string Password { get; set; } = null!;
 
     [JsonPropertyName("requestUser")]
     public bool RequestUser { get; set; } = true;
 
     [JsonPropertyName("clientToken")]
-    public required string ClientToken { get; set; }
+    [JsonRequired]
+    public string ClientToken { get; set; } = null!;
 }
 
 public class YggdrasilRefreshRequest
 {
     [JsonPropertyName("accessToken")]
-    public required string AccessToken { get; set; }
+    [JsonRequired]
+    public string AccessToken { get; set; } = null!;
 
     [JsonPropertyName("clientToken")]
-    public required string ClientToken { get; set; }
+    [JsonRequired]
+    public string ClientToken { get; set; } = null!;
 
     [JsonPropertyName("requestUser")]
     public bool RequestUser { get; set; } = true;
