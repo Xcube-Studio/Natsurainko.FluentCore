@@ -20,3 +20,9 @@ namespace Nrk.FluentCore.GameManagement;
 internal partial class MinecraftJsonSerializerContext : JsonSerializerContext
 {
 }
+
+[JsonSerializable(typeof(OptiFineInstanceInstaller.OptiFineClientJson))]
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, WriteIndented = true)]
+internal partial class OptiFineInstallerJsonSerializerContext : JsonSerializerContext
+{
+}

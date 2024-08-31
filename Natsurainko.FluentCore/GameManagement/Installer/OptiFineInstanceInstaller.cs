@@ -233,30 +233,27 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
 
         var time = DateTime.Now.ToString("s");
 
-        var jsonEntity = new
+        var jsonEntity = new OptiFineClientJson
         {
-            id = instanceId,
-            inheritsFrom = instance.InstanceId,
-            time,
-            releaseTime = time,
-            type = "release",
-            libraries = new[]
-            {
-                new { name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Patch}" },
-                new { name = launchwrapperName }
-            },
-            mainClass = "net.minecraft.launchwrapper.Launch",
-            minecraftArguments = "--tweakClass optifine.OptiFineTweaker"
+            Id = instanceId,
+            InheritsFrom = instance.InstanceId,
+            Time = time,
+            ReleaseTime = time,
+            Type = "release",
+            Libraries = [
+                new() { Name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Patch}" },
+                new() { Name = launchwrapperName }
+            ],
+            MainClass = "net.minecraft.launchwrapper.Launch",
+            MinecraftArguments = "--tweakClass optifine.OptiFineTweaker"
         };
 
         await File.WriteAllTextAsync(jsonFile.FullName,
             JsonSerializer.Serialize(
                 jsonEntity,
-                new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                }), cancellationToken);
+                OptiFineInstallerJsonSerializerContext.Default.OptiFineClientJson),
+            cancellationToken
+        );
 
         if (instance.ClientJarPath is null || !File.Exists(instance.ClientJarPath))
             throw new FileNotFoundException("Unable to find the original client client.jar file");
@@ -355,5 +352,39 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         DownloadOptiFinePackage,
         WriteDependenciesAndVersionFiles,
         RunCompileProcess
+    }
+
+    internal class OptiFineClientJson
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("inheritsFrom")]
+        public string? InheritsFrom { get; set; }
+
+        [JsonPropertyName("time")]
+        public string? Time { get; set; }
+
+        [JsonPropertyName("releaseTime")]
+        public string? ReleaseTime { get; set; }
+
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
+
+        [JsonPropertyName("libraries")]
+        public IEnumerable<OptiFineInstanceLibrary>? Libraries { get; set; }
+
+        [JsonPropertyName("mainClass")]
+        public string? MainClass { get; set; }
+
+        [JsonPropertyName("minecraftArguments")]
+        public string? MinecraftArguments { get; set; }
+    }
+
+    internal struct OptiFineInstanceLibrary
+    {
+        [JsonPropertyName("name")]
+        [JsonRequired]
+        public string Name { get; set; }
     }
 }
