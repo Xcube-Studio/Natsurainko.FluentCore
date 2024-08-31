@@ -46,7 +46,7 @@ internal class ClientJsonObject
     public string? Assets { get; set; }
 
     [JsonPropertyName("assetIndex")]
-    public AssstIndexJsonObject? AssetIndex { get; set; }
+    public AssetIndexJsonObject? AssetIndex { get; set; }
 
     [JsonPropertyName("libraries")]
     [JsonRequired]
@@ -203,7 +203,7 @@ internal class ClientJsonObject
     /// <summary>
     /// client.json 下 assetIndex 键 对应的实体类
     /// </summary>
-    internal class AssstIndexJsonObject
+    internal class AssetIndexJsonObject
     {
         [JsonPropertyName("url")]
         [JsonRequired]
@@ -320,8 +320,10 @@ internal class ClientJsonObject
 public record AssetJsonNode
 {
     [JsonPropertyName("hash")]
-    public required string? Hash { get; set; }
+    [JsonRequired]
+    public string? Hash { get; set; }
 
     [JsonPropertyName("size")]
-    public required int? Size { get; set; }
+    [JsonRequired]
+    public int? Size { get; set; }
 }

@@ -5,17 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.GameManagement.ClientJsonObject.ArgumentsJsonObject;
 
 namespace Nrk.FluentCore.GameManagement;
 
 [JsonSerializable(typeof(ClientJsonObject))]
-[JsonSerializable(typeof(ConditionalClientArgument<GameArgumentRule>))]
-[JsonSerializable(typeof(ConditionalClientArgument<ClientJsonObject.OsRule>))]
+[JsonSerializable(typeof(ClientJsonObject.ArgumentsJsonObject.ConditionalClientArgument<ClientJsonObject.ArgumentsJsonObject.GameArgumentRule>))]
+[JsonSerializable(typeof(ClientJsonObject.ArgumentsJsonObject.ConditionalClientArgument<ClientJsonObject.OsRule>))]
 [JsonSerializable(typeof(IEnumerable<ClientJsonObject.LibraryJsonObject>))] // ForgeInstanceInstaller
 [JsonSerializable(typeof(Dictionary<string, Dictionary<string, string>>))] // ForgeInstanceInstaller
 [JsonSerializable(typeof(IEnumerable<ForgeProcessorData>))] // ForgeInstanceInstaller
 [JsonSerializable(typeof(IEnumerable<string>))] // ClientJsonObject
+[JsonSerializable(typeof(Dictionary<string, AssetJsonNode>))] // MinecraftInstance
+[JsonSerializable(typeof(ClientJsonObject.AssetIndexJsonObject))] // MinecraftInstance
 internal partial class MinecraftJsonSerializerContext : JsonSerializerContext
 {
 }

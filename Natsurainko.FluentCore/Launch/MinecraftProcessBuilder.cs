@@ -94,7 +94,7 @@ public class MinecraftProcessBuilder
         // Build arguments
         var versionJsonNode = JsonNode.Parse(File.ReadAllText(MinecraftInstance.ClientJsonPath))
             ?? throw new JsonException("Failed to parse version.json");
-        var entity = versionJsonNode.Deserialize<ClientJsonObject>()
+        var entity = versionJsonNode.Deserialize(MinecraftJsonSerializerContext.Default.ClientJsonObject)
             ?? throw new JsonException("Failed to parse version.json");
 
         var vmParameters = DefaultVmParameterParser.Parse(versionJsonNode);

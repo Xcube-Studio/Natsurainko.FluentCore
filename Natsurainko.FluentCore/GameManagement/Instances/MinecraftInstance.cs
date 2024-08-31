@@ -61,7 +61,7 @@ public abstract partial class MinecraftInstance
 
         // Parse client.json
         JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(clientJsonPath));
-        AssstIndexJsonObject assetIndex = jsonNode?["assetIndex"]?.Deserialize<AssstIndexJsonObject>()
+        AssetIndexJsonObject assetIndex = jsonNode?["assetIndex"]?.Deserialize(MinecraftJsonSerializerContext.Default.AssetIndexJsonObject)
             ?? throw new InvalidDataException("Error in parsing version.json");
 
         // TODO: Handle nullable check in Json deserialization (requires .NET 9)
@@ -88,7 +88,7 @@ public abstract partial class MinecraftInstance
         // Parse asset index json
         JsonNode? jsonNode = JsonNode.Parse(File.ReadAllText(assetIndexJsonPath));
         Dictionary<string, AssetJsonNode> assets = jsonNode?["objects"]?
-            .Deserialize<Dictionary<string, AssetJsonNode>>()
+            .Deserialize(MinecraftJsonSerializerContext.Default.DictionaryStringAssetJsonNode)
             ?? throw new InvalidDataException("Error in parsing asset index json file");
 
         // Parse GameAsset objects
@@ -117,7 +117,7 @@ public abstract partial class MinecraftInstance
         List<MinecraftLibrary> nativeLibs = new();
 
         var libNodes = JsonNodeUtils.ParseFile(ClientJsonPath)?["libraries"]?
-            .Deserialize<IEnumerable<LibraryJsonObject>>()
+            .Deserialize(MinecraftJsonSerializerContext.Default.IEnumerableLibraryJsonObject)
             ?? throw new InvalidDataException("client.json does not contain library information");
 
         foreach (var libNode in libNodes)
