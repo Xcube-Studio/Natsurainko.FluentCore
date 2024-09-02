@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Nodes;
 
-namespace Nrk.FluentCore.Authentication;
+namespace Nrk.FluentCore.Exceptions;
 
 public class YggdrasilAuthenticationException : Exception
 {

@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.GameManagement.Downloader;
+﻿using Nrk.FluentCore.Exceptions;
+using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Utils;
 using System;

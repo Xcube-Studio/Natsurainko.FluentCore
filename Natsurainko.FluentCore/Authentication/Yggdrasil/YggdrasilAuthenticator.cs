@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.Utils;
+﻿using Nrk.FluentCore.Exceptions;
+using Nrk.FluentCore.Utils;
 using System;
 using System.Linq;
 using System.Net.Http;

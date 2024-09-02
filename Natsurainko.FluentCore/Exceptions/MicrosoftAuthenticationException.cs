@@ -1,6 +1,7 @@
 ﻿using System;
+using Nrk.FluentCore.Authentication;
 
-namespace Nrk.FluentCore.Authentication;
+namespace Nrk.FluentCore.Exceptions;
 
 public class MicrosoftAuthenticationException : Exception
 {

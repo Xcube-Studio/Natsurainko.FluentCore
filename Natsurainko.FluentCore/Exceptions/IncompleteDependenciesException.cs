@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Nrk.FluentCore.GameManagement.Installer;
+namespace Nrk.FluentCore.Exceptions;
 
 /// <summary>
 /// 依赖补全不完整错误

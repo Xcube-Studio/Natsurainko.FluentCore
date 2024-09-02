@@ -12,8 +12,8 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
-using AuthException = Nrk.FluentCore.Authentication.MicrosoftAuthenticationException;
-using AuthExceptionType = Nrk.FluentCore.Authentication.MicrosoftAuthenticationExceptionType;
+using AuthException = Nrk.FluentCore.Exceptions.MicrosoftAuthenticationException;
+using AuthExceptionType = Nrk.FluentCore.Exceptions.MicrosoftAuthenticationExceptionType;
 using AuthStep = Nrk.FluentCore.Authentication.MicrosoftAuthenticationProgress;
 
 namespace Nrk.FluentCore.Authentication;

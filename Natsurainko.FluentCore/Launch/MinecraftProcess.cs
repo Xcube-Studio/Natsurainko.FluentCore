@@ -170,7 +170,7 @@ public class MinecraftProcess : IDisposable
         State = MinecraftProcessState.Exited;
     }
 
-    public void Dispose() => Process.Dispose();
+    public void Dispose() => Process?.Dispose();
 
     public nint MainWindowHandle { get => Process.MainWindowHandle; }
 }
