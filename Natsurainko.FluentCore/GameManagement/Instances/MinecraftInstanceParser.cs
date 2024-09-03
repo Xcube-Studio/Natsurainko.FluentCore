@@ -21,13 +21,13 @@ public class MinecraftInstanceParser
     /// Successfully parsed instances
     /// </summary>
     public IReadOnlyCollection<MinecraftInstance> ParsedInstances => _parsedInstances;
-    private readonly List<MinecraftInstance> _parsedInstances = new();
+    private readonly List<MinecraftInstance> _parsedInstances = [];
 
     /// <summary>
     /// Erroneous directories that failed to parse
     /// </summary>
     public IReadOnlyCollection<DirectoryInfo> ErroneousDirectories => _erroneousDirectories;
-    private readonly List<DirectoryInfo> _erroneousDirectories = new();
+    private readonly List<DirectoryInfo> _erroneousDirectories = [];
 
     // .minecraft folder path
     private readonly string _minecraftFolderPath;
@@ -48,6 +48,9 @@ public class MinecraftInstanceParser
     /// <returns>All Minecraft instances parsed in this .minecraft profile</returns>
     public IReadOnlyCollection<MinecraftInstance> ParseAllInstances()
     {
+        _parsedInstances.Clear();
+        _erroneousDirectories.Clear();
+
         var versionsDirectory = new DirectoryInfo(Path.Combine(_minecraftFolderPath, "versions"));
 
         if (!versionsDirectory.Exists)

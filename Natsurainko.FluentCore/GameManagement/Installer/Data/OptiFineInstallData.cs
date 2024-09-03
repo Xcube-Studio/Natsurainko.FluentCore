@@ -14,5 +14,5 @@ public class OptiFineInstallData
     public required string FileName { get; set; }
 
     [JsonPropertyName("forge")]
-    public required string ForgeVersion { get; set; }
+    public string? ForgeVersion { get; set; }
 }
