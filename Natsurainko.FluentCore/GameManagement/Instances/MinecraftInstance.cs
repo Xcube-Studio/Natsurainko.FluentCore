@@ -139,7 +139,12 @@ public abstract partial class MinecraftInstance
             if (gameLib.IsNativeLibrary)
                 nativeLibs.Add(gameLib);
             else
+            {
+                //if ((gameLib is LegacyForgeLibrary forgeLibrary && !forgeLibrary.ClientRequest))
+                //    continue;
+
                 libs.Add(gameLib);
+            }
         }
 
         return (libs, nativeLibs);

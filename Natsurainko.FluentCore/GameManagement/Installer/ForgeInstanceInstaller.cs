@@ -52,7 +52,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// 继承的原版实例（可选）
     /// </summary>
     public VanillaMinecraftInstance? InheritedInstance { get; init; }
-
+        
     /// <summary>
     /// 自定义安装实例的 Id
     /// </summary>
@@ -266,7 +266,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             var universalFilePath = installProfileJsonNode["install"]?["filePath"]?.GetValue<string>()
                 ?? throw new InvalidDataException("Unable to resolve location of universal file in archive");
             var universalFileEntry = packageArchive.GetEntry(universalFilePath) ?? throw new FileNotFoundException("The universal file was not found in the archive");
-            universalFileEntry.ExtractTo(Path.Combine(forgeLibsFolder, universalFileEntry.Name));
+            universalFileEntry.ExtractTo(Path.Combine(forgeLibsFolder, universalFileEntry.Name.Replace("-universal", string.Empty)));
         }
 
         if (packageArchive.GetEntry($"maven/net/minecraftforge/forge/{forgeVersion}") != null)
@@ -276,7 +276,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         packageArchive.GetEntry("data/client.lzma")?.ExtractTo(Path.Combine(forgeLibsFolder, $"forge-{forgeVersion}-clientdata.lzma"));
 
         string jsonContent = (isLegacyForgeVersion
-            ? installProfileJsonNode["versionInfo"]!.GetValue<string>()
+            ? installProfileJsonNode["versionInfo"]!.ToString()
             : packageArchive.GetEntry("version.json")?.ReadAsString())
             ?? throw new Exception("Failed to read version.json");
         var jsonNode = JsonNode.Parse(jsonContent);
@@ -352,6 +352,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                 .AsArray()
                 .Deserialize(MinecraftJsonSerializerContext.Default.IEnumerableLibraryJsonObject)?
                 .Select(lib => MinecraftLibrary.ParseJsonNode(lib, MinecraftFolder))
+                //.Where(lib => !(lib is LegacyForgeLibrary forgeLibrary && !forgeLibrary.ClientRequest))
                 ?? throw new InvalidDataException();
 
             foreach (var item in processorLibraries)

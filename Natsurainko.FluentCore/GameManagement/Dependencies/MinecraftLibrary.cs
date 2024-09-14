@@ -29,14 +29,16 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
     public required bool IsNativeLibrary { get; init; }
 
-    internal string GetLibraryPath()
+    internal string GetLibraryPath() => GetLibraryPath(this.MavenName);
+
+    internal static string GetLibraryPath(string mavenName)
     {
         string path = "";
 
-        var extension = MavenName.Contains('@') ? MavenName.Split('@') : Array.Empty<string>();
+        var extension = mavenName.Contains('@') ? mavenName.Split('@') : [];
         var subString = extension.Any()
-            ? MavenName.Replace($"@{extension[1]}", string.Empty).Split(':')
-            : MavenName.Split(':');
+            ? mavenName.Replace($"@{extension[1]}", string.Empty).Split(':')
+            : mavenName.Split(':');
 
         // Group name
         foreach (string item in subString[0].Split('.'))
@@ -121,17 +123,36 @@ public abstract class MinecraftLibrary : MinecraftDependency
             #endregion
         }
 
+        #region Other Patterns
+
+        if (libNode.MavenName.StartsWith("net.minecraft:launchwrapper"))
+        {
+            return new DownloadableDependency($"https://libraries.minecraft.net/{GetLibraryPath(libNode.MavenName).Replace("\\", "/")}")
+            {
+                MinecraftFolderPath = minecraftFolderPath,
+                MavenName = libNode.MavenName,
+                IsNativeLibrary = libNode.NativeClassifierNames is not null
+            };
+        }
+
+        #endregion
+
         #region Legacy Forge Pattern
 
         if (libNode.MavenUrl == "https://maven.minecraftforge.net/"
             || libNode.ClientRequest != null
             || libNode.ServerRequest != null)
         {
-            return new LegacyForgeLibrary()
+            string legacyForgeLibraryUrl = (libNode.MavenUrl == "https://maven.minecraftforge.net/" 
+                ? "https://maven.minecraftforge.net/" 
+                : "https://libraries.minecraft.net/") + GetLibraryPath(libNode.MavenName).Replace("\\", "/");
+
+            return new LegacyForgeLibrary(legacyForgeLibraryUrl)
             {
                 MinecraftFolderPath = minecraftFolderPath,
                 MavenName = libNode.MavenName,
-                IsNativeLibrary = false
+                IsNativeLibrary = false,
+                ClientRequest = libNode.ClientRequest.GetValueOrDefault() || (libNode.ClientRequest == null && libNode.ServerRequest == null)
             };
         }
 
@@ -268,11 +289,16 @@ public class ForgeLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiab
 
     /// <inheritdoc/>
     public required string Sha1 { get; init; }
-}
+}   
 
 public class NeoForgeLibrary : ForgeLibrary { }
 
-public class LegacyForgeLibrary : MinecraftLibrary { }
+public class LegacyForgeLibrary(string url) : MinecraftLibrary, IDownloadableDependency
+{
+    public string Url { get; init; } = url;
+
+    public required bool ClientRequest { get; init; }
+}
 
 public class OptiFineLibrary : MinecraftLibrary { }
 
@@ -294,6 +320,11 @@ public class QuiltLibrary : MinecraftLibrary, IDownloadableDependency
 {
     /// <inheritdoc/>
     public string Url { get => $"https://maven.quiltmc.org/repository/release/{GetLibraryPath().Replace("\\", "/")}"; }
+}
+
+public class DownloadableDependency(string url) : MinecraftLibrary, IDownloadableDependency
+{
+    public string Url { get; init; } = url;
 }
 
 public class UnknownLibrary : MinecraftLibrary { }
