@@ -84,8 +84,8 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
             optifineClientJson = await WriteDependenciesAndVersionFiles(vanillaInstance, packageArchive, launchwrapperVersion, launchwrapperName, cancellationToken);
 
             stage = OptiFineInstallationStage.RunCompileProcess;
-            instance = ParseModifiedMinecraftInstance(optifinePackageFile, cancellationToken);
-            await RunCompileProcess(vanillaInstance, optifinePackageFile.FullName, launchwrapperName, cancellationToken);
+            instance = ParseModifiedMinecraftInstance(optifineClientJson, cancellationToken);
+            await RunCompileProcess(vanillaInstance, optifinePackageFile.FullName, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -164,7 +164,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         string packageUrl = $"https://bmclapi2.bangbang93.com/optifine/{McVersionManifestItem.Id}/{InstallData.Type}/{InstallData.Patch}";
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, InstallData.FileName));
 
-        var downloadRequest = new DownloadRequest(packageFile.FullName, packageUrl);
+        var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
         var downloadResult = await HttpUtils.Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
 
         if (downloadResult.Type == DownloadResultType.Failed)
@@ -242,7 +242,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
             ReleaseTime = time,
             Type = "release",
             Libraries = [
-                new() { Name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Patch}" },
+                new() { Name = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Type}_{InstallData.Patch}" },
                 new() { Name = launchwrapperName }
             ],
             MainClass = "net.minecraft.launchwrapper.Launch",
@@ -289,11 +289,11 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// </summary>
     /// <param name="instance"></param>
     /// <param name="optifinePackagePath"></param>
-    /// <param name="launchwrapperName"></param>
+    /// <param name="optifineLibName"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="OptiFineCompileProcessException"></exception>
-    async Task RunCompileProcess(VanillaMinecraftInstance instance, string optifinePackagePath, string launchwrapperName, CancellationToken cancellationToken)
+    async Task RunCompileProcess(VanillaMinecraftInstance instance, string optifinePackagePath, CancellationToken cancellationToken)
     {
         Progress?.Report(new(
             OptiFineInstallationStage.RunCompileProcess,
@@ -301,8 +301,12 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        string optifineLibraryPath = Path.Combine(MinecraftFolder, "libraries",
-            StringExtensions.FormatLibraryNameToRelativePath(launchwrapperName));
+        string optifineLibName = $"optifine:Optifine:{McVersionManifestItem.Id}_{InstallData.Type}_{InstallData.Patch}";
+        var optifineLibraryFile = new FileInfo(Path.Combine(MinecraftFolder, "libraries",
+            StringExtensions.FormatLibraryNameToRelativePath(optifineLibName)));
+
+        if (!optifineLibraryFile.Directory!.Exists)
+            optifineLibraryFile.Directory.Create();
 
         using var process = Process.Start(
             new ProcessStartInfo(JavaPath)
@@ -319,7 +323,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
                         "optifine.Patcher",
                         instance.ClientJarPath.ToPathParameter(),
                         optifinePackagePath.ToPathParameter(),
-                        optifineLibraryPath.ToPathParameter()
+                        optifineLibraryFile.FullName.ToPathParameter()
                     ]
                 )
             }

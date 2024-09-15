@@ -176,7 +176,7 @@ public class MinecraftProcessBuilder
 
         yield return $"-Xms{_minMemory}M";
         yield return $"-Xmx{_maxMemory}M";
-        yield return $"-Dminecraft.client.jar={MinecraftInstance.ClientJsonPath.ToPathParameter()}";
+        yield return $"-Dminecraft.client.jar={MinecraftInstance.ClientJarPath.ToPathParameter()}";
 
         if (_Dlog4j2_FormatMsgNoLookups) yield return "-Dlog4j2.formatMsgNoLookups=true";
 
