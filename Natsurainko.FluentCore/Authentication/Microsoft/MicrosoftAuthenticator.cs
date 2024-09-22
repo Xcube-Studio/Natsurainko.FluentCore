@@ -33,23 +33,23 @@ public class MicrosoftAuthenticator
         _redirectUri = redirectUri;
     }
 
-    public async Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null)
+    public async Task<MicrosoftAccount> LoginAsync(string code, IProgress<AuthStep>? progress = null, CancellationToken cancellationToken = default)
     {
         progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
-        var msaOAuthTokens = await AuthMsaAsync("code", code);
+        var msaOAuthTokens = await AuthMsaAsync("code", code, cancellationToken);
 
-        return await AuthenticateCommonAsync(msaOAuthTokens.AccessToken, msaOAuthTokens.RefreshToken, progress);
+        return await AuthenticateCommonAsync(msaOAuthTokens.AccessToken, msaOAuthTokens.RefreshToken, progress, cancellationToken);
     }
 
-    public async Task<MicrosoftAccount> LoginAsync(OAuth2Tokens msaTokens, IProgress<AuthStep>? progress = null)
-        => await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress);
+    public async Task<MicrosoftAccount> LoginAsync(OAuth2Tokens msaTokens, IProgress<AuthStep>? progress = null, CancellationToken cancellationToken = default)
+        => await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress, cancellationToken);
 
-    public async Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null)
+    public async Task<MicrosoftAccount> RefreshAsync(MicrosoftAccount account, IProgress<AuthStep>? progress = null, CancellationToken cancellationToken = default)
     {
         progress?.Report(AuthStep.AuthenticatingMicrosoftAccount);
-        var msaTokens = await AuthMsaAsync("refresh_token", account.RefreshToken);
+        var msaTokens = await AuthMsaAsync("refresh_token", account.RefreshToken, cancellationToken);
 
-        return await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress);
+        return await AuthenticateCommonAsync(msaTokens.AccessToken, msaTokens.RefreshToken, progress, cancellationToken);
     }
 
     /// <summary>
@@ -120,22 +120,23 @@ public class MicrosoftAuthenticator
     private async Task<MicrosoftAccount> AuthenticateCommonAsync(
         string msaAccessToken,
         string msaRefreshToken,
-        IProgress<AuthStep>? progress = null)
+        IProgress<AuthStep>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         progress?.Report(AuthStep.AuthenticatingWithXboxLive);
-        var xblResponse = await AuthXboxLiveAsync(msaAccessToken);
+        var xblResponse = await AuthXboxLiveAsync(msaAccessToken, cancellationToken);
 
         progress?.Report(AuthStep.AuthenticatingWithXsts);
-        string xstsToken = await AuthXstsAsync(xblResponse.Token);
+        string xstsToken = await AuthXstsAsync(xblResponse.Token, cancellationToken);
 
         progress?.Report(AuthStep.AuthenticatingMinecraftAccount);
-        string minecraftToken = await AuthMinecraftAsync(xblResponse, xstsToken);
+        string minecraftToken = await AuthMinecraftAsync(xblResponse, xstsToken, cancellationToken);
 
         progress?.Report(AuthStep.CheckingGameOwnership);
-        await EnsureGameOwnershipAsync(minecraftToken);
+        await EnsureGameOwnershipAsync(minecraftToken, cancellationToken);
 
         progress?.Report(AuthStep.GettingMinecraftProfile);
-        var (name, guid) = await GetMinecraftProfileAsync(minecraftToken);
+        var (name, guid) = await GetMinecraftProfileAsync(minecraftToken, cancellationToken);
 
         progress?.Report(AuthStep.Finish);
         return new MicrosoftAccount(
@@ -151,7 +152,7 @@ public class MicrosoftAuthenticator
     #region HTTP APIs
 
     // Get Microsoft Account OAuth2 token
-    private async Task<OAuth2TokenResponse> AuthMsaAsync(string? parameterName, string code)
+    private async Task<OAuth2TokenResponse> AuthMsaAsync(string? parameterName, string code, CancellationToken cancellationToken = default)
     {
         // Send OAuth2 request
         string authCodePost =
@@ -162,8 +163,8 @@ public class MicrosoftAuthenticator
 
         using var response = await _httpClient.PostAsync(
             "https://login.live.com/oauth20_token.srf",
-            new StringContent(authCodePost, Encoding.UTF8, "application/x-www-form-urlencoded")
-            );
+            new StringContent(authCodePost, Encoding.UTF8, "application/x-www-form-urlencoded"),
+            cancellationToken);
 
         // Parse response
         OAuth2TokenResponse? oauth2TokenResponse = null;
@@ -171,7 +172,7 @@ public class MicrosoftAuthenticator
         {
             oauth2TokenResponse = await response
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.OAuth2TokenResponse);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.OAuth2TokenResponse, cancellationToken);
 
             if (oauth2TokenResponse is null)
                 throw new FormatException("Response is null");
@@ -187,7 +188,7 @@ public class MicrosoftAuthenticator
     }
 
     // Get Xbox Live token
-    private async Task<XBLAuthenticateResponse> AuthXboxLiveAsync(string msaToken)
+    private async Task<XBLAuthenticateResponse> AuthXboxLiveAsync(string msaToken, CancellationToken cancellationToken = default)
     {
         // Send XBL auth request
         var xblRequest = new XBLAuthenticateRequest();
@@ -198,14 +199,15 @@ public class MicrosoftAuthenticator
         using var xblResponseMessage = await _httpClient.PostAsJsonAsync(
             "https://user.auth.xboxlive.com/user/authenticate",
             xblRequest,
-            AuthenticationJsonSerializerContext.Default.XBLAuthenticateRequest);
+            AuthenticationJsonSerializerContext.Default.XBLAuthenticateRequest,
+            cancellationToken);
 
         // Parse response
         XBLAuthenticateResponse? xblResponse = null;
         try {
             xblResponse = await xblResponseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XBLAuthenticateResponse);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XBLAuthenticateResponse, cancellationToken);
 
             if (xblResponse is null)
                 throw new FormatException("Response is null");
@@ -221,7 +223,7 @@ public class MicrosoftAuthenticator
     }
 
     // Get XSTS token
-    private async Task<string> AuthXstsAsync(string xblToken)
+    private async Task<string> AuthXstsAsync(string xblToken, CancellationToken cancellationToken = default)
     {
         // Send XSTS auth request
         var xstsAuthRequest = new XSTSAuthenticateRequest();
@@ -230,13 +232,14 @@ public class MicrosoftAuthenticator
         using var xstsResponseMessage = await _httpClient.PostAsJsonAsync(
             "https://xsts.auth.xboxlive.com/xsts/authorize",
             xstsAuthRequest,
-            AuthenticationJsonSerializerContext.Default.XSTSAuthenticateRequest);
+            AuthenticationJsonSerializerContext.Default.XSTSAuthenticateRequest,
+            cancellationToken);
 
         // Handle errors
         if (xstsResponseMessage.StatusCode.Equals(HttpStatusCode.Unauthorized))
         {
             var xstsErrorResponse = await xstsResponseMessage.Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateErrorModel);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateErrorModel, cancellationToken);
 
             string message = "An error occurred while verifying with Xbox Live";
             if (!string.IsNullOrEmpty(xstsErrorResponse?.Message))
@@ -270,7 +273,7 @@ public class MicrosoftAuthenticator
         {
             xstsResponse = await xstsResponseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateResponse);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XSTSAuthenticateResponse, cancellationToken);
 
             if (xstsResponse is null)
                 throw new FormatException("Response is null");
@@ -286,7 +289,7 @@ public class MicrosoftAuthenticator
     }
 
     // Get Minecraft Account token
-    private async Task<string> AuthMinecraftAsync(XBLAuthenticateResponse xblResponse, string xstsToken)
+    private async Task<string> AuthMinecraftAsync(XBLAuthenticateResponse xblResponse, string xstsToken, CancellationToken cancellationToken = default)
     {
         // Send Minecraft auth request
         string? x = null;
@@ -306,12 +309,13 @@ public class MicrosoftAuthenticator
 
         using var responseMessage = await _httpClient.PostAsync(
             "https://api.minecraftservices.com/authentication/login_with_xbox",
-            new StringContent(requestContent, Encoding.UTF8, "application/json"));
+            new StringContent(requestContent, Encoding.UTF8, "application/json"),
+            cancellationToken);
 
         // Parse response
         string responseString = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         string? accessToken = null;
         try
@@ -327,7 +331,7 @@ public class MicrosoftAuthenticator
     }
 
     // Check if the Minecraft Account owns the game
-    private async Task EnsureGameOwnershipAsync(string minecraftToken)
+    private async Task EnsureGameOwnershipAsync(string minecraftToken, CancellationToken cancellationToken = default)
     {
         // Send request
         var requestMessage = new HttpRequestMessage(
@@ -335,12 +339,12 @@ public class MicrosoftAuthenticator
             "https://api.minecraftservices.com/entitlements/mcstore");
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", minecraftToken);
 
-        using var responseMessage = await _httpClient.SendAsync(requestMessage);
+        using var responseMessage = await _httpClient.SendAsync(requestMessage, cancellationToken);
 
         // Check response
         string responseString = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         try
         {
@@ -362,7 +366,7 @@ public class MicrosoftAuthenticator
     }
 
     // Get Minecraft Account
-    private async Task<(string Name, Guid Guid)> GetMinecraftProfileAsync(string minecraftToken)
+    private async Task<(string Name, Guid Guid)> GetMinecraftProfileAsync(string minecraftToken, CancellationToken cancellationToken = default)
     {
         // Send request
         var requestMessage = new HttpRequestMessage(
@@ -370,7 +374,7 @@ public class MicrosoftAuthenticator
             "https://api.minecraftservices.com/minecraft/profile");
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", minecraftToken);
 
-        using var responseMessage = await _httpClient.SendAsync(requestMessage);
+        using var responseMessage = await _httpClient.SendAsync(requestMessage, cancellationToken);
 
         // Parse response
         MicrosoftAuthenticationResponse? response = null;
@@ -379,7 +383,7 @@ public class MicrosoftAuthenticator
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.MicrosoftAuthenticationResponse);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.MicrosoftAuthenticationResponse, cancellationToken);
 
             // Check errors
             if (response is null ||

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Authentication;
@@ -34,7 +35,7 @@ public class YggdrasilAuthenticator
     /// <param name="email">Yggdrasil account email</param>
     /// <param name="password">Yggdrasil account password</param>
     /// <returns>All Minecraft accounts associated with the Yggdrasil account</returns>
-    public async Task<YggdrasilAccount[]> LoginAsync(string email, string password)
+    public async Task<YggdrasilAccount[]> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         var request = new YggdrasilLoginRequest
         {
@@ -48,10 +49,10 @@ public class YggdrasilAuthenticator
             new StringContent(
                 JsonSerializer.Serialize(request, AuthenticationJsonSerializerContext.Default.YggdrasilLoginRequest),
                 Encoding.UTF8,
-                "application/json")
-            );
+                "application/json"),
+            cancellationToken);
 
-        return await ParseResponseAsync(response);
+        return await ParseResponseAsync(response, cancellationToken);
     }
 
     /// <summary>
@@ -59,7 +60,7 @@ public class YggdrasilAuthenticator
     /// </summary>
     /// <param name="account">Any Yggdrasil Minecraft account to be refreshed</param>
     /// <returns>All Minecraft accounts associated with the Yggdrasil account</returns>
-    public async Task<YggdrasilAccount[]> RefreshAsync(YggdrasilAccount account)
+    public async Task<YggdrasilAccount[]> RefreshAsync(YggdrasilAccount account, CancellationToken cancellationToken = default)
     {
         var request = new YggdrasilRefreshRequest
         {
@@ -72,21 +73,21 @@ public class YggdrasilAuthenticator
             $"{_serverUrl}/authserver/refresh",
             new StringContent(JsonSerializer.Serialize(request, AuthenticationJsonSerializerContext.Default.YggdrasilRefreshRequest),
                 Encoding.UTF8,
-                "application/json")
-            );
+                "application/json"),
+            cancellationToken);
 
-        return await ParseResponseAsync(response);
+        return await ParseResponseAsync(response, cancellationToken);
     }
 
     // Read Yggdrasil accounts from the response for both login and refresh
-    private async Task<YggdrasilAccount[]> ParseResponseAsync(HttpResponseMessage responseMessage)
+    private async Task<YggdrasilAccount[]> ParseResponseAsync(HttpResponseMessage responseMessage, CancellationToken cancellationToken = default)
     {
         YggdrasilResponseModel? response = null;
         try
         {
             response = await responseMessage
                 .EnsureSuccessStatusCode().Content
-                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.YggdrasilResponseModel);
+                .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.YggdrasilResponseModel, cancellationToken);
 
             if (response?.AvailableProfiles is null)
                 throw new FormatException("Response does not contain any profile");
@@ -96,8 +97,7 @@ public class YggdrasilAuthenticator
             throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
         }
 
-        return response.AvailableProfiles
-            .Select(profile =>
+        return response.AvailableProfiles.Select(profile =>
             {
                 if (profile.Name is null || profile.Id is null || response.AccessToken is null)
                     throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
@@ -112,7 +112,6 @@ public class YggdrasilAuthenticator
                     _clientToken,
                     _serverUrl
                 );
-            })
-            .ToArray();
+            }).ToArray();
     }
 }
