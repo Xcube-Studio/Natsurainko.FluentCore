@@ -13,6 +13,9 @@ public class ForgeInstallData
 
     [JsonPropertyName("branch")]
     public string? Branch { get; set; }
+
+    [JsonPropertyName("build")]
+    public long? Build { get; set; }
 }
 
 public class ForgeProcessorData
