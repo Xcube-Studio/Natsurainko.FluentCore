@@ -35,6 +35,9 @@ public class YggdrasilRefreshRequest
 
     [JsonPropertyName("requestUser")]
     public bool RequestUser { get; set; } = true;
+
+    [JsonPropertyName("selectedProfile")]
+    public ProfileModel? SelectedProfile { get; set; }
 }
 
 public class Agent

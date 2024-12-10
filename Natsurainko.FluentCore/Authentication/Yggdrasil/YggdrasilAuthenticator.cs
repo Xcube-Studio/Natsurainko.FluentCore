@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Nrk.FluentCore.Authentication;
 
@@ -60,13 +61,18 @@ public class YggdrasilAuthenticator
     /// </summary>
     /// <param name="account">Any Yggdrasil Minecraft account to be refreshed</param>
     /// <returns>All Minecraft accounts associated with the Yggdrasil account</returns>
-    public async Task<YggdrasilAccount[]> RefreshAsync(YggdrasilAccount account, CancellationToken cancellationToken = default)
+    public async Task<YggdrasilAccount> RefreshAsync(YggdrasilAccount account, CancellationToken cancellationToken = default)
     {
         var request = new YggdrasilRefreshRequest
         {
             ClientToken = _clientToken,
             AccessToken = account.AccessToken,
-            RequestUser = true
+            RequestUser = true,
+            SelectedProfile = new()
+            {
+                Id = account.Uuid.ToString("N"),
+                Name = account.Name,
+            }
         };
 
         using var response = await _httpClient.PostAsync(
@@ -76,7 +82,8 @@ public class YggdrasilAuthenticator
                 "application/json"),
             cancellationToken);
 
-        return await ParseResponseAsync(response, cancellationToken);
+        return (await ParseResponseAsync(response, cancellationToken)).FirstOrDefault(x => x!.Uuid.Equals(account.Uuid), null)
+            ?? throw new InvalidOperationException("The profile requested to refresh does not exist in response");
     }
 
     // Read Yggdrasil accounts from the response for both login and refresh
@@ -89,7 +96,7 @@ public class YggdrasilAuthenticator
                 .EnsureSuccessStatusCode().Content
                 .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.YggdrasilResponseModel, cancellationToken);
 
-            if (response?.AvailableProfiles is null)
+            if (response?.AvailableProfiles is null && response?.SelectedProfile is null)
                 throw new FormatException("Response does not contain any profile");
         }
         catch (Exception)
@@ -97,7 +104,9 @@ public class YggdrasilAuthenticator
             throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
         }
 
-        return response.AvailableProfiles.Select(profile =>
+        if (response.SelectedProfile is null)
+        {
+            return response.AvailableProfiles!.Select(profile =>
             {
                 if (profile.Name is null || profile.Id is null || response.AccessToken is null)
                     throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
@@ -113,5 +122,16 @@ public class YggdrasilAuthenticator
                     _serverUrl
                 );
             }).ToArray();
+        }
+        else
+        {
+            if (response.SelectedProfile.Name is null || response.SelectedProfile.Id is null || response.AccessToken is null)
+                throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
+
+            if (!Guid.TryParse(response.SelectedProfile.Id, out var uuid))
+                throw new YggdrasilAuthenticationException("Invalid UUID");
+
+            return [ new (response.SelectedProfile.Name, uuid, response.AccessToken, _clientToken, _serverUrl) ];
+        }
     }
 }
