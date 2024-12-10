@@ -31,23 +31,22 @@ public enum AccountType
 [JsonDerivedType(typeof(OfflineAccount), typeDiscriminator: "offline")]
 [JsonDerivedType(typeof(MicrosoftAccount), typeDiscriminator: "microsoft")]
 [JsonDerivedType(typeof(YggdrasilAccount), typeDiscriminator: "yggdrasil")]
-public abstract class Account(string name, Guid uuid, string accessToken)
+public abstract record Account(string Name, Guid Uuid, string AccessToken)
 {
     /// <summary>
     /// 账户类型
     /// </summary>
     public abstract AccountType Type { get; }
 
-    public string Name { get; init; } = name;
+    public string Name { get; init; } = Name;
 
-    public Guid Uuid { get; init; } = uuid;
+    public Guid Uuid { get; init; } = Uuid;
 
-    public string AccessToken { get; set; } = accessToken;
+    public string AccessToken { get; set; } = AccessToken;
 
-    public override bool Equals(object? obj)
+    public virtual bool ProfileEquals(Account account)
     {
-        if (obj is Account account
-            && account.Type.Equals(this.Type)
+        if (account.Type.Equals(this.Type)
             && account.Uuid.Equals(this.Uuid)
             && account.Name.Equals(this.Name))
             return true;
@@ -66,22 +65,22 @@ public abstract class Account(string name, Guid uuid, string accessToken)
 /// </summary>
 /// <param name="RefreshToken">RefreshToken</param>
 /// <param name="LastRefreshTime">最后一次刷新时间</param>
-public class MicrosoftAccount(
-    string name,
-    Guid uuid,
-    string accessToken,
-    string refreshToken,
-    DateTime lastRefreshTime) : Account(name, uuid, accessToken)
+public record MicrosoftAccount(
+    string Name,
+    Guid Uuid,
+    string AccessToken,
+    string RefreshToken,
+    DateTime LastRefreshTime) : Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Microsoft;
 
-    public DateTime LastRefreshTime { get; set; } = lastRefreshTime;
+    public DateTime LastRefreshTime { get; set; } = LastRefreshTime;
 
-    public string RefreshToken { get; set; } = refreshToken;
+    public string RefreshToken { get; set; } = RefreshToken;
 
-    public override bool Equals(object? obj)
+    public override bool ProfileEquals(Account account)
     {
-        if (obj is MicrosoftAccount microsoftAccount
+        if (account is MicrosoftAccount microsoftAccount
             && microsoftAccount.Uuid.Equals(this.Uuid))
             return true;
 
@@ -95,22 +94,22 @@ public class MicrosoftAccount(
 /// 外置账户
 /// </summary>
 /// <param name="YggdrasilServerUrl">外置验证服务器Url</param>
-public class YggdrasilAccount(
-    string name, 
-    Guid uuid, 
-    string accessToken, 
-    string clientToken, 
-    string yggdrasilServerUrl): Account(name, uuid, accessToken)
+public record YggdrasilAccount(
+    string Name, 
+    Guid Uuid, 
+    string AccessToken, 
+    string ClientToken, 
+    string YggdrasilServerUrl): Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Yggdrasil;
 
-    public string ClientToken { get; set; } = clientToken;
+    public string ClientToken { get; set; } = ClientToken;
 
-    public string YggdrasilServerUrl { get; set; } = yggdrasilServerUrl;
+    public string YggdrasilServerUrl { get; set; } = YggdrasilServerUrl;
 
-    public override bool Equals(object? obj)
+    public override bool ProfileEquals(Account account)
     {
-        if (obj is YggdrasilAccount yggdrasilAccount
+        if (account is YggdrasilAccount yggdrasilAccount
             && yggdrasilAccount.YggdrasilServerUrl.Equals(this.YggdrasilServerUrl)
             && yggdrasilAccount.Uuid.Equals(this.Uuid))
             return true;
@@ -124,10 +123,10 @@ public class YggdrasilAccount(
 /// <summary>
 /// 离线账户
 /// </summary>
-public class OfflineAccount(
-    string name, 
-    Guid uuid, 
-    string accessToken) : Account(name, uuid, accessToken)
+public record OfflineAccount(
+    string Name, 
+    Guid Uuid, 
+    string AccessToken) : Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Offline;
 }

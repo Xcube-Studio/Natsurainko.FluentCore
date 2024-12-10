@@ -474,8 +474,8 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             string mainClass = fileArchive.GetEntry("META-INF/MANIFEST.MF")?
                 .ReadAsString()
                 .Split("\r\n".ToCharArray())
-                .First(x => x.Contains("Main-Class: "))
-                .Replace("Main-Class: ", string.Empty)
+                .FirstOrDefault(x => x.Contains("Main-Class: "))
+                ?.Replace("Main-Class: ", string.Empty)
                 ?? throw new InvalidDataException("Unable to find MainClass for Processor");
 
             string classPath = string.Join(Path.PathSeparator.ToString(), new List<string>() { fileName }

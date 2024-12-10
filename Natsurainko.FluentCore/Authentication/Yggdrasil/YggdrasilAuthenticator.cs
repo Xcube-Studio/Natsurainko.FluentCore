@@ -82,7 +82,7 @@ public class YggdrasilAuthenticator
                 "application/json"),
             cancellationToken);
 
-        return (await ParseResponseAsync(response, cancellationToken)).FirstOrDefault(x => x!.Uuid.Equals(account.Uuid), null)
+        return (await ParseResponseAsync(response, cancellationToken)).FirstOrDefault(x => x!.Uuid.Equals(account.Uuid))
             ?? throw new InvalidOperationException("The profile requested to refresh does not exist in response");
     }
 
