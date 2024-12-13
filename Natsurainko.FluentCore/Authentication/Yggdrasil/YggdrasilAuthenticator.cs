@@ -98,6 +98,10 @@ public class YggdrasilAuthenticator
 
             if (response?.AvailableProfiles is null && response?.SelectedProfile is null)
                 throw new FormatException("Response does not contain any profile");
+        } 
+        catch (FormatException ex)
+        {
+            throw new YggdrasilAuthenticationException(ex.Message);
         }
         catch (Exception)
         {

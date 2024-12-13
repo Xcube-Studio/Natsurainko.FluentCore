@@ -279,7 +279,7 @@ public class MicrosoftAuthenticator
                 throw new FormatException("Response is null");
             if (xstsResponse.Token is null)
                 throw new FormatException("Token is null");
-}
+        }
         catch (Exception e) when (e is JsonException || e is FormatException)
         {
             throw new AuthException("Error in XSTS authentication\n" + xstsResponseMessage.Content.ReadAsString());
