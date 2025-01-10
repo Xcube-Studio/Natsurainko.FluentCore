@@ -24,29 +24,35 @@ public static class ModInfoParser
 
         var quiltModJson = zipArchive.GetEntry("quilt.mod.json");
         var fabricModJson = zipArchive.GetEntry("fabric.mod.json");
-        var modsToml = zipArchive.GetEntry("META-INF/mods.toml");
+        var forgeModsToml = zipArchive.GetEntry("META-INF/mods.toml");
+        var neoForgeModsToml = zipArchive.GetEntry("META-INF/neoforge.mods.toml");
         var mcmodInfo = zipArchive.GetEntry("mcmod.info");
 
         if (quiltModJson != null)
             supportedModLoaders.Add(ModLoaderType.Quilt);
         if (fabricModJson != null)
             supportedModLoaders.Add(ModLoaderType.Fabric);
-        if (modsToml != null || mcmodInfo != null)
+        if (forgeModsToml != null || mcmodInfo != null)
             supportedModLoaders.Add(ModLoaderType.Forge);
+        if (neoForgeModsToml != null)
+            supportedModLoaders.Add(ModLoaderType.NeoForge);
 
-        if (!supportedModLoaders.Any())
+        if (supportedModLoaders.Count == 0)
             supportedModLoaders.Add(ModLoaderType.Unknown);
-        modInfo.SupportedModLoaders = supportedModLoaders.ToArray();
+        modInfo.SupportedModLoaders = [.. supportedModLoaders];
 
         if (quiltModJson != null)
             return ParseModJson(ref modInfo, quiltModJson.ReadAsString(), true);
         if (fabricModJson != null)
             return ParseModJson(ref modInfo, fabricModJson.ReadAsString(), false);
 
-        if (modsToml != null)
-            return ParseModsToml(ref modInfo, modsToml.ReadAsString());
+        if (forgeModsToml != null)
+            return ParseModsToml(ref modInfo, forgeModsToml.ReadAsString());
         if (mcmodInfo != null)
-            return ParseMcmodInfo(ref modInfo, mcmodInfo.ReadAsString());
+            return ParseForgeMcmodInfo(ref modInfo, mcmodInfo.ReadAsString());
+
+        if (neoForgeModsToml != null)
+            return ParseModsToml(ref modInfo, neoForgeModsToml.ReadAsString());
 
         throw new Exception("Unknown Mod Type");
     }
@@ -80,9 +86,8 @@ public static class ModInfoParser
 
     private static MinecraftMod ParseModsToml(ref MinecraftMod mod, string tomlContent)
     {
-        var tomlTable = (Toml.ToModel(tomlContent)["mods"] as TomlTableArray)?.FirstOrDefault();
-        if (tomlTable is null)
-            throw new InvalidDataException("Invalid mods.toml");
+        var tomlTable = ((Toml.ToModel(tomlContent)["mods"] as TomlTableArray)?.FirstOrDefault()) 
+            ?? throw new InvalidDataException("Invalid mods.toml");
 
         mod.DisplayName = tomlTable.GetString("displayName");
         mod.Version = tomlTable.GetString("version");
@@ -92,7 +97,7 @@ public static class ModInfoParser
         return mod;
     }
 
-    private static MinecraftMod ParseMcmodInfo(ref MinecraftMod mod, string jsonContent)
+    private static MinecraftMod ParseForgeMcmodInfo(ref MinecraftMod mod, string jsonContent)
     {
         var jsonNode =
             JsonNode.Parse(jsonContent.Replace("\u000a", "") ?? "")?.AsArray().FirstOrDefault()
