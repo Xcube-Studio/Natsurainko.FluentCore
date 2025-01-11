@@ -1,31 +1,56 @@
 ﻿using Nrk.FluentCore.Environment;
 using System;
 using System.IO;
-using System.Linq;
+using System.Text.RegularExpressions;
 using static Nrk.FluentCore.GameManagement.ClientJsonObject;
 using static Nrk.FluentCore.GameManagement.ClientJsonObject.LibraryJsonObject;
 
 namespace Nrk.FluentCore.GameManagement.Dependencies;
 
-public abstract class MinecraftLibrary : MinecraftDependency
+public abstract partial class MinecraftLibrary : MinecraftDependency
 {
+    private readonly static Regex MavenParseRegex = GenerateMavenParseRegex();
+
     /// <inheritdoc/>
     public override string FilePath => Path.Combine("libraries", GetLibraryPath());
 
     /// <summary>
     /// Full package name of the Java library in the format "group_id:artifact_id:version[:classifier]"
     /// </summary>
-    public required string MavenName { get; init; }
+    public string MavenName { get; init; }
 
-    // TODO: Quick accessors to package details
+    // <summary>
+    // Parse a library from the full name of a Java library
+    // </summary>
+    // <remarks>If <paramref name="packageName"/> is not a Java library name, then it is set for <see cref="Name"/> and other fields are <see cref="string.Empty"/></remarks>
+    // <param name="packageName">Full library name in the format of DOMAIN:NAME:VER:CLASSIFIER</param>
+    public MinecraftLibrary(string mavenName)
+    {
+        this.MavenName = mavenName;
+        Match match = MavenParseRegex.Match(mavenName);
 
-    //public required string Domain { get; init; } = "";
+        if (match.Success)
+        {
+            Domain = match.Groups["domain"].Value;
+            Name = match.Groups["name"].Value;
+            Version = match.Groups["version"].Value;
 
-    //public required string Name { get; init; } = "";
+            if (match.Groups["classifier"].Success)
+                Classifier = match.Groups["classifier"].Value;
+        }
+    }
 
-    //public required string Version { get; init; } = "";
+    #region Maven Package Info
 
-    //public string? Classifier { get; init; }
+    public string? Domain { get; init; }
+
+    public string? Name { get; init; }
+
+    public string? Version { get; init; }
+
+    public string? Classifier { get; init; }
+
+    #endregion
 
     public required bool IsNativeLibrary { get; init; }
 
@@ -36,7 +61,7 @@ public abstract class MinecraftLibrary : MinecraftDependency
         string path = "";
 
         var extension = mavenName.Contains('@') ? mavenName.Split('@') : [];
-        var subString = extension.Any()
+        var subString = extension.Length != 0
             ? mavenName.Replace($"@{extension[1]}", string.Empty).Split(':')
             : mavenName.Split(':');
 
@@ -49,10 +74,7 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
         // Filename of the library
         string filename = $"{subString[1]}-{subString[2]}{(subString.Length > 3 ? $"-{subString[3]}" : string.Empty)}.";
-        if (extension.Any())
-            filename += extension[1];
-        else
-            filename += "jar";
+        filename += extension.Length != 0 ? extension[1] : "jar";
 
         return Path.Combine(path, filename);
     }
@@ -76,10 +98,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
             if (artifactNode.Url.StartsWith("https://libraries.minecraft.net/"))
             {
-                return new VanillaLibrary()
+                return new VanillaLibrary(libNode.MavenName)
                 {
                     MinecraftFolderPath = minecraftFolderPath,
-                    MavenName = libNode.MavenName,
                     Sha1 = artifactNode.Sha1,
                     Size = (long)artifactNode.Size,
                     IsNativeLibrary = libNode.NativeClassifierNames is not null
@@ -92,10 +113,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
             if (artifactNode.Url.StartsWith("https://maven.minecraftforge.net/"))
             {
-                return new ForgeLibrary()
+                return new ForgeLibrary(libNode.MavenName)
                 {
                     MinecraftFolderPath = minecraftFolderPath,
-                    MavenName = libNode.MavenName,
                     Sha1 = artifactNode.Sha1,
                     Size = (long)artifactNode.Size,
                     Url = artifactNode.Url,
@@ -109,10 +129,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
             if (artifactNode.Url.StartsWith("https://maven.neoforged.net/"))
             {
-                return new NeoForgeLibrary()
+                return new NeoForgeLibrary(libNode.MavenName)
                 {
                     MinecraftFolderPath = minecraftFolderPath,
-                    MavenName = libNode.MavenName,
                     Sha1 = artifactNode.Sha1,
                     Size = (long)artifactNode.Size,
                     Url = artifactNode.Url,
@@ -127,10 +146,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
         if (libNode.MavenName.StartsWith("net.minecraft:launchwrapper"))
         {
-            return new DownloadableDependency($"https://libraries.minecraft.net/{GetLibraryPath(libNode.MavenName).Replace("\\", "/")}")
+            return new DownloadableDependency(libNode.MavenName, $"https://libraries.minecraft.net/{GetLibraryPath(libNode.MavenName).Replace("\\", "/")}")
             {
                 MinecraftFolderPath = minecraftFolderPath,
-                MavenName = libNode.MavenName,
                 IsNativeLibrary = libNode.NativeClassifierNames is not null
             };
         }
@@ -147,10 +165,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
                 ? "https://maven.minecraftforge.net/" 
                 : "https://libraries.minecraft.net/") + GetLibraryPath(libNode.MavenName).Replace("\\", "/");
 
-            return new LegacyForgeLibrary(legacyForgeLibraryUrl)
+            return new LegacyForgeLibrary(libNode.MavenName, legacyForgeLibraryUrl)
             {
                 MinecraftFolderPath = minecraftFolderPath,
-                MavenName = libNode.MavenName,
                 IsNativeLibrary = false,
                 ClientRequest = libNode.ClientRequest.GetValueOrDefault() || (libNode.ClientRequest == null && libNode.ServerRequest == null)
             };
@@ -164,10 +181,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
         //&& libNode.Sha1 != null
         //&& libNode.Size != null)
         {
-            return new FabricLibrary()
+            return new FabricLibrary(libNode.MavenName)
             {
                 MinecraftFolderPath = minecraftFolderPath,
-                MavenName = libNode.MavenName,
                 //Sha1 = libNode.Sha1,
                 //Size = (long)libNode.Size,
                 IsNativeLibrary = false
@@ -181,10 +197,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
         if (libNode.MavenUrl == "https://maven.quiltmc.org/repository/release/"
             && libNode.Sha1 == null && libNode.Size == null && libNode.DownloadInformation == null)
         {
-            return new QuiltLibrary()
+            return new QuiltLibrary(libNode.MavenName)
             {
                 MinecraftFolderPath = minecraftFolderPath,
-                MavenName = libNode.MavenName,
                 IsNativeLibrary = false
             };
         }
@@ -193,12 +208,11 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
         #region OptiFine Pattern
 
-        if (libNode.MavenName.ToLower().StartsWith("optifine:optifine")
-            || libNode.MavenName.ToLower().StartsWith("optifine:launchwrapper-of"))
+        if (libNode.MavenName.StartsWith("optifine:optifine", StringComparison.CurrentCultureIgnoreCase)
+            || libNode.MavenName.StartsWith("optifine:launchwrapper-of", StringComparison.CurrentCultureIgnoreCase))
         {
-            return new OptiFineLibrary
+            return new OptiFineLibrary(libNode.MavenName)
             {
-                MavenName = libNode.MavenName,
                 IsNativeLibrary = false,
                 MinecraftFolderPath = minecraftFolderPath
             };
@@ -206,10 +220,9 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
         #endregion
 
-        return new UnknownLibrary
+        return new UnknownLibrary(libNode.MavenName)
         {
             IsNativeLibrary = false,
-            MavenName = libNode.MavenName,
             MinecraftFolderPath = minecraftFolderPath
         };
     }
@@ -240,32 +253,13 @@ public abstract class MinecraftLibrary : MinecraftDependency
 
     public override int GetHashCode() => FullPath.GetHashCode();
 
-    // <summary>
-    // Parse a library from the full name of a Java library
-    // </summary>
-    // <remarks>If <paramref name="packageName"/> is not a Java library name, then it is set for <see cref="Name"/> and other fields are <see cref="string.Empty"/></remarks>
-    // <param name="packageName">Full library name in the format of DOMAIN:NAME:VER:CLASSIFIER</param>
-    //public MinecraftLibrary(string packageName)
-    //{
-    //    Regex regex = new(@"^(?<domain>[^:]+):(?<name>[^:]+):(?<version>[^:]+)(?::(?<classifier>[^:]+))?");
-    //    Match match = regex.Match(packageName);
-
-    //    if (!match.Success)
-    //    {
-    //        Name = packageName;
-    //        return;
-    //    }
-
-    //    Domain = match.Groups["domain"].Value;
-    //    Name = match.Groups["name"].Value;
-    //    Version = match.Groups["version"].Value;
-    //    if (match.Groups["classifier"].Success)
-    //        Classifier = match.Groups["classifier"].Value;
-    //}
+    [GeneratedRegex(@"^(?<domain>[^:]+):(?<name>[^:]+):(?<version>[^:]+)(?::(?<classifier>[^:]+))?")]
+    private static partial Regex GenerateMavenParseRegex();
 }
 
-public class VanillaLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiableDependency
+public class VanillaLibrary(string mavenName) : MinecraftLibrary(mavenName), IDownloadableDependency, IVerifiableDependency
 {
+
     /// <inheritdoc/>
     public string Url { get => $"https://libraries.minecraft.net/{GetLibraryPath().Replace("\\", "/")}"; }
 
@@ -278,7 +272,7 @@ public class VanillaLibrary : MinecraftLibrary, IDownloadableDependency, IVerifi
     public required string Sha1 { get; init; }
 }
 
-public class ForgeLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiableDependency
+public class ForgeLibrary(string mavenName) : MinecraftLibrary(mavenName), IDownloadableDependency, IVerifiableDependency
 {
     /// <inheritdoc/>
     public required string Url { get; init; }
@@ -289,20 +283,20 @@ public class ForgeLibrary : MinecraftLibrary, IDownloadableDependency, IVerifiab
 
     /// <inheritdoc/>
     public required string Sha1 { get; init; }
-}   
+}
 
-public class NeoForgeLibrary : ForgeLibrary { }
+public class NeoForgeLibrary(string mavenName) : ForgeLibrary(mavenName) { }
 
-public class LegacyForgeLibrary(string url) : MinecraftLibrary, IDownloadableDependency
+public class LegacyForgeLibrary(string mavenName, string url) : MinecraftLibrary(mavenName), IDownloadableDependency
 {
     public string Url { get; init; } = url;
 
     public required bool ClientRequest { get; init; }
 }
 
-public class OptiFineLibrary : MinecraftLibrary { }
+public class OptiFineLibrary(string mavenName) : MinecraftLibrary(mavenName) { }
 
-public class FabricLibrary : MinecraftLibrary, IDownloadableDependency //, IVerifiableDependency
+public class FabricLibrary(string mavenName) : MinecraftLibrary(mavenName), IDownloadableDependency //, IVerifiableDependency
 {
     /// <inheritdoc/>
     public string Url { get => $"https://maven.fabricmc.net/{GetLibraryPath().Replace("\\", "/")}"; }
@@ -316,15 +310,15 @@ public class FabricLibrary : MinecraftLibrary, IDownloadableDependency //, IVeri
     //public required string Sha1 { get; init; }
 }
 
-public class QuiltLibrary : MinecraftLibrary, IDownloadableDependency
+public class QuiltLibrary(string mavenName) : MinecraftLibrary(mavenName), IDownloadableDependency
 {
     /// <inheritdoc/>
     public string Url { get => $"https://maven.quiltmc.org/repository/release/{GetLibraryPath().Replace("\\", "/")}"; }
 }
 
-public class DownloadableDependency(string url) : MinecraftLibrary, IDownloadableDependency
+public class DownloadableDependency(string mavenName, string url) : MinecraftLibrary(mavenName), IDownloadableDependency
 {
     public string Url { get; init; } = url;
 }
 
-public class UnknownLibrary : MinecraftLibrary { }
+public class UnknownLibrary(string mavenName) : MinecraftLibrary(mavenName) { }

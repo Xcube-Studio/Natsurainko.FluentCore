@@ -264,7 +264,6 @@ public class MinecraftProcessBuilder
         return this;
     }
 
-
     /// <summary>
     /// 设置 加载Libraries [必须]
     /// </summary>
@@ -283,11 +282,37 @@ public class MinecraftProcessBuilder
 
         (var libs, var nats) = MinecraftInstance.GetRequiredLibraries();
 
-        foreach (var item in libs.Where(libraries.Contains).ToArray())
-            libraries.Remove(item);
-
-        libraries.AddRange(libs);
         natives.AddRange(nats);
+
+        foreach (var lib in libs)
+        {
+            MinecraftLibrary? existsEqualLib = null;
+            MinecraftLibrary? sameNameLib = null;
+
+            foreach (var containedLib in libraries)
+            {
+                if (lib.Equals(containedLib))
+                {
+                    existsEqualLib = containedLib;
+                    break;
+                }
+                else if (lib.Name == containedLib.Name 
+                    && lib.Classifier == containedLib.Classifier
+                    && lib.Domain == lib.Domain)
+                {
+                    sameNameLib = containedLib;
+                    break;
+                }
+            }
+
+            if (existsEqualLib == null)
+            {
+                libraries.Add(lib);
+
+                if (sameNameLib != null)
+                    libraries.Remove(sameNameLib);
+            }
+        }
 
         _libraries = libraries;
         _natives = natives;
