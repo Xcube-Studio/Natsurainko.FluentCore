@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
@@ -128,6 +127,9 @@ public class OAuth2DeviceCodeResponse
 
     [JsonPropertyName("verification_uri")]
     public string? VerificationUrl { get; set; }
+
+    [JsonPropertyName("verification_uri_complete")]
+    public string? VerificationUriComplete { get; set; }
 
     [JsonPropertyName("expires_in")]
     [JsonRequired]

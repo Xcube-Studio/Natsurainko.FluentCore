@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Nrk.FluentCore.Authentication;
 
@@ -110,7 +109,7 @@ public class YggdrasilAuthenticator
 
         if (response.SelectedProfile is null)
         {
-            return response.AvailableProfiles!.Select(profile =>
+            return [.. response.AvailableProfiles!.Select(profile =>
             {
                 if (profile.Name is null || profile.Id is null || response.AccessToken is null)
                     throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
@@ -118,14 +117,15 @@ public class YggdrasilAuthenticator
                 if (!Guid.TryParse(profile.Id, out var uuid))
                     throw new YggdrasilAuthenticationException("Invalid UUID");
 
-                return new YggdrasilAccount(
-                    profile.Name,
-                    uuid,
-                    response.AccessToken,
-                    _clientToken,
-                    _serverUrl
-                );
-            }).ToArray();
+                return new YggdrasilAccount(profile.Name, uuid, response.AccessToken, _serverUrl, _clientToken)
+                {
+                    MetaData = new()
+                    {
+                        { "authType", "Legacy" },
+                        { "client_token", _clientToken },
+                    }
+                };
+            })];
         }
         else
         {
@@ -135,7 +135,17 @@ public class YggdrasilAuthenticator
             if (!Guid.TryParse(response.SelectedProfile.Id, out var uuid))
                 throw new YggdrasilAuthenticationException("Invalid UUID");
 
-            return [ new (response.SelectedProfile.Name, uuid, response.AccessToken, _clientToken, _serverUrl) ];
+            return
+            [
+                new(response.SelectedProfile.Name, uuid, response.AccessToken, _serverUrl, _clientToken) 
+                {
+                    MetaData = new()
+                    {
+                        { "authType", "Legacy" },
+                        { "client_token", _clientToken },
+                    }
+                }
+            ];
         }
     }
 }

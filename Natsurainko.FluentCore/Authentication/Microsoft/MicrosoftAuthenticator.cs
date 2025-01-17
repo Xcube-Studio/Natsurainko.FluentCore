@@ -148,16 +148,15 @@ public class MicrosoftAuthenticator
         );
     }
 
-
     #region HTTP APIs
 
     // Get Microsoft Account OAuth2 token
-    private async Task<OAuth2TokenResponse> AuthMsaAsync(string? parameterName, string code, CancellationToken cancellationToken = default)
+    private async Task<OAuth2TokenResponse> AuthMsaAsync(string? parameterName, string parameter, CancellationToken cancellationToken = default)
     {
         // Send OAuth2 request
         string authCodePost =
             $"client_id={_clientId}" +
-            $"&{parameterName}={code}" +
+            $"&{parameterName}={parameter}" +
             $"&grant_type={(parameterName == "code" ? "authorization_code" : "refresh_token")}" +
             $"&redirect_uri={_redirectUri}";
 

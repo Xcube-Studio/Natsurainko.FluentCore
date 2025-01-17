@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Authentication;
@@ -98,14 +99,17 @@ public record YggdrasilAccount(
     string Name, 
     Guid Uuid, 
     string AccessToken, 
-    string ClientToken, 
-    string YggdrasilServerUrl): Account(Name, Uuid, AccessToken)
+    string YggdrasilServerUrl,
+    string? ClientToken = default) : Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Yggdrasil;
 
-    public string ClientToken { get; set; } = ClientToken;
-
     public string YggdrasilServerUrl { get; set; } = YggdrasilServerUrl;
+
+    [Obsolete("Use MetaData instead")]
+    public string? ClientToken { get; set; } = ClientToken;
+
+    public Dictionary<string, string> MetaData { get; set; } = [];
 
     public override bool ProfileEquals(Account account)
     {

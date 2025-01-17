@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Authentication;
 
@@ -18,6 +14,5 @@ namespace Nrk.FluentCore.Authentication;
 [JsonSerializable(typeof(YggdrasilLoginRequest))]
 [JsonSerializable(typeof(YggdrasilRefreshRequest))]
 [JsonSerializable(typeof(YggdrasilResponseModel))]
-internal partial class AuthenticationJsonSerializerContext : JsonSerializerContext
-{
-}
+[JsonSerializable(typeof(Dictionary<string, string>))]
+internal partial class AuthenticationJsonSerializerContext : JsonSerializerContext { }
