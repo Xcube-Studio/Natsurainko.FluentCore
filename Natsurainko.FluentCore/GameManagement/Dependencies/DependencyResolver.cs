@@ -30,6 +30,11 @@ public class DependencyResolver
     /// </summary>
     public bool AllowVerifyAssets { get; init; } = true;
 
+    /// <summary>
+    /// 验证依赖时的首选方法
+    /// </summary>
+    public PreferredVerificationMethod DefalutPreferredVerificationMethod { get; set; } = PreferredVerificationMethod.Sha1;
+
     public DependencyResolver(MinecraftInstance instance, IEnumerable<MinecraftDependency>? extraDependencies = null)
     {
         if (extraDependencies is not null)
@@ -40,8 +45,7 @@ public class DependencyResolver
 
     public async Task<GroupDownloadResult> VerifyAndDownloadDependenciesAsync(IDownloader? downloader = null, int fileVerificationParallelism = 10, CancellationToken cancellationToken = default)
     {
-        if (fileVerificationParallelism <= 0)
-            throw new ArgumentOutOfRangeException(nameof(fileVerificationParallelism));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileVerificationParallelism);
 
         downloader ??= HttpUtils.Downloader;
 
@@ -84,7 +88,7 @@ public class DependencyResolver
         {
             var assetIndex = _instance.GetAssetIndex();
 
-            if (!await VerifyDependencyAsync(assetIndex, cancellationToken))
+            if (!await VerifyDependencyAsync(assetIndex, DefalutPreferredVerificationMethod, cancellationToken))
             {
                 var result = await downloader.CreateDownloadTask(assetIndex.Url, assetIndex.FullPath).StartAsync(cancellationToken);
 
@@ -111,7 +115,7 @@ public class DependencyResolver
             await semaphore.WaitAsync(cancellationToken);
             try
             {
-                if (!await VerifyDependencyAsync(dep, cancellationToken))
+                if (!await VerifyDependencyAsync(dep, DefalutPreferredVerificationMethod, cancellationToken))
                 {
                     lock (invalidDeps)
                     {
@@ -140,7 +144,7 @@ public class DependencyResolver
     }
 
     // TODO: change to private
-    public static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, CancellationToken cancellationToken = default)
+    public static async Task<bool> VerifyDependencyAsync(MinecraftDependency dep, PreferredVerificationMethod preferredVerificationMethod = PreferredVerificationMethod.Sha1, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(dep.FullPath))
             return false;
@@ -148,7 +152,7 @@ public class DependencyResolver
         if (dep is not IVerifiableDependency verifiableDependency)
             return true;
 
-        if (verifiableDependency.Sha1 != null)
+        async Task<bool> VerifySha1Async(CancellationToken cancellationToken)
         {
             using var fileStream = File.OpenRead(dep.FullPath);
             byte[] sha1Bytes = await SHA1.HashDataAsync(fileStream, cancellationToken);
@@ -157,12 +161,33 @@ public class DependencyResolver
             return sha1Str == verifiableDependency.Sha1;
         }
 
-        if (verifiableDependency.Size != null)
+        async Task<bool> VerifySizeAsync(CancellationToken _)
         {
             var file = new FileInfo(dep.FullPath);
-            return verifiableDependency.Size == file.Length;
+            return await Task.FromResult(verifiableDependency.Size == file.Length);
+        }
+
+        if (preferredVerificationMethod == PreferredVerificationMethod.Sha1)
+        {
+            if (verifiableDependency.Sha1 != null)
+                return await VerifySha1Async(cancellationToken);
+            else if (verifiableDependency.Size != null)
+                return await VerifySizeAsync(cancellationToken);
+        }
+        else
+        {
+            if (verifiableDependency.Size != null)
+                return await VerifySizeAsync(cancellationToken);
+            else if (verifiableDependency.Sha1 != null)
+                return await VerifySha1Async(cancellationToken);
         }
 
         return true;
+    }
+
+    public enum PreferredVerificationMethod
+    {
+        Sha1,
+        Size
     }
 }
