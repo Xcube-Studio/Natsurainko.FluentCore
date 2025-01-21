@@ -269,8 +269,8 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             universalFileEntry.ExtractTo(Path.Combine(forgeLibsFolder, universalFileEntry.Name.Replace("-universal", string.Empty)));
         }
 
-        if (packageArchive.GetEntry($"maven/net/minecraftforge/forge/{forgeVersion}") != null)
-            foreach (var entry in packageArchive.Entries.Where(x => x.FullName.StartsWith($"maven/net/minecraftforge/forge/{forgeVersion}")))
+        if (packageArchive.GetEntry($"maven/net/minecraftforge/forge/{forgeVersion}/") != null)
+            foreach (var entry in packageArchive.Entries.Where(x => !x.FullName.EndsWith('/') && x.FullName.StartsWith($"maven/net/minecraftforge/forge/{forgeVersion}")))
                 entry.ExtractTo(Path.Combine(forgeLibsFolder, entry.Name));
 
         packageArchive.GetEntry("data/client.lzma")?.ExtractTo(Path.Combine(forgeLibsFolder, $"forge-{forgeVersion}-clientdata.lzma"));
