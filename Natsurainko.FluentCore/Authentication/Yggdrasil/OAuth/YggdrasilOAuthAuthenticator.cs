@@ -334,7 +334,7 @@ public class YggdrasilOAuthAuthenticator
     private async Task<OAuth2DeviceCodeResponse> GetDeviceCodeAsync()
     {
         // Send request
-        var requestParams = $"client_id={this.ClientId}" + "&scope=openid%20offline_access%20Yggdrasil.PlayerProfiles.Select%20Yggdrasil.Server.Join%20Yggdrasil.MinecraftToken.Create";
+        var requestParams = $"client_id={this.ClientId}" + "&scope=openid%20offline_access%20Yggdrasil.PlayerProfiles.Select%20Yggdrasil.Server.Join";
 
         using var responseMessage = await _httpClient.PostAsync(this.DeviceAuthorizationEndpoint,
             new StringContent(requestParams, Encoding.UTF8, "application/x-www-form-urlencoded"));
@@ -352,7 +352,7 @@ public class YggdrasilOAuthAuthenticator
             if (response.ExpiresIn == -1 || response.Interval <= 0 || response.DeviceCode is null || response.UserCode is null)
                 throw new FormatException("Invalid response");
         }
-        catch (Exception e) when (e is JsonException || e is FormatException)
+        catch (Exception e) // when (e is JsonException || e is FormatException)
         {
             throw new YggdrasilAuthenticationException("Error in device flow authentication\n" + await responseMessage.Content.ReadAsStringAsync());
         }
