@@ -298,7 +298,7 @@ public class MinecraftProcessBuilder
                 }
                 else if (lib.Name == containedLib.Name 
                     && lib.Classifier == containedLib.Classifier
-                    && lib.Domain == lib.Domain)
+                    && lib.Domain == containedLib.Domain)
                 {
                     sameNameLib = containedLib;
                     break;
