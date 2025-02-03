@@ -1,6 +1,7 @@
 ﻿using Nrk.FluentCore.Exceptions;
 using Nrk.FluentCore.Utils;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -24,6 +25,8 @@ public class YggdrasilOAuthAuthenticator
 
     public string? RedirectUri { get; init; }
 
+    public string? ServerName { get; init; }
+
     public required string TokenEndpoint { get; init; }
 
     public string? DeviceAuthorizationEndpoint { get; init; }
@@ -43,13 +46,7 @@ public class YggdrasilOAuthAuthenticator
 
         return new YggdrasilAccount(name, guid, oAuth2TokenResponse.AccessToken, _serverUrl)
         {
-            MetaData = new()
-            {
-                { "authType", "OAuth" },
-                { "useDeviceFlow", "false" },
-                { "refresh_token", oAuth2TokenResponse.RefreshToken },
-                { "expires_in" , oAuth2TokenResponse.ExpiresIn.ToString()! }
-            }
+            MetaData = GetMetaData(oAuth2TokenResponse.RefreshToken, oAuth2TokenResponse.ExpiresIn.GetValueOrDefault(259200))
         };
     }
 
@@ -59,13 +56,7 @@ public class YggdrasilOAuthAuthenticator
 
         return new YggdrasilAccount(name, guid, oAuth2TokenResponse.AccessToken, _serverUrl) 
         {
-            MetaData = new()
-            {
-                { "authType", "OAuth" },
-                { "useDeviceFlow", "true" },
-                { "refresh_token", oAuth2TokenResponse.RefreshToken },
-                { "expires_in" , oAuth2TokenResponse.ExpiresIn.ToString()! }
-            }
+            MetaData = GetMetaData(oAuth2TokenResponse.RefreshToken, oAuth2TokenResponse.ExpiresIn.GetValueOrDefault(259200))
         };
     }
 
@@ -161,11 +152,14 @@ public class YggdrasilOAuthAuthenticator
     /// <returns></returns>
     public static async Task<YggdrasilOAuthAuthenticator> CreateFromServerPublicClientAsync(string serverUrl)
     {
-        var (support, oauthMetaUrl) = await IsSupportOAuthAsync(serverUrl, CancellationToken.None);
+        string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(serverUrl);
+        JsonNode baseMetaJson = JsonNode.Parse(metaRawJson) ?? throw new FormatException("Invalid meta json reponse");
+
+        var (support, oauthMetaUrl) = IsSupportOAuthAsync(baseMetaJson, CancellationToken.None);
         if (!support) throw new NotSupportedException("The server does not support OAuth");
 
-        string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(oauthMetaUrl);
-        JsonNode jsonNode = JsonNode.Parse(metaRawJson)
+        string oAuthMetaRawJson = await HttpUtils.HttpClient.GetStringAsync(oauthMetaUrl);
+        JsonNode jsonNode = JsonNode.Parse(oAuthMetaRawJson)
             ?? throw new FormatException("Invalid meta json response");
 
         if (jsonNode["shared_client_id"]?.GetValue<string>() is not string publicClientId)
@@ -179,6 +173,7 @@ public class YggdrasilOAuthAuthenticator
             UserInfoEndpoint = jsonNode["userinfo_endpoint"]?.GetValue<string>()
                 ?? throw new NotSupportedException("Invalid server userinfo_endpoint"),
             DeviceAuthorizationEndpoint = jsonNode["device_authorization_endpoint"]?.GetValue<string>(),
+            ServerName = baseMetaJson["meta"]?["serverName"]?.GetValue<string>()
         };
     }
 
@@ -194,11 +189,15 @@ public class YggdrasilOAuthAuthenticator
     /// <exception cref="FormatException"></exception>
     public static async Task<YggdrasilOAuthAuthenticator> CreateFromPrivateClientAsync(string serverUrl, string clientId, string? clientSecret = default, string? redirectUri = default)
     {
-        var (support, oauthMetaUrl) = await IsSupportOAuthAsync(serverUrl, CancellationToken.None);
+        string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(serverUrl);
+        JsonNode baseMetaJson = JsonNode.Parse(metaRawJson)
+                ?? throw new FormatException("Invalid meta json reponse");
+
+        var (support, oauthMetaUrl) = IsSupportOAuthAsync(baseMetaJson, CancellationToken.None);
         if (!support) throw new NotSupportedException("The server does not support OAuth");
 
-        string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(oauthMetaUrl);
-        JsonNode jsonNode = JsonNode.Parse(metaRawJson)
+        string oAuthMetaRawJson = await HttpUtils.HttpClient.GetStringAsync(oauthMetaUrl);
+        JsonNode jsonNode = JsonNode.Parse(oAuthMetaRawJson)
             ?? throw new FormatException("Invalid meta json response");
 
         return new YggdrasilOAuthAuthenticator(serverUrl)
@@ -211,6 +210,7 @@ public class YggdrasilOAuthAuthenticator
             UserInfoEndpoint = jsonNode["userinfo_endpoint"]?.GetValue<string>()
                 ?? throw new NotSupportedException("Invalid server userinfo_endpoint"),
             DeviceAuthorizationEndpoint = jsonNode["device_authorization_endpoint"]?.GetValue<string>(),
+            ServerName = baseMetaJson["meta"]?["serverName"]?.GetValue<string>()
         };
     }
 
@@ -224,14 +224,10 @@ public class YggdrasilOAuthAuthenticator
     /// <param name="serverUrl"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    private static async Task<(bool, string?)> IsSupportOAuthAsync(string serverUrl, CancellationToken cancellationToken = default)
+    private static (bool, string?) IsSupportOAuthAsync(JsonNode jsonNode, CancellationToken cancellationToken = default)
     {
         try
         {
-            string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(serverUrl, cancellationToken);
-            JsonNode jsonNode = JsonNode.Parse(metaRawJson)
-                ?? throw new FormatException("Invalid meta json reponse");
-
             if ((jsonNode["meta"]?["feature.no_email_login"]?.GetValue<bool>()).GetValueOrDefault())
             {
                 string oauthMetaUrl = jsonNode["meta"]?["feature.openid_configuration_url"]?.GetValue<string>()
@@ -412,4 +408,20 @@ public class YggdrasilOAuthAuthenticator
     }
 
     #endregion
+
+    Dictionary<string, string> GetMetaData(string refreshToken, int expiresIn)
+    {
+        Dictionary<string, string> dictionary = new()
+        {
+            { "authType", "OAuth" },
+            { "useDeviceFlow", "true" },
+            { "refresh_token", refreshToken },
+            { "expires_in" , expiresIn.ToString() }
+        };
+
+        if (!string.IsNullOrEmpty(ServerName))
+            dictionary.Add("server_name", ServerName);
+
+        return dictionary;
+    }
 }
