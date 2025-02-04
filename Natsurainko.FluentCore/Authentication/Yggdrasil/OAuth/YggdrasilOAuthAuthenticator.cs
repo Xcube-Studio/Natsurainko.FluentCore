@@ -191,7 +191,7 @@ public class YggdrasilOAuthAuthenticator
     {
         string metaRawJson = await HttpUtils.HttpClient.GetStringAsync(serverUrl);
         JsonNode baseMetaJson = JsonNode.Parse(metaRawJson)
-                ?? throw new FormatException("Invalid meta json reponse");
+                ?? throw new FormatException("Invalid meta json response");
 
         var (support, oauthMetaUrl) = IsSupportOAuthAsync(baseMetaJson, CancellationToken.None);
         if (!support) throw new NotSupportedException("The server does not support OAuth");
@@ -231,7 +231,7 @@ public class YggdrasilOAuthAuthenticator
             if ((jsonNode["meta"]?["feature.no_email_login"]?.GetValue<bool>()).GetValueOrDefault())
             {
                 string oauthMetaUrl = jsonNode["meta"]?["feature.openid_configuration_url"]?.GetValue<string>()
-                    ?? throw new FormatException("Invalid meta json reponse");
+                    ?? throw new FormatException("Invalid meta json response");
 
                 return (true, oauthMetaUrl);
             }
