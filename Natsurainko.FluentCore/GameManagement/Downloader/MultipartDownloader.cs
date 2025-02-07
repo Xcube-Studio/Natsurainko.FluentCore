@@ -17,6 +17,7 @@ public class MultipartDownloader : IDownloader
     public int WorkersPerDownloadTask { get => _config.WorkersPerDownloadTask; }
     public int ConcurrentDownloadTasks { get => _config.ConcurrentDownloadTasks; }
     public IDownloadMirror? Mirror { get => _config.Mirror; }
+    public bool EnableMultiPartDownload { get => _config.EnableMultiPartDownload; }
 
     private HttpClient HttpClient { get => _config.HttpClient; }
 
@@ -25,10 +26,16 @@ public class MultipartDownloader : IDownloader
 
     private readonly SemaphoreSlim _globalDownloadTasksSemaphore;
 
-    public MultipartDownloader(HttpClient? httpClient, long chunkSize = 1048576 /* 1MB */, int workersPerDownloadTask = 16, int concurrentDownloadTasks = 5, IDownloadMirror? mirror = null)
+    public MultipartDownloader(
+        HttpClient? httpClient, 
+        long chunkSize = 1048576 /* 1MB */, 
+        int workersPerDownloadTask = 16, 
+        int concurrentDownloadTasks = 5, 
+        IDownloadMirror? mirror = null,
+        bool enableMultiPartDownload = true)
     {
         httpClient ??= HttpUtils.HttpClient;
-        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks, mirror);
+        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks, mirror, enableMultiPartDownload);
         _globalDownloadTasksSemaphore = new SemaphoreSlim(concurrentDownloadTasks, concurrentDownloadTasks);
     }
 
@@ -87,7 +94,7 @@ public class MultipartDownloader : IDownloader
         // Use multi-part download if Content-Length is provided and the remote server supports range requests
         // Fall back to single part download if the remote server does not provide a Content-Length or does not support range requests
         bool useMultiPart = false;
-        if (response.Content.Headers.ContentLength is long contentLength)
+        if (EnableMultiPartDownload && response.Content.Headers.ContentLength is long contentLength)
         {
             states.TotalBytes = contentLength;
             // Commented: some servers return AcceptRange="bytes" while they return 404 for range requests
@@ -231,15 +238,13 @@ public class MultipartDownloader : IDownloader
 
     public async Task<GroupDownloadResult> DownloadFilesAsync(GroupDownloadRequest request, CancellationToken cancellationToken = default)
     {
-        List<(DownloadRequest, DownloadResult)> failed = new();
-        List<Task> downloadTasks = new();
+        List<(DownloadRequest, DownloadResult)> failed = [];
+        List<Task> downloadTasks = [];
+
         foreach (var req in request.Files)
         {
-            string url = req.Url;
-            string localPath = req.LocalPath;
-
             if (_config.Mirror is not null)
-                url = _config.Mirror.GetMirrorUrl(url);
+                req.Url = _config.Mirror.GetMirrorUrl(req.Url);
 
             downloadTasks.Add(DownloadFileInGroupAsync(req, request, failed, cancellationToken));
         }
@@ -297,5 +302,6 @@ public class MultipartDownloader : IDownloader
         long ChunkSize,
         int WorkersPerDownloadTask,
         int ConcurrentDownloadTasks,
-        IDownloadMirror? Mirror);
+        IDownloadMirror? Mirror,
+        bool EnableMultiPartDownload = true);
 }
