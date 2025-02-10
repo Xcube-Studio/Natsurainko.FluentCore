@@ -43,7 +43,7 @@ public class ModrinthClient
         if (version is not null)
             facets.Add($"[\"versions:{version}\"]");
 
-        if (facets.Any())
+        if (facets.Count != 0)
             stringBuilder.Append($"&facets=[{string.Join(',', facets)}]");
 
         string url = stringBuilder.ToString();
@@ -70,6 +70,32 @@ public class ModrinthClient
         }
 
         return modrinthResources;
+    }
+
+    public async Task<ModrinthProject> GetProjectFromId(string id)
+    {
+        string url = $"{BaseUrl}project/{id}";
+
+        // Send request
+        using var responseMessage = await _httpClient.GetAsync(url);
+        string responseJson = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync();
+
+        ModrinthProject? modrinthProject = null;
+        try
+        {
+            modrinthProject = responseJson
+                .ToJsonNode()?
+                .Deserialize(ResourcesJsonSerializerContext.Default.ModrinthProject)
+                ?? throw new FormatException();
+        }
+        catch (Exception e) when (e is JsonException || e is FormatException)
+        {
+            throw new InvalidResponseException(url, responseJson, "Error in JSON returned by Modrinth", e);
+        }
+
+        return modrinthProject;
     }
 
     public async Task<string> GetResourceDescriptionAsync(string resourceId)
