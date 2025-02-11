@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -34,16 +35,19 @@ public class CurseForgeClient
     public async Task<IEnumerable<CurseForgeResource>> SearchResourcesAsync(
         string searchFilter,
         CurseForgeResourceType? resourceType = null,
-        string? version = null)
+        string? version = null,
+        int categoryId = 0,
+        CancellationToken cancellationToken = default)
     {
         // Build URL
         var stringBuilder = new StringBuilder(BaseUrl)
             .Append($"mods/search?gameId={MinecraftGameId}")
             .Append($"&sortField=Featured")
+            .Append($"&categoryId={categoryId}")
             .Append($"&sortOrder=desc");
 
         if (resourceType is not null)
-            stringBuilder.Append($"&categoryId=0&classId={(int)resourceType}");
+            stringBuilder.Append($"&classId={(int)resourceType}");
 
         if (version is not null)
             stringBuilder.Append($"&gameVersion={version}");
@@ -54,12 +58,12 @@ public class CurseForgeClient
 
         // Send request
         using var request = CreateCurseForgeGetRequest(url);
-        using var responseMessage = await _httpClient.SendAsync(request);
+        using var responseMessage = await _httpClient.SendAsync(request, cancellationToken);
 
         // Parse response
         var response = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         IEnumerable<CurseForgeResource>? resources = null;
         try

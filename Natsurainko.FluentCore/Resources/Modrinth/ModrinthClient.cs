@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Resources;
@@ -24,7 +25,9 @@ public class ModrinthClient
     public async Task<IEnumerable<ModrinthResource>> SearchResourcesAsync(
         string query,
         ModrinthResourceType? resourceType = null,
-        string? version = null)
+        string? version = null,
+        string? categories = null,
+        CancellationToken cancellationToken = default)
     {
         // Build URL
         var stringBuilder = new StringBuilder($"{BaseUrl}search?query={query}");
@@ -40,8 +43,11 @@ public class ModrinthClient
             };
             facets.Add($"[\"project_type:{type}\"]");
         }
+
         if (version is not null)
             facets.Add($"[\"versions:{version}\"]");
+        if (categories is not null)
+            facets.Add($"[\"categories:\'{categories}\'\"]");
 
         if (facets.Count != 0)
             stringBuilder.Append($"&facets=[{string.Join(',', facets)}]");
@@ -49,10 +55,10 @@ public class ModrinthClient
         string url = stringBuilder.ToString();
 
         // Send request
-        using var responseMessage = await _httpClient.GetAsync(url);
+        using var responseMessage = await _httpClient.GetAsync(url, cancellationToken);
         string responseJson = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         // Parse JSON
         IEnumerable<ModrinthResource>? modrinthResources = null;

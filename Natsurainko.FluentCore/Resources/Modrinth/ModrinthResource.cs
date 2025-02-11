@@ -38,6 +38,10 @@ public record ModrinthResource
     [JsonRequired]
     public string Author { get; set; } = null!;
 
+    [JsonPropertyName("versions")]
+    [JsonRequired]
+    public IEnumerable<string> Versions { get; set; } = null!;
+
     [JsonPropertyName("display_categories")]
     [JsonRequired]
     public IEnumerable<string> Categories { get; set; } = null!;
