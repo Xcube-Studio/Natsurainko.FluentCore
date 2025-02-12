@@ -42,7 +42,7 @@ public class CurseForgeClient
         // Build URL
         var stringBuilder = new StringBuilder(BaseUrl)
             .Append($"mods/search?gameId={MinecraftGameId}")
-            .Append($"&sortField=Featured")
+            .Append($"&sortField=2")
             .Append($"&categoryId={categoryId}")
             .Append($"&sortOrder=desc");
 
