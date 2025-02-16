@@ -125,9 +125,9 @@ public class MinecraftProcessBuilder
             { "${natives_directory}", _nativesFolder.ToPathParameter() },
             { "${classpath}", classPath.ToPathParameter() },
             {
-                "${version_name}", MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } instance
+                "${version_name}", (MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } instance
                     ? instance.InheritedMinecraftInstance.InstanceId
-                    : MinecraftInstance.InstanceId
+                    : MinecraftInstance.InstanceId).ToPathParameter()
             },
         };
 
