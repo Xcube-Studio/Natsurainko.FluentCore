@@ -69,7 +69,7 @@ public static class ModInfoParser
 
         mod.DisplayName = jsonNode["name"]?.GetValue<string>();
         mod.Version = jsonNode["version"]?.GetValue<string>();
-        mod.Description = jsonNode["description"]?.GetValue<string>();
+        mod.Description = jsonNode["description"]?.GetValue<string>().TrimEnd('\n').TrimEnd('\r');
 
         try
         {
@@ -91,8 +91,10 @@ public static class ModInfoParser
 
         mod.DisplayName = tomlTable.GetString("displayName");
         mod.Version = tomlTable.GetString("version");
-        mod.Description = tomlTable.GetString("description");
+        mod.Description = tomlTable.GetString("description")?.TrimEnd('\n').TrimEnd('\r');
         mod.Authors = tomlTable.GetString("authors")?.Split(",").Select(x => x.Trim(' ')).ToArray();
+
+        if (mod.Version == "${file.jarVersion}") mod.Version = null;
 
         return mod;
     }
@@ -105,7 +107,7 @@ public static class ModInfoParser
 
         mod.DisplayName = jsonNode["name"]?.GetValue<string>();
         mod.Version = jsonNode["version"]?.GetValue<string>();
-        mod.Description = jsonNode["description"]?.GetValue<string>();
+        mod.Description = jsonNode["description"]?.GetValue<string>().TrimEnd('\n').TrimEnd('\r');
         mod.Authors = (jsonNode["authorList"] ?? jsonNode["authors"])
             ?.AsArray()
             .Where(x => x?.GetValue<string>() is not null)
