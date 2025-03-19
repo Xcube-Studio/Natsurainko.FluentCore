@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NbtToolkit" Version="0.1.2-beta" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="Tomlyn" Version="0.18.0" />
   </ItemGroup>
