@@ -1,6 +1,5 @@
-﻿using System;
-using System.Security.Cryptography;
-using System.Text;
+﻿using Nrk.FluentCore.Utils;
+using System;
 
 namespace Nrk.FluentCore.Authentication;
 
@@ -13,17 +12,18 @@ public class OfflineAuthenticator
     /// <param name="uuid">UUID of the account (will be generated form <paramref name="name"/> if <see cref="null"/> is provided)</param>
     /// <exception cref="ArgumentNullException">Throws if <paramref name="name"/> is null</exception>
     public OfflineAccount Login(string name, Guid? uuid = null)
-        => new OfflineAccount
+        => new
         (
             name ?? throw new ArgumentNullException(nameof(name)),
-            uuid ?? new Guid(MD5.HashData(Encoding.UTF8.GetBytes(name))),
+            uuid ?? GuidHelper.ToGuidHashAsName(name),
             Guid.NewGuid().ToString("N")
         );
 
     public OfflineAccount Refresh(OfflineAccount account)
-        => new OfflineAccount(
+        => new
+        (
             account.Name,
             account.Uuid,
             Guid.NewGuid().ToString("N")
-            );
+        );
 }
