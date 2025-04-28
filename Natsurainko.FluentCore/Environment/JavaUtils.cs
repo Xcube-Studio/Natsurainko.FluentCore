@@ -114,8 +114,12 @@ public static class JavaUtils
 
         // %APPDATA%\.minecraft\cache\java
         string? appDataPath = System.Environment.GetEnvironmentVariable("APPDATA");
-        if (appDataPath is not null)
-            folders.Add(Path.Combine(appDataPath, ".minecraft\\cache\\java")); // Use \ as this is Windows only
+
+        if (appDataPath is not null) // Use \ as this is Windows only
+        {
+            folders.Add(Path.Combine(appDataPath, ".minecraft\\cache\\java"));
+            folders.Add(Path.Combine(appDataPath, ".minecraft\\runtime"));
+        }
 
         // %JAVA_HOME%
         string? javaHomePath = System.Environment.GetEnvironmentVariable("JAVA_HOME");
