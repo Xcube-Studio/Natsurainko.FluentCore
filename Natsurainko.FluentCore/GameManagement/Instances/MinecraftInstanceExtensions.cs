@@ -11,7 +11,7 @@ namespace Nrk.FluentCore.GameManagement;
 
 public static class MinecraftInstanceExtensions
 {
-    public static string GetSuitableJavaVersion(this MinecraftInstance instance)
+    public static int GetSuitableJavaVersion(this MinecraftInstance instance)
     {
         if (instance is ModifiedMinecraftInstance { HasInheritance: true } inst)
             return inst.InheritedMinecraftInstance.GetSuitableJavaVersion();
@@ -19,9 +19,9 @@ public static class MinecraftInstanceExtensions
         JsonNode? majorJavaVersionNode = JsonNodeUtils.ParseFile(instance.ClientJsonPath)["javaVersion"]?["majorVersion"];
 
         if (majorJavaVersionNode is null)
-            return "8";
+            return 8;
         else
-            return majorJavaVersionNode.GetValue<int>().ToString();
+            return majorJavaVersionNode.GetValue<int>();
     }
 
     public static IEnumerable<ModLoaderInfo> GetModLoaders(this MinecraftInstance instance)
