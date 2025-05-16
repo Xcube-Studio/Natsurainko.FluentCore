@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using System.Text;
 
 namespace Nrk.FluentCore.Launch;
 
@@ -111,6 +112,8 @@ public class MinecraftProcess : IDisposable
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
             },
             EnableRaisingEvents = true,
         };
