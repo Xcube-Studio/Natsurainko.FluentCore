@@ -3,11 +3,10 @@ using System.Text.Json.Nodes;
 
 namespace Nrk.FluentCore.Exceptions;
 
-public class YggdrasilAuthenticationException : Exception
+public class YggdrasilAuthenticationException(
+    string responseJson, 
+    Exception? innerException = null) : Exception(ParseUnicodeContent(responseJson), innerException)
 {
-    public YggdrasilAuthenticationException(string responseJson)
-        : base(ParseUnicodeContent(responseJson)) { }
-
     private static string ParseUnicodeContent(string content)
     {
         try

@@ -89,7 +89,7 @@ public record ModrinthProject
 
     [JsonPropertyName("loaders")]
     [JsonRequired]
-    public IEnumerable<string> Loaders { get; set; }
+    public IEnumerable<string> Loaders { get; set; } = [];
 
     //[JsonPropertyName("author")]
     //[JsonRequired]

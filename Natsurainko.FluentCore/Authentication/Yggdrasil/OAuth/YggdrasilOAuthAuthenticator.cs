@@ -285,7 +285,7 @@ public class YggdrasilOAuthAuthenticator
         }
         catch (Exception e) when (e is JsonException || e is FormatException)
         {
-            throw new YggdrasilAuthenticationException("Error in getting authorization token\r\nOAuth response:\r\n" + response.Content.ReadAsString());
+            throw new YggdrasilAuthenticationException("Error in getting authorization token\r\nOAuth response:\r\n" + response.Content.ReadAsString(), e);
         }
 
         return oauth2TokenResponse;
@@ -320,7 +320,7 @@ public class YggdrasilOAuthAuthenticator
         }
         catch (Exception e) when (e is JsonException || e is FormatException)
         {
-            throw new YggdrasilAuthenticationException("Error in getting the profile\n" + responseMessage.Content.ReadAsString());
+            throw new YggdrasilAuthenticationException("Error in getting the profile\n" + responseMessage.Content.ReadAsString(), e);
         }
 
         return (response.SelectedProfile.Name, guid);
@@ -350,7 +350,7 @@ public class YggdrasilOAuthAuthenticator
         }
         catch (Exception e) // when (e is JsonException || e is FormatException)
         {
-            throw new YggdrasilAuthenticationException("Error in device flow authentication\n" + await responseMessage.Content.ReadAsStringAsync());
+            throw new YggdrasilAuthenticationException("Error in device flow authentication\n" + await responseMessage.Content.ReadAsStringAsync(), e);
         }
 
         return response;
@@ -401,7 +401,7 @@ public class YggdrasilOAuthAuthenticator
         }
         catch (Exception e) when (e is JsonException || e is FormatException)
         {
-            throw new YggdrasilAuthenticationException("Error in device flow authentication\n" + await responseMessage.Content.ReadAsStringAsync());
+            throw new YggdrasilAuthenticationException("Error in device flow authentication\n" + await responseMessage.Content.ReadAsStringAsync(), e);
         }
 
         return new DeviceFlowPollResult(true, oauthResponse);
