@@ -45,8 +45,11 @@ public abstract record Account(string Name, Guid Uuid, string AccessToken)
 
     public string AccessToken { get; set; } = AccessToken;
 
-    public virtual bool ProfileEquals(Account account)
+    public virtual bool ProfileEquals(Account? account)
     {
+        if (account == null)
+            return false;
+
         if (account.Type.Equals(this.Type)
             && account.Uuid.Equals(this.Uuid)
             && account.Name.Equals(this.Name))
@@ -79,7 +82,7 @@ public record MicrosoftAccount(
 
     public string RefreshToken { get; set; } = RefreshToken;
 
-    public override bool ProfileEquals(Account account)
+    public override bool ProfileEquals(Account? account)
     {
         if (account is MicrosoftAccount microsoftAccount
             && microsoftAccount.Uuid.Equals(this.Uuid))
@@ -111,7 +114,7 @@ public record YggdrasilAccount(
 
     public Dictionary<string, string> MetaData { get; set; } = [];
 
-    public override bool ProfileEquals(Account account)
+    public override bool ProfileEquals(Account? account)
     {
         if (account is YggdrasilAccount yggdrasilAccount
             && yggdrasilAccount.YggdrasilServerUrl.Equals(this.YggdrasilServerUrl)
