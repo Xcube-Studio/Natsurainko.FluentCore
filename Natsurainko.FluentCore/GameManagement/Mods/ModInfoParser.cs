@@ -2,6 +2,7 @@
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -55,6 +56,21 @@ public static class ModInfoParser
             return ParseModsToml(ref modInfo, neoForgeModsToml.ReadAsString());
 
         throw new Exception("Unknown Mod Type");
+    }
+
+    public static bool TryParse(string filePath, [NotNullWhen(true)] out MinecraftMod? minecraftMod)
+    {
+        try
+        {
+            minecraftMod = Parse(filePath);
+            return true;
+        }
+        catch
+        {
+            minecraftMod = null;
+        }
+
+        return false;
     }
 
     private static MinecraftMod ParseModJson(ref MinecraftMod mod, string jsonContent, bool isQuilt)
