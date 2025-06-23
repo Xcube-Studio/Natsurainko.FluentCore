@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Nrk.FluentCore.Authentication;
@@ -91,13 +90,13 @@ public class MicrosoftAuthenticationResponse
     public string? Name { get; set; }
 
     [JsonPropertyName("skins")]
-    public List<SkinModel>? Skins { get; set; }
+    public SkinModel[]? Skins { get; set; }
 
     [JsonPropertyName("capes")]
-    public JsonArray? Capes { get; set; }
+    public CapeModel[]? Capes { get; set; }
 }
 
-public class SkinModel
+public record SkinModel
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }
@@ -113,6 +112,21 @@ public class SkinModel
 
     [JsonPropertyName("alias")]
     public string? Alias { get; set; }
+}
+
+public record CapeModel
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("state")]
+    public required string State { get; set; }
+
+    [JsonPropertyName("url")]
+    public required string Url { get; set; }
+
+    [JsonPropertyName("alias")]
+    public required string Alias { get; set; }
 }
 
 public class OAuth2DeviceCodeResponse
