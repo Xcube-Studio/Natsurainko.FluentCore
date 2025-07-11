@@ -22,6 +22,8 @@ public static class PlayerTextureHelper
         public SkinModel? ActiveSkin { get; set; }
 
         public CapeModel? ActiveCape { get; set; }
+
+        public CapeModel[]? OwnedCapes { get; set; }
     }
 
     public static async Task<PlayerTextureProfile> GetTextureProfileAsync(this Account account)
@@ -41,21 +43,12 @@ public static class PlayerTextureHelper
         using var responseMessage = await HttpUtils.HttpClient.SendAsync(requestMessage);
         responseMessage.EnsureSuccessStatusCode();
 
-        return ParseFromJson(account, await responseMessage.Content.ReadAsStringAsync());
-    }
+        var profile = ParseFromJson(account, await responseMessage.Content.ReadAsStringAsync());
 
-    public static async Task<CapeModel[]> GetAllCapeOfProfileAsync(this MicrosoftAccount microsoftAccount)
-    {
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://api.minecraftservices.com/minecraft/profile");
-        requestMessage.Headers.Authorization = new("Bearer", microsoftAccount.AccessToken);
+        if (account is MicrosoftAccount microsoftAccount)
+            await TryParseCapesFromMicrosoftAccount(microsoftAccount, profile);
 
-        using var responseMessage = await HttpUtils.HttpClient.SendAsync(requestMessage);
-        responseMessage.EnsureSuccessStatusCode();
-
-        return JsonSerializer.Deserialize(
-            await responseMessage.Content.ReadAsStreamAsync(),
-            AuthenticationJsonSerializerContext.Default.MicrosoftAuthenticationResponse)?
-            .Capes ?? throw new InvalidDataException();
+        return profile;
     }
 
     public static async Task UploadSkinTextureAsync(MicrosoftAccount account, string filePath, string variant = "classic")
@@ -121,6 +114,29 @@ public static class PlayerTextureHelper
             };
         }
 
+        if (profile.ActiveCape != null)
+            profile.OwnedCapes = [profile.ActiveCape];
+
         return profile;
+    }
+
+    private static async Task TryParseCapesFromMicrosoftAccount(MicrosoftAccount account, PlayerTextureProfile profile)
+    {
+        try
+        {
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://api.minecraftservices.com/minecraft/profile");
+            requestMessage.Headers.Authorization = new("Bearer", account.AccessToken);
+
+            using var responseMessage = await HttpUtils.HttpClient.SendAsync(requestMessage);
+            responseMessage.EnsureSuccessStatusCode();
+
+            var authenticationResponse = JsonSerializer.Deserialize(
+                await responseMessage.Content.ReadAsStreamAsync(),
+                AuthenticationJsonSerializerContext.Default.MicrosoftAuthenticationResponse);
+
+            profile.OwnedCapes = authenticationResponse?.Capes;
+            profile.ActiveCape = profile.OwnedCapes?.FirstOrDefault(c => c.State.Equals("ACTIVE"));
+        }
+        catch { }
     }
 }
