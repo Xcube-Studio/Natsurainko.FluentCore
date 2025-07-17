@@ -141,6 +141,22 @@ public static class JavaUtils
 
         #endregion
 
+        #region Validate: Convert symLink to real path
+
+        result.Select(f => new FileInfo(f))
+            .Where(f => f.LinkTarget is not null)
+            .ToList() // ToList to avoid modifying the collection while iterating
+            .ForEach(f =>
+            {
+                if (File.Exists(f.LinkTarget))
+                {
+                    result.Remove(f.FullName);
+                    result.Add(f.LinkTarget);
+                }
+            });
+
+        #endregion
+
         return result.Distinct();
     }
 
