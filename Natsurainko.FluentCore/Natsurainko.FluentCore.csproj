@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="NbtToolkit" Version="0.1.2-beta" />
-    <PackageReference Include="System.Text.Json" Version="9.0.3" />
+    <PackageReference Include="System.Text.Json" Version="9.0.7" />
     <PackageReference Include="Tomlyn" Version="0.19.0" />
   </ItemGroup>
 
