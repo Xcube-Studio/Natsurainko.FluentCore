@@ -31,22 +31,24 @@ public enum MinecraftProcessState
     Exited
 }
 
-public class MinecraftProcessExitedEventArgs : EventArgs
+public class MinecraftProcessExitedEventArgs(int exitCode) : EventArgs
 {
-    public int ExitCode { get; }
-
-    public MinecraftProcessExitedEventArgs(int exitCode)
-    {
-        ExitCode = exitCode;
-    }
+    public int ExitCode { get; } = exitCode;
 }
 
 public class MinecraftProcess : IDisposable
 {
+    private bool _isCmdMode = false;
+
     /// <summary>
     /// Java path to use for running Minecraft
     /// </summary>
     public string JavaPath { get; }
+
+    /// <summary>
+    /// Absolute path of the working directory for the Minecraft process
+    /// </summary>
+    public string WorkingDirectory { get; }
 
     /// <summary>
     /// State of this launch session
@@ -101,6 +103,7 @@ public class MinecraftProcess : IDisposable
     {
         Natives = natives;
         JavaPath = javaPath;
+        WorkingDirectory = workingDir;
         ArgumentList = launchArgs;
 
         Process = new Process
@@ -123,27 +126,28 @@ public class MinecraftProcess : IDisposable
     }
 
     /// <summary>
-    /// Create a new Minecraft process
+    /// Create a new Minecraft process in cmd mode.
     /// </summary>
     /// <param name="javaPath">Java path to use for running Minecraft</param>
     /// <param name="workingDir"></param>
     /// <param name="launchArgs">Launch arguments to pass to the Minecraft process</param>
     [SupportedOSPlatform("windows")]
-    public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs, IReadOnlyList<MinecraftLibrary> natives, bool isCmdMode)
+    public MinecraftProcess(string javaPath, string workingDir, IEnumerable<string> launchArgs, IReadOnlyList<MinecraftLibrary> natives, string batchFilePath)
     {
+        _isCmdMode = true;
+
         Natives = natives;
         JavaPath = javaPath;
+        WorkingDirectory = workingDir;
         ArgumentList = launchArgs;
 
         Process = new Process
         {
-            StartInfo = new ProcessStartInfo(isCmdMode ? "cmd.exe" : javaPath)
+            StartInfo = new ProcessStartInfo(batchFilePath)
             {
                 WorkingDirectory = workingDir,
-                Arguments = string.Join(' ', launchArgs),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Normal
             },
             EnableRaisingEvents = true,
         };
@@ -161,8 +165,13 @@ public class MinecraftProcess : IDisposable
     public void Start()
     {
         Process.Start();
-        Process.BeginOutputReadLine();
-        Process.BeginErrorReadLine();
+
+        if (!_isCmdMode)
+        {
+            Process.BeginOutputReadLine();
+            Process.BeginErrorReadLine();
+        }
+
         State = MinecraftProcessState.Running;
         Started?.Invoke(this, EventArgs.Empty);
     }

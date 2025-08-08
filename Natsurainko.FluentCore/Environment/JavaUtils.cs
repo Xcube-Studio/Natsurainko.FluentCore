@@ -16,12 +16,12 @@ public static class JavaUtils
     /// Search for all installed Java versions
     /// </summary>
     /// <param name="otherPaths">Paths to search other than default locations</param>
-    /// <returns>A list of paths of javaw.exe</returns>
-    public static IEnumerable<string> SearchJava(IEnumerable<string>? otherPaths = null)
+    /// <returns>A list of paths of java(w).exe</returns>
+    public static IEnumerable<string> SearchJava(IEnumerable<string>? otherPaths = null, string identifier = "javaw")
     {
         var result = new List<string>();
 
-        #region Cmd: Find Java by running "where javaw" command in cmd.exe
+        #region Cmd: Find Java by running "where java(w)" command in cmd.exe
 
         using var process = new Process()
         {
@@ -46,12 +46,12 @@ public static class JavaUtils
         process.OutputDataReceived += (sender, e) => output.Add(e.Data);
         process.ErrorDataReceived += (sender, e) => output.Add(e.Data);
 
-        process.StandardInput.WriteLine("where javaw");
+        process.StandardInput.WriteLine($"where {identifier}");
         process.StandardInput.WriteLine("exit");
         process.WaitForExit();
 
         IEnumerable<string> javaPaths = output.Where(
-            x => !string.IsNullOrEmpty(x) && x.EndsWith("javaw.exe") && File.Exists(x)
+            x => !string.IsNullOrEmpty(x) && x.EndsWith($"{identifier}.exe") && File.Exists(x)
         )!; // null checked in the where clause
         result.AddRange(javaPaths);
 
@@ -104,7 +104,7 @@ public static class JavaUtils
 
         foreach (var item in javaHomePaths)
             if (Directory.Exists(item))
-                result.AddRange(new DirectoryInfo(item).FindAll("javaw.exe").Select(x => x.FullName));
+                result.AddRange(new DirectoryInfo(item).FindAll($"{identifier}.exe").Select(x => x.FullName));
 
         #endregion
 
@@ -132,12 +132,12 @@ public static class JavaUtils
         // Check Java for each folder
         foreach (var folder in folders)
             if (Directory.Exists(folder))
-                result.AddRange(new DirectoryInfo(folder).FindAll("javaw.exe").Select(x => x.FullName));
+                result.AddRange(new DirectoryInfo(folder).FindAll($"{identifier}.exe").Select(x => x.FullName));
 
         if (otherPaths is not null)
             foreach (string path in otherPaths)
                 if (Directory.Exists(path))
-                    result.AddRange(new DirectoryInfo(path).FindAll("javaw.exe").Select(x => x.FullName));
+                    result.AddRange(new DirectoryInfo(path).FindAll($"{identifier}.exe").Select(x => x.FullName));
 
         #endregion
 
@@ -161,10 +161,10 @@ public static class JavaUtils
     }
 
     /// <summary>
-    /// Get the JavaInfo of a javaw.exe
+    /// Get the JavaInfo of a java(w).exe
     /// </summary>
-    /// <param name="file">Path of javaw.exe</param>
-    /// <returns>A JavaInfo object representing the javaw.exe</returns>
+    /// <param name="file">Path of java(w).exe</param>
+    /// <returns>A JavaInfo object representing the java(w).exe</returns>
     public static JavaInfo GetJavaInfo(string file)
     {
         var fileVersionInfo = FileVersionInfo.GetVersionInfo(file);

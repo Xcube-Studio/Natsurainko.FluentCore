@@ -22,6 +22,7 @@ namespace Nrk.FluentCore.Experimental.Launch;
 public class MinecraftProcessBuilder
 {
     private bool _isCmdMode = false;
+    private string _batchFilePath = Path.Combine(Directory.GetCurrentDirectory(), "cmd-launch.bat");
     private bool _Dlog4j2_FormatMsgNoLookups = true;
 
     // Obtained from the GameInfo passed in the constructor
@@ -64,8 +65,11 @@ public class MinecraftProcessBuilder
 
         if (_isCmdMode)
         {
+            IEnumerable<string> args = BuildArguments();
+            File.WriteAllText(_batchFilePath, string.Join(' ', args));
+
 #pragma warning disable CA1416
-            return new MinecraftProcess(_javaPath, _gameDirectory, BuildArguments(), _natives, true);
+            return new MinecraftProcess(_javaPath, _gameDirectory, args, _natives, _batchFilePath);
 #pragma warning restore CA1416
         }
 
@@ -163,14 +167,14 @@ public class MinecraftProcessBuilder
             { "${assets_index_name}" , assetIndexFilename },
         };
 
-        var parentFolderPath = Directory.GetParent(MinecraftInstance.MinecraftFolderPath)?.FullName
-            ?? throw new InvalidOperationException("Invalid Minecraft folder path"); // QUESTION: is this needed?
-
         if (_isCmdMode)
         {
+            //var parentFolderPath = Directory.GetParent(MinecraftInstance.MinecraftFolderPath)?.FullName
+            //    ?? throw new InvalidOperationException("Invalid Minecraft folder path"); // QUESTION: is this needed?
+
             yield return "@echo off";
-            yield return $"\r\nset APPDATA={parentFolderPath}";
-            yield return $"\r\ncd /{MinecraftInstance.MinecraftFolderPath[0]} {MinecraftInstance.MinecraftFolderPath}";
+            //yield return $"\r\nset APPDATA={parentFolderPath}";
+            yield return $"\r\ncd /{_gameDirectory[0]} {_gameDirectory}";
             yield return $"\r\n{_javaPath.ToPathParameter()}";
         }
 
@@ -261,6 +265,13 @@ public class MinecraftProcessBuilder
     public MinecraftProcessBuilder SetCmdMode(bool isCmdMode)
     {
         _isCmdMode = isCmdMode;
+        return this;
+    }
+
+    [SupportedOSPlatform("windows")]
+    public MinecraftProcessBuilder SetBatchFilePath(string batchFilePath)
+    {
+        _batchFilePath = batchFilePath;
         return this;
     }
 
