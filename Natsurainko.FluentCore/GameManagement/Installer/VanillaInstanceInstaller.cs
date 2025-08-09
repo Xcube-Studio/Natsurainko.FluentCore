@@ -23,6 +23,8 @@ public class VanillaInstanceInstaller : IInstanceInstaller
 
     public IDownloadMirror? DownloadMirror { get; init; }
 
+    public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
+
     public bool CheckAllDependencies { get; init; }
 
     /// <summary>
@@ -152,10 +154,9 @@ public class VanillaInstanceInstaller : IInstanceInstaller
         var assetIndex = instance.GetAssetIndex();
         var jsonFile = new FileInfo(assetIndex.FullPath);
 
-        string requestUrl = assetIndex.Url;
-
-        if (DownloadMirror != null)
-            requestUrl = DownloadMirror.GetMirrorUrl(requestUrl);
+        string requestUrl = DownloadMirror == null 
+            ? assetIndex.Url
+            : DownloadMirror.GetMirrorUrl(assetIndex.Url);
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
         using var responseMessage = await httpClient.SendAsync(requestMessage, cancellationToken);
@@ -205,7 +206,9 @@ public class VanillaInstanceInstaller : IInstanceInstaller
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
 
-        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
+        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(
+            downloader: Downloader,
+            cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");

@@ -27,6 +27,8 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// </summary>
     public IDownloadMirror? DownloadMirror { get; init; }
 
+    public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
+
     public bool CheckAllDependencies { get; init; }
 
     /// <summary>
@@ -131,6 +133,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
+            Downloader = Downloader,
             DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
@@ -165,7 +168,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, InstallData.FileName));
 
         var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
-        var downloadResult = await HttpUtils.Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
+        var downloadResult = await Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
 
         if (downloadResult.Type == DownloadResultType.Failed)
             throw downloadResult.Exception!;

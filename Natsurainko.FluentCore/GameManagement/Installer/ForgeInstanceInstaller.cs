@@ -26,6 +26,8 @@ public class ForgeInstanceInstaller : IInstanceInstaller
 
     public IDownloadMirror? DownloadMirror { get; init; }
 
+    public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
+
     public bool CheckAllDependencies { get; init; }
 
     /// <summary>
@@ -148,6 +150,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
+            Downloader = Downloader,
             DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
@@ -194,7 +197,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, fileName));
 
         var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
-        var downloadResult = await HttpUtils.Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
+        var downloadResult = await Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
 
         if (downloadResult.Type == DownloadResultType.Failed)
             throw downloadResult.Exception!;
@@ -373,7 +376,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
 
-        var groupDownloadResult = await HttpUtils.Downloader.DownloadFilesAsync(groupDownloadRequest, cancellationToken);
+        var groupDownloadResult = await Downloader.DownloadFilesAsync(groupDownloadRequest, cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");

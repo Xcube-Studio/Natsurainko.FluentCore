@@ -54,19 +54,27 @@ public class MultipartDownloader : IDownloader
 
         try
         {
-            await DownloadFileDriverAsync(request, cancellationToken);
-            return new DownloadResult(DownloadResultType.Successful);
-        }
-        catch (TaskCanceledException)
-        {
-            return new DownloadResult(DownloadResultType.Cancelled);
-        }
-        catch (Exception e)
-        {
-            return new DownloadResult(DownloadResultType.Failed)
+            while (true)
             {
-                Exception = e
-            };
+                try
+                {
+                    await DownloadFileDriverAsync(request, cancellationToken);
+                    return new DownloadResult(DownloadResultType.Successful);
+                }
+                catch (TaskCanceledException)
+                {
+                    return new DownloadResult(DownloadResultType.Cancelled);
+                }
+                catch (Exception e)
+                {
+                    if (request.AttemptCount >= _config.MaxRetryCount)
+                        return new DownloadResult(DownloadResultType.Failed) { Exception = e };
+                }
+                finally
+                {
+                    request.AttemptCount++;
+                }
+            }
         }
         finally
         {
@@ -105,9 +113,9 @@ public class MultipartDownloader : IDownloader
             //}
             //else // Check if the server supports range requests by sending a range request
             //{
-                var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
+                using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
                 rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
-                var rangeResponse = await HttpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                using var rangeResponse = await HttpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
             //}
         }
@@ -135,7 +143,7 @@ public class MultipartDownloader : IDownloader
     private async Task<(HttpResponseMessage Response, string RedirectedUrl)> PrepareForDownloadAsync(string url, CancellationToken cancellationToken = default)
     {
         // Get header
-        var request = new HttpRequestMessage(HttpMethod.Head, url);
+        using var request = new HttpRequestMessage(HttpMethod.Head, url);
         var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == HttpStatusCode.Found)
         {
@@ -169,7 +177,7 @@ public class MultipartDownloader : IDownloader
 
     private async Task WriteStreamToFile(Stream contentStream, FileStream fileStream, Memory<byte> buffer, DownloadRequest request, CancellationToken cancellationToken = default)
     {
-        int bytesRead = 0;
+        int bytesRead;
         while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
             await fileStream.WriteAsync(buffer[0..bytesRead], cancellationToken);
@@ -215,7 +223,7 @@ public class MultipartDownloader : IDownloader
             fileStream.Seek(start, SeekOrigin.Begin);
 
             // Send a range request to download the chunk of the file
-            var request = new HttpRequestMessage(HttpMethod.Get, states.Url);
+            using var request = new HttpRequestMessage(HttpMethod.Get, states.Url);
             request.Headers.Range = new RangeHeaderValue(start, end);
             var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -303,5 +311,6 @@ public class MultipartDownloader : IDownloader
         int WorkersPerDownloadTask,
         int ConcurrentDownloadTasks,
         IDownloadMirror? Mirror,
-        bool EnableMultiPartDownload = true);
+        bool EnableMultiPartDownload = true,
+        int MaxRetryCount = 8);
 }

@@ -20,7 +20,7 @@ internal class BmclApiMirror : IDownloadMirror
         { "https://files.minecraftforge.net/maven", "https://bmclapi2.bangbang93.com/maven" },
         { "https://maven.fabricmc.net", "https://bmclapi2.bangbang93.com/maven" },
         { "https://meta.fabricmc.net", "https://bmclapi2.bangbang93.com/fabric-meta" },
-        { "https://maven.neoforged.net/releases/net/neoforged/forge", "https://bmclapi2.bangbang93.com/maven/net/neoforged/forge" }
+        { "https://maven.neoforged.net/releases", "https://bmclapi2.bangbang93.com/maven" }
     };
 
     public string GetMirrorUrl(string sourceUrl)

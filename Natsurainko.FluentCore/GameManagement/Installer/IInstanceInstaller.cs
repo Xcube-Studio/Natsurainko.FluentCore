@@ -21,6 +21,11 @@ public interface IInstanceInstaller
     public IDownloadMirror? DownloadMirror { get; init; }
 
     /// <summary>
+    /// 下载器
+    /// </summary>
+    public IDownloader Downloader { get; init; }
+
+    /// <summary>
     /// 强制检查所有依赖必须被下载
     /// </summary>
     public bool CheckAllDependencies { get; init; }

@@ -27,6 +27,8 @@ public partial class FabricInstanceInstaller : IInstanceInstaller
 
     public IDownloadMirror? DownloadMirror { get; init; }
 
+    public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
+
     public bool CheckAllDependencies { get; init; }
 
     /// <summary>
@@ -113,6 +115,7 @@ public partial class FabricInstanceInstaller : IInstanceInstaller
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
+            Downloader = Downloader,
             DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
@@ -225,7 +228,9 @@ public partial class FabricInstanceInstaller : IInstanceInstaller
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
 
-        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(cancellationToken: cancellationToken);
+        var groupDownloadResult = await dependencyResolver.VerifyAndDownloadDependenciesAsync(
+            downloader: Downloader,
+            cancellationToken: cancellationToken);
 
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");
