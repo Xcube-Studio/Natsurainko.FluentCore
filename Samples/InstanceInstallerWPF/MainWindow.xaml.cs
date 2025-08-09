@@ -33,7 +33,7 @@ public partial class MainWindow : Window
 #nullable disable
 partial class ViewModel : ObservableObject
 {
-    private readonly HttpClient httpClient = HttpUtils.HttpClient;
+    private readonly HttpClient httpClient = new();
     private readonly Dispatcher Dispatcher = App.Current.Dispatcher;
     private readonly string JavaPath = JavaUtils.SearchJava().Select(JavaUtils.GetJavaInfo).MaxBy(x => x.Version).FilePath;
 
