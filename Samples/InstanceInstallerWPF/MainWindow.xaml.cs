@@ -156,7 +156,6 @@ partial class ViewModel : ObservableObject
         {
             "Forge" => new ForgeInstanceInstaller()
             {
-                //DownloadMirror = DownloadMirrors.BmclApi,
                 McVersionManifestItem = SelectedItem,
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
@@ -168,7 +167,6 @@ partial class ViewModel : ObservableObject
             },
             "NeoForge" => new ForgeInstanceInstaller()
             {
-                //DownloadMirror = DownloadMirrors.BmclApi,
                 McVersionManifestItem = SelectedItem,
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
@@ -180,7 +178,6 @@ partial class ViewModel : ObservableObject
             },
             "OptiFine" => new OptiFineInstanceInstaller()
             {
-                DownloadMirror = DownloadMirrors.BmclApi,
                 McVersionManifestItem = SelectedItem,
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
@@ -191,7 +188,6 @@ partial class ViewModel : ObservableObject
             },
             "Fabric" => new FabricInstanceInstaller()
             {
-                DownloadMirror = DownloadMirrors.BmclApi,
                 McVersionManifestItem = SelectedItem,
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
@@ -201,7 +197,6 @@ partial class ViewModel : ObservableObject
             },
             "Quilt" => new QuiltInstanceInstaller()
             {
-                DownloadMirror = DownloadMirrors.BmclApi,
                 McVersionManifestItem = SelectedItem,
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
