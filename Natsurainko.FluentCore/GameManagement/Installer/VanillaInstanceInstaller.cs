@@ -6,7 +6,6 @@ using Nrk.FluentCore.Utils;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,11 +16,7 @@ namespace Nrk.FluentCore.GameManagement.Installer;
 /// </summary>
 public class VanillaInstanceInstaller : IInstanceInstaller
 {
-    private readonly HttpClient httpClient = HttpUtils.HttpClient;
-
     public required string MinecraftFolder { get; init; }
-
-    public IDownloadMirror? DownloadMirror { get; init; }
 
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
@@ -96,23 +91,14 @@ public class VanillaInstanceInstaller : IInstanceInstaller
         ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        string requestUrl = McVersionManifestItem.Url;
+        FileInfo jsonFile = new(Path.Combine(MinecraftFolder, "versions", McVersionManifestItem.Id, $"{McVersionManifestItem.Id}.json"));
 
-        if (DownloadMirror != null)
-            requestUrl = DownloadMirror.GetMirrorUrl(requestUrl);
-
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-        using var responseMessage = await httpClient.SendAsync(requestMessage, cancellationToken);
-
-        responseMessage.EnsureSuccessStatusCode();
-
-        string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", McVersionManifestItem.Id, $"{McVersionManifestItem.Id}.json"));
-
-        if (!jsonFile.Directory!.Exists)
-            jsonFile.Directory.Create();
-
-        await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
+        var downloadResult = await Downloader.DownloadFileAsync(new(McVersionManifestItem.Url, jsonFile.FullName), cancellationToken);
+        if (downloadResult.Type != DownloadResultType.Successful)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw downloadResult.Exception!;
+        }
 
         Progress?.Report(new(
             VanillaInstallationStage.DownloadVersionJson,
@@ -152,23 +138,14 @@ public class VanillaInstanceInstaller : IInstanceInstaller
         cancellationToken.ThrowIfCancellationRequested();
 
         var assetIndex = instance.GetAssetIndex();
-        var jsonFile = new FileInfo(assetIndex.FullPath);
+        FileInfo jsonFile = new(assetIndex.FullPath);
 
-        string requestUrl = DownloadMirror == null 
-            ? assetIndex.Url
-            : DownloadMirror.GetMirrorUrl(assetIndex.Url);
-
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-        using var responseMessage = await httpClient.SendAsync(requestMessage, cancellationToken);
-
-        responseMessage.EnsureSuccessStatusCode();
-
-        string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-
-        if (!jsonFile.Directory!.Exists)
-            jsonFile.Directory.Create();
-
-        await File.WriteAllTextAsync(jsonFile.FullName, jsonContent, cancellationToken);
+        var downloadResult = await Downloader.DownloadFileAsync(new(assetIndex.Url, jsonFile.FullName), cancellationToken);
+        if (downloadResult.Type != DownloadResultType.Successful)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw downloadResult.Exception!;
+        }
 
         Progress?.Report(new(
              VanillaInstallationStage.DownloadAssetIndexJson,

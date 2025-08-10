@@ -13,18 +13,21 @@ namespace Nrk.FluentCore.GameManagement.Downloader;
 
 public class MultipartDownloader : IDownloader
 {
-    public long ChunkSize { get => _config.ChunkSize; }
-    public int WorkersPerDownloadTask { get => _config.WorkersPerDownloadTask; }
-    public int ConcurrentDownloadTasks { get => _config.ConcurrentDownloadTasks; }
-    public IDownloadMirror? Mirror { get => _config.Mirror; }
-    public bool EnableMultiPartDownload { get => _config.EnableMultiPartDownload; }
-
-    private HttpClient HttpClient { get => _config.HttpClient; }
-
-    private const int DownloadBufferSize = 4096; // 4 KB
-    private readonly DownloaderConfig _config;
-
     private readonly SemaphoreSlim _globalDownloadTasksSemaphore;
+    private readonly HttpClient _httpClient;
+    private const int DownloadBufferSize = 4096; // 4 KB
+
+    public long ChunkSize { get; init; }
+
+    public int WorkersPerDownloadTask { get; init; }
+
+    public int ConcurrentDownloadTasks { get; init; }
+
+    public int MaxRetryCount { get; init; }
+
+    public IDownloadMirror? Mirror { get; init; }
+
+    public bool EnableMultiPartDownload { get; init; }
 
     public MultipartDownloader(
         HttpClient? httpClient, 
@@ -32,10 +35,18 @@ public class MultipartDownloader : IDownloader
         int workersPerDownloadTask = 16, 
         int concurrentDownloadTasks = 5, 
         IDownloadMirror? mirror = null,
-        bool enableMultiPartDownload = true)
+        bool enableMultiPartDownload = true,
+        int maxRetryCount = 8)
     {
-        httpClient ??= HttpUtils.HttpClient;
-        _config = new DownloaderConfig(httpClient, chunkSize, workersPerDownloadTask, concurrentDownloadTasks, mirror, enableMultiPartDownload);
+        _httpClient = httpClient ?? HttpUtils.HttpClient;
+
+        ChunkSize = chunkSize;
+        WorkersPerDownloadTask = workersPerDownloadTask;
+        ConcurrentDownloadTasks = concurrentDownloadTasks;
+        MaxRetryCount = maxRetryCount;
+        Mirror = mirror;
+        EnableMultiPartDownload = enableMultiPartDownload;
+
         _globalDownloadTasksSemaphore = new SemaphoreSlim(concurrentDownloadTasks, concurrentDownloadTasks);
     }
 
@@ -67,7 +78,7 @@ public class MultipartDownloader : IDownloader
                 }
                 catch (Exception e)
                 {
-                    if (request.AttemptCount >= _config.MaxRetryCount)
+                    if (request.AttemptCount >= MaxRetryCount)
                         return new DownloadResult(DownloadResultType.Failed) { Exception = e };
                 }
                 finally
@@ -87,8 +98,8 @@ public class MultipartDownloader : IDownloader
         string url = request.Url;
         string localPath = request.LocalPath;
 
-        if (_config.Mirror is not null)
-            url = _config.Mirror.GetMirrorUrl(url);
+        if (Mirror is not null)
+            url = Mirror.GetMirrorUrl(url);
 
         // Try to get the size of the file
         (var response, url) = await PrepareForDownloadAsync(url, cancellationToken);
@@ -96,7 +107,7 @@ public class MultipartDownloader : IDownloader
         {
             Url = url,
             LocalPath = localPath,
-            ChunkSize = _config.ChunkSize
+            ChunkSize = ChunkSize
         };
 
         // Use multi-part download if Content-Length is provided and the remote server supports range requests
@@ -115,7 +126,7 @@ public class MultipartDownloader : IDownloader
             //{
                 using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
                 rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
-                using var rangeResponse = await HttpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                using var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
             //}
         }
@@ -144,7 +155,7 @@ public class MultipartDownloader : IDownloader
     {
         // Get header
         using var request = new HttpRequestMessage(HttpMethod.Head, url);
-        var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == HttpStatusCode.Found)
         {
             var redirectUrl = response.Headers.Location?.AbsoluteUri;
@@ -159,7 +170,7 @@ public class MultipartDownloader : IDownloader
     private async Task DownloadSinglePartAsync(DownloadStates states, DownloadRequest request, CancellationToken cancellationToken = default)
     {
         // Send a GET request to start downloading the file
-        using var response = await HttpClient.GetAsync(states.Url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response = await _httpClient.GetAsync(states.Url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         // Prepare streams and download buffer
@@ -225,7 +236,7 @@ public class MultipartDownloader : IDownloader
             // Send a range request to download the chunk of the file
             using var request = new HttpRequestMessage(HttpMethod.Get, states.Url);
             request.Headers.Range = new RangeHeaderValue(start, end);
-            var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             // Write to the file
@@ -251,8 +262,8 @@ public class MultipartDownloader : IDownloader
 
         foreach (var req in request.Files)
         {
-            if (_config.Mirror is not null)
-                req.Url = _config.Mirror.GetMirrorUrl(req.Url);
+            if (Mirror is not null)
+                req.Url = Mirror.GetMirrorUrl(req.Url);
 
             downloadTasks.Add(DownloadFileInGroupAsync(req, request, failed, cancellationToken));
         }
@@ -305,12 +316,12 @@ public class MultipartDownloader : IDownloader
         }
     }
 
-    private record class DownloaderConfig(
-        HttpClient HttpClient,
-        long ChunkSize,
-        int WorkersPerDownloadTask,
-        int ConcurrentDownloadTasks,
-        IDownloadMirror? Mirror,
-        bool EnableMultiPartDownload = true,
-        int MaxRetryCount = 8);
+    //private record class DownloaderConfig(
+    //    HttpClient HttpClient,
+    //    long ChunkSize,
+    //    int WorkersPerDownloadTask,
+    //    int ConcurrentDownloadTasks,
+    //    IDownloadMirror? Mirror,
+    //    bool EnableMultiPartDownload = true,
+    //    int MaxRetryCount = 8);
 }

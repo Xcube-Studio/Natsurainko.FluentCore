@@ -24,8 +24,6 @@ public class ForgeInstanceInstaller : IInstanceInstaller
 {
     public required string MinecraftFolder { get; init; }
 
-    public IDownloadMirror? DownloadMirror { get; init; }
-
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
     public bool CheckAllDependencies { get; init; }
@@ -151,7 +149,6 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
             Downloader = Downloader,
-            DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
             CheckAllDependencies = true,
@@ -195,12 +192,13 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                 $"-installer.jar";
 
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, fileName));
+        var downloadResult = await Downloader.DownloadFileAsync(new(packageUrl, packageFile.FullName), cancellationToken);
 
-        var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
-        var downloadResult = await Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
-
-        if (downloadResult.Type == DownloadResultType.Failed)
+        if (downloadResult.Type != DownloadResultType.Successful)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             throw downloadResult.Exception!;
+        }
 
         Progress?.Report(new(
             ForgeInstallationStage.DownloadForgePackage,
@@ -367,9 +365,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             ForgeInstallationStage.DownloadForgeDependencies,
             InstallerStageProgress.UpdateTotalTasks(dependencies.Count)));
 
-        var groupDownloadRequest = new GroupDownloadRequest(dependencies.OfType<IDownloadableDependency>().Select(x => new DownloadRequest(
-            DownloadMirror != null ? DownloadMirror.GetMirrorUrl(x.Url) : x.Url, x.FullPath)));
-
+        var groupDownloadRequest = new GroupDownloadRequest(dependencies.OfType<IDownloadableDependency>().Select(x => new DownloadRequest(x.Url, x.FullPath)));
         groupDownloadRequest.SingleRequestCompleted += (_, _)
             => Progress?.Report(new(
                 ForgeInstallationStage.DownloadForgeDependencies,

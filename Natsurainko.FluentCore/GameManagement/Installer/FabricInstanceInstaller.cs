@@ -6,10 +6,6 @@ using Nrk.FluentCore.Utils;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using static Nrk.FluentCore.GameManagement.Installer.VanillaInstanceInstaller;
@@ -21,11 +17,7 @@ namespace Nrk.FluentCore.GameManagement.Installer;
 /// </summary>
 public partial class FabricInstanceInstaller : IInstanceInstaller
 {
-    private readonly HttpClient httpClient = HttpUtils.HttpClient;
-
     public required string MinecraftFolder { get; init; }
-
-    public IDownloadMirror? DownloadMirror { get; init; }
 
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
@@ -116,7 +108,6 @@ public partial class FabricInstanceInstaller : IInstanceInstaller
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
             Downloader = Downloader,
-            DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
             CheckAllDependencies = true,
@@ -148,30 +139,15 @@ public partial class FabricInstanceInstaller : IInstanceInstaller
         ));
 
         string requestUrl = $"https://meta.fabricmc.net/v2/versions/loader/{instance.InstanceId}/{InstallData.Loader.Version}/profile/json";
+        string instanceId = CustomizedInstanceId ?? $"fabric-loader-{InstallData.Loader.Version}-{instance.InstanceId}";
+        FileInfo jsonFile = new(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
 
-        if (DownloadMirror != null)
-            requestUrl = DownloadMirror.GetMirrorUrl(requestUrl);
-
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-        using var responseMessage = await httpClient.SendAsync(requestMessage, cancellationToken);
-
-        responseMessage.EnsureSuccessStatusCode();
-
-        string jsonContent = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
-        string instanceId = CustomizedInstanceId ??
-            JsonNode.Parse(jsonContent)!["id"]?.GetValue<string>() ?? $"fabric-loader-{InstallData.Loader.Version}-{instance.InstanceId}";
-
-        var jsonFile = new FileInfo(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
-
-        if (!jsonFile.Directory!.Exists)
-            jsonFile.Directory.Create();
-
-        await File.WriteAllTextAsync(jsonFile.FullName,
-            JsonNode.Parse(jsonContent)!.ToJsonString(new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            }), cancellationToken);
+        var downloadResult = await Downloader.DownloadFileAsync(new(requestUrl, jsonFile.FullName), cancellationToken);
+        if (downloadResult.Type != DownloadResultType.Successful)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw downloadResult.Exception!;
+        }
 
         Progress?.Report(new(
             FabricInstallationStage.DownloadFabricClientJson,

@@ -22,11 +22,6 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
 {
     public required string MinecraftFolder { get; init; }
 
-    /// <summary>
-    /// OptiFine 安装本身必须要使用 bmclapi，修改此项只会影响原版实例安装的镜像源（如果需要的话）
-    /// </summary>
-    public IDownloadMirror? DownloadMirror { get; init; }
-
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
     public bool CheckAllDependencies { get; init; }
@@ -134,7 +129,6 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
             Downloader = Downloader,
-            DownloadMirror = DownloadMirror,
             McVersionManifestItem = McVersionManifestItem,
             MinecraftFolder = MinecraftFolder,
             CheckAllDependencies = true,
@@ -167,11 +161,12 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         string packageUrl = $"https://bmclapi2.bangbang93.com/optifine/{McVersionManifestItem.Id}/{InstallData.Type}/{InstallData.Patch}";
         var packageFile = new FileInfo(Path.Combine(MinecraftFolder, InstallData.FileName));
 
-        var downloadRequest = new DownloadRequest(packageUrl, packageFile.FullName);
-        var downloadResult = await Downloader.DownloadFileAsync(downloadRequest, cancellationToken);
-
-        if (downloadResult.Type == DownloadResultType.Failed)
+        var downloadResult = await Downloader.DownloadFileAsync(new(packageUrl, packageFile.FullName), cancellationToken);
+        if (downloadResult.Type != DownloadResultType.Successful)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             throw downloadResult.Exception!;
+        }
 
         Progress?.Report(new(
             OptiFineInstallationStage.DownloadOptiFinePackage,
