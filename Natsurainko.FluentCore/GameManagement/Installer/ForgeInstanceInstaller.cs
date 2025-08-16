@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using static Nrk.FluentCore.GameManagement.Installer.VanillaInstanceInstaller;
@@ -178,12 +179,26 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             InstallerStageProgress.Starting()
         ));
 
-        string packageUrl = IsNeoForgeInstaller
-            ? $"https://bmclapi2.bangbang93.com/neoforge/version/{InstallData.Version}/download/installer.jar"
-            : $"https://bmclapi2.bangbang93.com/forge/download?mcversion={InstallData.McVersion}" +
-                $"{(string.IsNullOrEmpty(InstallData.Branch) ? string.Empty : $"&branch={InstallData.Branch}")}" +
-                $"&version={InstallData.Version}" +
-                $"&category=installer&format=jar";
+        string packageUrl;
+
+        if (IsNeoForgeInstaller)
+        {
+            string prefix = InstallData.McVersion == "1.20.1" ? "forge" : "neoforge";
+            packageUrl = $"https://maven.neoforged.net/releases/net/neoforged/{prefix}/"
+                + InstallData.Version + $"/{prefix}-{InstallData.Version}-installer.jar";
+        }
+        else
+        {
+            List<string> identifiers = [InstallData.McVersion, InstallData.Version];
+
+            if (InstallData.Branch != null) 
+                identifiers.Add(InstallData.Branch);
+
+            string loaderVersion = string.Join('-', identifiers);
+
+            packageUrl = $"https://maven.minecraftforge.net/releases/net/minecraftforge/forge/" 
+                + loaderVersion + $"/forge-{loaderVersion}-installer.jar";
+        }
 
         string fileName = IsNeoForgeInstaller
             ? $"neoforge-{InstallData.Version}-installer.jar"
@@ -407,7 +422,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         cancellationToken.ThrowIfCancellationRequested();
 
         Dictionary<string, Dictionary<string, string>> forgeDataDictionary = installProfileJsonNode["data"]
-            .Deserialize(MinecraftJsonSerializerContext.Default.DictionaryStringDictionaryStringString)
+            .Deserialize(ForgeInstallerJsonSerializerContext.Default.DictionaryStringDictionaryStringString)
             ?? throw new Exception("Failed to parse install profile data");
 
         string forgeVersion = $"{InstallData.McVersion}-{InstallData.Version}";
@@ -439,7 +454,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             });
 
         var forgeProcessors = installProfileJsonNode["processors"]?
-            .Deserialize(MinecraftJsonSerializerContext.Default.IEnumerableForgeProcessorData)?
+            .Deserialize(ForgeInstallerJsonSerializerContext.Default.IEnumerableForgeProcessorData)?
             .Where(x => !(x.Sides.Count == 1 && x.Sides.Contains("server")))
             .ToArray()
             ?? throw new InvalidDataException("Unable to parse Forge Processors");
@@ -533,5 +548,26 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         WriteDependenciesAndVersionFiles,
         DownloadForgeDependencies,
         RunCompileProcess
+    }
+
+    public class ForgeProcessorData
+    {
+        [JsonPropertyName("sides")]
+        public List<string> Sides { get; set; } = [];
+
+        [JsonPropertyName("jar")]
+        [JsonRequired]
+        public string Jar { get; set; } = null!;
+
+        [JsonPropertyName("classpath")]
+        [JsonRequired]
+        public IEnumerable<string> Classpath { get; set; } = null!;
+
+        [JsonPropertyName("args")]
+        [JsonRequired]
+        public IEnumerable<string> Args { get; set; } = null!;
+
+        [JsonPropertyName("outputs")]
+        public Dictionary<string, string> Outputs { get; set; } = [];
     }
 }
