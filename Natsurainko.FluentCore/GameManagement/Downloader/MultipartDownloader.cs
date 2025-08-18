@@ -17,6 +17,8 @@ public class MultipartDownloader : IDownloader
     private readonly HttpClient _httpClient;
     private const int DownloadBufferSize = 4096; // 4 KB
 
+    public HttpClient HttpClient => _httpClient;
+
     public long ChunkSize { get; init; }
 
     public int WorkersPerDownloadTask { get; init; }
@@ -25,7 +27,7 @@ public class MultipartDownloader : IDownloader
 
     public int MaxRetryCount { get; init; }
 
-    public IDownloadMirror? Mirror { get; init; }
+    public IDownloadMirror? DownloadMirror { get; init; }
 
     public bool EnableMultiPartDownload { get; init; }
 
@@ -44,7 +46,7 @@ public class MultipartDownloader : IDownloader
         WorkersPerDownloadTask = workersPerDownloadTask;
         ConcurrentDownloadTasks = concurrentDownloadTasks;
         MaxRetryCount = maxRetryCount;
-        Mirror = mirror;
+        DownloadMirror = mirror;
         EnableMultiPartDownload = enableMultiPartDownload;
 
         _globalDownloadTasksSemaphore = new SemaphoreSlim(concurrentDownloadTasks, concurrentDownloadTasks);
@@ -98,8 +100,8 @@ public class MultipartDownloader : IDownloader
         string url = request.Url;
         string localPath = request.LocalPath;
 
-        if (Mirror is not null)
-            url = Mirror.GetMirrorUrl(url);
+        if (DownloadMirror is not null)
+            url = DownloadMirror.GetMirrorUrl(url);
 
         // Try to get the size of the file
         (var response, url) = await PrepareForDownloadAsync(url, cancellationToken);
@@ -262,8 +264,8 @@ public class MultipartDownloader : IDownloader
 
         foreach (var req in request.Files)
         {
-            if (Mirror is not null)
-                req.Url = Mirror.GetMirrorUrl(req.Url);
+            if (DownloadMirror is not null)
+                req.Url = DownloadMirror.GetMirrorUrl(req.Url);
 
             downloadTasks.Add(DownloadFileInGroupAsync(req, request, failed, cancellationToken));
         }

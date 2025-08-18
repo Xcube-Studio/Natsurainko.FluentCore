@@ -9,6 +9,7 @@ namespace Nrk.FluentCore.GameManagement;
 [JsonSerializable(typeof(ClientJsonObject.ArgumentsJsonObject.ConditionalClientArgument<ClientJsonObject.OsRule>))]
 [JsonSerializable(typeof(IEnumerable<ClientJsonObject.LibraryJsonObject>))]
 [JsonSerializable(typeof(IEnumerable<string>))] // ClientJsonObject
+[JsonSerializable(typeof(VersionManifestJsonObject))]
 [JsonSerializable(typeof(Dictionary<string, AssetJsonNode>))] // MinecraftInstance
 [JsonSerializable(typeof(ClientJsonObject.AssetIndexJsonObject))] // MinecraftInstance
 internal partial class MinecraftJsonSerializerContext : JsonSerializerContext;

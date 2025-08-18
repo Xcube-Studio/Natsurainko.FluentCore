@@ -15,20 +15,12 @@ namespace Nrk.FluentCore.Resources;
 
 using FeaturedResources = (IEnumerable<CurseForgeResource> Mods, IEnumerable<CurseForgeResource> Modpacks);
 
-public class CurseForgeClient
+public class CurseForgeClient(string apiKey, HttpClient? httpClient = null)
 {
     private const string BaseUrl = "https://api.curseforge.com/v1/";
     private const int MinecraftGameId = 432;
 
-    private readonly HttpClient _httpClient;
-    private readonly string _apiKey;
-
-
-    public CurseForgeClient(string apiKey, HttpClient? httpClient = null)
-    {
-        _apiKey = apiKey;
-        _httpClient = httpClient ?? HttpUtils.HttpClient;
-    }
+    private readonly HttpClient _httpClient = httpClient ?? HttpUtils.HttpClient;
 
     #region CurseForge APIs
 
@@ -82,21 +74,36 @@ public class CurseForgeClient
         return resources;
     }
 
-    public async Task<string> GetFileUrlAsync(CurseForgeFile file)
+    public async Task<string> GetFileUrlAsync(CurseForgeFile file, CancellationToken cancellationToken = default)
     {
-        var url = $"{BaseUrl}mods/{file.ModId}/files/{file.FileId}";
+        var url = $"{BaseUrl}mods/{file.ModId}/files/{file.FileId}/download-url";
         using var request = CreateCurseForgeGetRequest(url);
-        using var responseMessage = await _httpClient.SendAsync(request);
+        using var responseMessage = await _httpClient.SendAsync(request, cancellationToken);
 
         // Parse response
         var response = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         return JsonNode.Parse(response)?
             ["data"]?
-            ["downloadUrl"]?
             .GetValue<string>()
+            ?? throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge");
+    }
+
+    public async Task<CurseForgeFileDetails> GetFileDetailsAsync(CurseForgeFile file, CancellationToken cancellationToken = default)
+    {
+        var url = $"{BaseUrl}mods/{file.ModId}/files/{file.FileId}";
+        using var request = CreateCurseForgeGetRequest(url);
+        using var responseMessage = await _httpClient.SendAsync(request, cancellationToken);
+
+        // Parse response
+        var response = await responseMessage
+            .EnsureSuccessStatusCode().Content
+            .ReadAsStringAsync(cancellationToken);
+
+        return JsonNode.Parse(response)?
+            ["data"]?.Deserialize(ResourcesJsonSerializerContext.Default.CurseForgeFileDetails)
             ?? throw new InvalidResponseException(url, response, "Error in JSON returned by CurseForge");
     }
 
@@ -184,17 +191,17 @@ public class CurseForgeClient
         return result;
     }
 
-    public async Task<CurseForgeResource> GetResourceAsync(int resourceId)
+    public async Task<CurseForgeResource> GetResourceAsync(int resourceId, CancellationToken cancellationToken = default)
     {
         // Create request
         string url = $"{BaseUrl}mods/{resourceId}";
         using var request = CreateCurseForgeGetRequest(url);
 
         // Send request
-        using var responseMessage = await _httpClient.SendAsync(request);
+        using var responseMessage = await _httpClient.SendAsync(request, cancellationToken);
         string responseJson = await responseMessage
             .EnsureSuccessStatusCode().Content
-            .ReadAsStringAsync();
+            .ReadAsStringAsync(cancellationToken);
 
         // Parse response
         CurseForgeResource? result = null;
@@ -218,7 +225,7 @@ public class CurseForgeClient
     private HttpRequestMessage CreateCurseForgeGetRequest(string url)
     {
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
-        requestMessage.Headers.Add("x-api-key", _apiKey);
+        requestMessage.Headers.Add("x-api-key", apiKey);
         return requestMessage;
     }
 
