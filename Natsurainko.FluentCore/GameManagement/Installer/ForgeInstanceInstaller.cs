@@ -59,9 +59,9 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// </summary>
     public string? CustomizedInstanceId { get; init; }
 
-    public IProgress<InstallerProgress>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
-    public IProgress<InstallerProgress>? VanillaInstallationProgress { get; init; }
+    public IProgress<IInstallerProgress>? VanillaInstallationProgress { get; init; }
 
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);

@@ -16,7 +16,7 @@ public interface IInstanceInstaller
     public string MinecraftFolder { get; init; }
 
     /// <summary>
-    /// 下载器
+    /// 安装过程调用的下载器
     /// </summary>
     public IDownloader Downloader { get; init; }
 

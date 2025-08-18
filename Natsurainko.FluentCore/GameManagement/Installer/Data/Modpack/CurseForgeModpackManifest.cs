@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.Installer.Data.Modpack;
+namespace Nrk.FluentCore.GameManagement.Installer.Modpack;
 
 public class CurseForgeModpackManifest
 {
@@ -30,9 +30,9 @@ public class CurseForgeModpackManifest
 
     [JsonRequired]
     [JsonPropertyName("files")]
-    public required FileJsonObject[] Files { get; set; }
+    public required CurseForgeModpackFileJsonObject[] Files { get; set; }
 
-    public class FileJsonObject
+    public class CurseForgeModpackFileJsonObject
     {
         [JsonRequired]
         [JsonPropertyName("projectID")]

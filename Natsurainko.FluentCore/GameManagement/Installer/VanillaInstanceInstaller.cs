@@ -27,7 +27,7 @@ public class VanillaInstanceInstaller : IInstanceInstaller
     /// </summary>
     public required VersionManifestItem McVersionManifestItem { get; init; }
 
-    public IProgress<InstallerProgress>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
     public bool CleanAfterCancelled { get; init; } = true;
 

@@ -11,16 +11,11 @@ using System.Threading.Tasks;
 
 namespace Nrk.FluentCore.Resources;
 
-public class ModrinthClient
+public class ModrinthClient(HttpClient? httpClient = null)
 {
     private const string BaseUrl = "https://api.modrinth.com/v2/";
 
-    private readonly HttpClient _httpClient;
-
-    public ModrinthClient(HttpClient? httpClient = null)
-    {
-        _httpClient = httpClient ?? HttpUtils.HttpClient;
-    }
+    private readonly HttpClient _httpClient = httpClient ?? HttpUtils.HttpClient;
 
     public async Task<IEnumerable<ModrinthResource>> SearchResourcesAsync(
         string query,

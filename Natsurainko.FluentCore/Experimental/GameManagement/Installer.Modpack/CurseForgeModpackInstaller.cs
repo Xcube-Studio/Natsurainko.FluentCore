@@ -1,8 +1,9 @@
 ﻿using Nrk.FluentCore.Exceptions;
+using Nrk.FluentCore.Experimental.GameManagement.Modpacks;
 using Nrk.FluentCore.GameManagement;
 using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Installer;
-using Nrk.FluentCore.GameManagement.Installer.Data.Modpack;
+using Nrk.FluentCore.GameManagement.Installer.Modpack;
 using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Resources;
 using Nrk.FluentCore.Utils;
@@ -15,11 +16,12 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using static Nrk.FluentCore.GameManagement.Installer.Modpack.CurseForgeModpackManifest;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Modpack;
 
-public delegate IProgress<InstallerProgress>? CreateModLoderInstallerProgressReporterDelegate(
-    ModLoaderType modLoaderType, out IProgress<InstallerProgress>? VanillaInstallationProgress);
+public delegate IProgress<IInstallerProgress>? CreateModLoderInstallerProgressReporterDelegate(
+    ModLoaderType modLoaderType, out IProgress<IInstallerProgress>? VanillaInstallationProgress);
 
 public class CurseForgeModpackInstaller : IInstanceInstaller
 {
@@ -35,6 +37,9 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
     /// </summary>
     public required string JavaPath { get; init; }
 
+    /// <summary>
+    /// CurseForge Api 客户端
+    /// </summary>
     public required CurseForgeClient CurseForgeClient { get; init; }
 
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
@@ -46,7 +51,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
     /// </summary>
     public string? CustomizedInstanceId { get; init; }
 
-    public IProgress<InstallerProgress>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
     public CreateModLoderInstallerProgressReporterDelegate? CreateModLoderInstallerProgressReporter { get; init; }
 
@@ -111,27 +116,8 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         cancellationToken.ThrowIfCancellationRequested();
 
         packageArchive = ZipFile.OpenRead(packageFilePath);
-        modpackManifest = JsonSerializer.Deserialize(
-            packageArchive.GetEntry("manifest.json")?.ReadAsString() ?? throw new InvalidDataException(),
-            ResourcesJsonSerializerContext.Default.CurseForgeModpackManifest) ?? throw new InvalidDataException();
-
-        var primaryModLoader = modpackManifest.Minecraft.ModLoaders.First(m => m.Primary) ?? throw new InvalidDataException();
-        string[] identifiers = primaryModLoader.Id.Split('-');
-
-        if (identifiers.Length < 2) throw new InvalidDataException();
-
-        modLoaderInfo = new
-        (
-            identifiers[0] switch
-            {
-                "forge" => ModLoaderType.Forge,
-                "neoforge" => ModLoaderType.NeoForge,
-                "fabric" => ModLoaderType.Fabric,
-                "quilt" => ModLoaderType.Quilt,
-                _ => throw new NotSupportedException()
-            },
-            identifiers[1]
-        );
+        var modpackInfo = ModpackInfoParser.ParseCurseForgeModpack(packageArchive, out modpackManifest);
+        modLoaderInfo = modpackInfo.ModLoader;
 
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.ParseCurseForgeModpack,
@@ -150,32 +136,21 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        var httpClient = Downloader.HttpClient;
-        var downloadMirror = Downloader.DownloadMirror;
-        var mcVersion = modpackManifest.Minecraft.McVersion;
-
-        var versionManifest = await VersionManifestApi.GetVersionManifestAsync(httpClient, downloadMirror, cancellationToken);
-        var versionManifestItem = versionManifest.Versions.First(v => v.Id.Equals(mcVersion));
-
-        object installData = modLoaderInfo.Type switch
-        {
-            ModLoaderType.NeoForge => (await ForgeInstallDataApi.GetNeoForgeInstallDataAsync(
-                mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Forge => (await ForgeInstallDataApi.GetForgeInstallDataAsync(
-                mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Fabric => (await FabricInstallDataApi.GetFabricInstallDataAsync(
-                mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Quilt => (await QuiltInstallDataApi.GetQuiltInstallDataAsync(
-                mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Version)),
-            _ => throw new NotImplementedException()
-        };
+        var value = await VersionManifestApi.SearchInstallDataAsync
+        (
+            modpackManifest.Minecraft.McVersion,
+            modLoaderInfo,
+            Downloader.HttpClient,
+            Downloader.DownloadMirror,
+            cancellationToken
+        );
 
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.SearchInstallData,
             InstallerStageProgress.Finished()
         ));
 
-        return (versionManifestItem, installData);
+        return value;
     }
 
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
@@ -208,7 +183,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
                 JavaPath = JavaPath,
                 McVersionManifestItem = modification.Item1,
                 MinecraftFolder = MinecraftFolder,
-                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<InstallerProgress>? VanillaInstallationProgress),
+                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<IInstallerProgress>? VanillaInstallationProgress),
                 VanillaInstallationProgress = VanillaInstallationProgress
             },
             ModLoaderType.NeoForge => new ForgeInstanceInstaller
@@ -222,7 +197,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
                 JavaPath = JavaPath,
                 McVersionManifestItem = modification.Item1,
                 MinecraftFolder = MinecraftFolder,
-                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<InstallerProgress>? VanillaInstallationProgress),
+                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<IInstallerProgress>? VanillaInstallationProgress),
                 VanillaInstallationProgress = VanillaInstallationProgress
             },
             ModLoaderType.Fabric => new FabricInstanceInstaller
@@ -234,7 +209,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
                 InstallData = (FabricInstallData)modification.Item2,
                 McVersionManifestItem = modification.Item1,
                 MinecraftFolder = MinecraftFolder,
-                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<InstallerProgress>? VanillaInstallationProgress),
+                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<IInstallerProgress>? VanillaInstallationProgress),
                 VanillaInstallationProgress = VanillaInstallationProgress
             },
             ModLoaderType.Quilt => new QuiltInstanceInstaller
@@ -246,7 +221,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
                 InstallData = (QuiltInstallData)modification.Item2,
                 McVersionManifestItem = modification.Item1,
                 MinecraftFolder = MinecraftFolder,
-                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<InstallerProgress>? VanillaInstallationProgress),
+                Progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)(modLoaderInfo.Type, out IProgress<IInstallerProgress>? VanillaInstallationProgress),
                 VanillaInstallationProgress = VanillaInstallationProgress
             },
             _ => throw new NotImplementedException()
@@ -272,7 +247,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         cancellationToken.ThrowIfCancellationRequested();
 
         ConcurrentBag<DownloadRequest> downloadRequests = [];
-        ConcurrentDictionary<CurseForgeModpackManifest.FileJsonObject, Exception> failedFiles = [];
+        ConcurrentDictionary<CurseForgeModpackFileJsonObject, Exception> failedFiles = [];
 
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.ParseCurseForgeFiles,
@@ -379,7 +354,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
 
             string targetFilePath = Path.Combine(
                 Path.GetDirectoryName(minecraftInstance.ClientJsonPath)!,
-                new string([.. entry.FullName.Skip(modpackManifest.Overrides.Length)]).TrimStart('/'));
+                new string([.. entry.FullName.Skip(modpackManifest.Overrides.Length + 1)]));
             string targetDirectory = Path.GetDirectoryName(targetFilePath)!;
 
             if (!Directory.Exists(targetDirectory))
@@ -481,7 +456,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         CopyOverriddenFiles
     }
 
-    private static readonly CreateModLoderInstallerProgressReporterDelegate EmptyDelegate = (ModLoaderType _, out IProgress<InstallerProgress>? progress) =>
+    private static readonly CreateModLoderInstallerProgressReporterDelegate EmptyDelegate = (ModLoaderType _, out IProgress<IInstallerProgress>? progress) =>
     {
         progress = null;
         return null;
