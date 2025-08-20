@@ -56,9 +56,9 @@ public static class VersionManifestApi
             ?? throw new InvalidDataException();
     }
 
-    public static async Task<(VersionManifestItem, object)> SearchInstallDataAsync(
+    public static async Task<(VersionManifestItem, object?)> SearchInstallDataAsync(
         string mcVersion,
-        ModLoaderInfo modLoaderInfo,
+        ModLoaderInfo? modLoaderInfo = null,
         HttpClient? httpClient = null,
         IDownloadMirror? downloadMirror = null,
         CancellationToken cancellationToken = default)
@@ -67,19 +67,23 @@ public static class VersionManifestApi
 
         var versionManifest = await GetVersionManifestAsync(httpClient, downloadMirror, cancellationToken);
         var versionManifestItem = versionManifest.Versions.First(v => v.Id.Equals(mcVersion));
+        object? installData = null;
 
-        object installData = modLoaderInfo.Type switch
+        if (modLoaderInfo != null)
         {
-            ModLoaderType.NeoForge => (await ForgeInstallDataApi.GetNeoForgeInstallDataAsync(
-                mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Forge => (await ForgeInstallDataApi.GetForgeInstallDataAsync(
-                mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Fabric => (await FabricInstallDataApi.GetFabricInstallDataAsync(
-                mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Version)),
-            ModLoaderType.Quilt => (await QuiltInstallDataApi.GetQuiltInstallDataAsync(
-                mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Version)),
-            _ => throw new NotImplementedException()
-        };
+            installData = modLoaderInfo.Value.Type switch
+            {
+                ModLoaderType.NeoForge => (await ForgeInstallDataApi.GetNeoForgeInstallDataAsync(
+                    mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Value.Version)),
+                ModLoaderType.Forge => (await ForgeInstallDataApi.GetForgeInstallDataAsync(
+                    mcVersion, httpClient, downloadMirror, cancellationToken)).First(d => d.Version.Equals(modLoaderInfo.Value.Version)),
+                ModLoaderType.Fabric => (await FabricInstallDataApi.GetFabricInstallDataAsync(
+                    mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Value.Version)),
+                ModLoaderType.Quilt => (await QuiltInstallDataApi.GetQuiltInstallDataAsync(
+                    mcVersion, httpClient, cancellationToken)).First(d => d.Loader.Version.Equals(modLoaderInfo.Value.Version)),
+                _ => throw new NotImplementedException()
+            };
+        }
 
         return (versionManifestItem, installData);
     }

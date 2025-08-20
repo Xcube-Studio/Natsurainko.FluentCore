@@ -6,6 +6,7 @@ using Nrk.FluentCore.Utils;
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,6 +31,11 @@ public class VanillaInstanceInstaller : IInstanceInstaller
     public IProgress<IInstallerProgress>? Progress { get; init; }
 
     public bool CleanAfterCancelled { get; init; } = true;
+
+    /// <summary>
+    /// 自定义安装实例的 Id
+    /// </summary>
+    public string? CustomizedInstanceId { get; init; }
 
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
@@ -91,13 +97,22 @@ public class VanillaInstanceInstaller : IInstanceInstaller
         ));
         cancellationToken.ThrowIfCancellationRequested();
 
-        FileInfo jsonFile = new(Path.Combine(MinecraftFolder, "versions", McVersionManifestItem.Id, $"{McVersionManifestItem.Id}.json"));
+        string instanceId = CustomizedInstanceId ?? McVersionManifestItem.Id;
+        FileInfo jsonFile = new(Path.Combine(MinecraftFolder, "versions", instanceId, $"{instanceId}.json"));
 
         var downloadResult = await Downloader.DownloadFileAsync(new(McVersionManifestItem.Url, jsonFile.FullName), cancellationToken);
         if (downloadResult.Type != DownloadResultType.Successful)
         {
             cancellationToken.ThrowIfCancellationRequested();
             throw downloadResult.Exception!;
+        }
+
+        if (CustomizedInstanceId != null)
+        {
+            var jsonNode = JsonNode.Parse(await File.ReadAllTextAsync(jsonFile.FullName, cancellationToken))!;
+            jsonNode["id"] = CustomizedInstanceId;
+
+            await File.WriteAllTextAsync(jsonFile.FullName, jsonNode.ToJsonString(), cancellationToken);
         }
 
         Progress?.Report(new InstallerProgress<VanillaInstallationStage>(

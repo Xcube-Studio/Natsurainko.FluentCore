@@ -1,8 +1,10 @@
 ﻿using Nrk.FluentCore.GameManagement.Installer;
-using Nrk.FluentCore.GameManagement.Installer.Modpack;
 using Nrk.FluentCore.Resources;
+using Nrk.FluentCore.Resources.CurseForge;
+using Nrk.FluentCore.Resources.Modrinth;
 using Nrk.FluentCore.Utils;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace Nrk.FluentCore.Experimental.GameManagement.Modpacks;
 
 public static class ModpackInfoParser
 {
-    public static bool TryParseModpack(string packageFilePath, out ModpackInfo? modpackInfo)
+    public static bool TryParseModpack(string packageFilePath, [NotNullWhen(true)] out ModpackInfo? modpackInfo)
     {
         using ZipArchive zipArchive = ZipFile.OpenRead(packageFilePath);
 
@@ -28,7 +30,9 @@ public static class ModpackInfoParser
                 return true;
             }
         }
-        catch (Exception) { }
+        catch (Exception ex) 
+        {
+        }
 
         modpackInfo = null;
         return false;
@@ -40,23 +44,33 @@ public static class ModpackInfoParser
             packageArchive.GetEntry("manifest.json")?.ReadAsString() ?? throw new InvalidDataException(),
             ResourcesJsonSerializerContext.Default.CurseForgeModpackManifest) ?? throw new InvalidDataException();
 
-        var primaryModLoader = modpackManifest.Minecraft.ModLoaders.First(m => m.Primary) ?? throw new InvalidDataException();
-        string[] identifiers = primaryModLoader.Id.Split('-');
+        if (string.IsNullOrEmpty(modpackManifest.Minecraft.McVersion))
+            throw new InvalidDataException("could not parse modpack minecraft version");
+        if (modpackManifest.Minecraft.ModLoaders.Length >= 2)
+            throw new InvalidDataException("could not parse modpack modloader, count of modloader >= 2");
 
-        if (identifiers.Length < 2) throw new InvalidDataException();
+        ModLoaderInfo? modLoaderInfo = null;
+        if (modpackManifest.Minecraft.ModLoaders.Length != 0)
+        {
+            var primaryModLoader = modpackManifest.Minecraft.ModLoaders.First(m => m.Primary)
+                ?? throw new InvalidDataException("could not parse modpack primary modloader");
+            string[] identifiers = primaryModLoader.Id.Split('-');
 
-        var modLoaderInfo = new ModLoaderInfo
-        (
-            identifiers[0] switch
-            {
-                "forge" => ModLoaderType.Forge,
-                "neoforge" => ModLoaderType.NeoForge,
-                "fabric" => ModLoaderType.Fabric,
-                "quilt" => ModLoaderType.Quilt,
-                _ => throw new NotSupportedException()
-            },
-            identifiers[1]
-        );
+            if (identifiers.Length != 2) throw new InvalidDataException("could not parse modpack modloader");
+
+            modLoaderInfo = new ModLoaderInfo
+            (
+                identifiers[0] switch
+                {
+                    "forge" => ModLoaderType.Forge,
+                    "neoforge" => ModLoaderType.NeoForge,
+                    "fabric" => ModLoaderType.Fabric,
+                    "quilt" => ModLoaderType.Quilt,
+                    _ => throw new NotSupportedException()
+                },
+                identifiers[1]
+            );
+        }
 
         return new ModpackInfo
         {
@@ -76,23 +90,27 @@ public static class ModpackInfoParser
             ResourcesJsonSerializerContext.Default.ModrinthModpackManifest) ?? throw new InvalidDataException();
 
         if (!modpackManifest.Dependencies.TryGetValue("minecraft", out string? mcVersion))
-            throw new InvalidDataException();
-        if (modpackManifest.Dependencies.Keys.Count != 2)
-            throw new InvalidDataException("could not parse modpack modloader");
+            throw new InvalidDataException("could not parse modpack minecraft version");
+        if (modpackManifest.Dependencies.Keys.Count > 2)
+            throw new InvalidDataException("could not parse modpack modloader, count of modloader >= 2");
 
-        string loaderName = modpackManifest.Dependencies.Keys.First(k => k != "minecraft");
-        var modLoaderInfo = new ModLoaderInfo
-        (
-            loaderName switch
-            {
-                "forge" => ModLoaderType.Forge,
-                "neoforge" => ModLoaderType.NeoForge,
-                "fabric-loadeer" => ModLoaderType.Fabric,
-                "quilt-loadeer" => ModLoaderType.Quilt,
-                _ => throw new NotSupportedException()
-            },
-            modpackManifest.Dependencies[loaderName]
-        );
+        ModLoaderInfo? modLoaderInfo = null;
+        if (modpackManifest.Dependencies.Keys.Count == 2)
+        {
+            string loaderName = modpackManifest.Dependencies.Keys.First(k => k != "minecraft");
+            modLoaderInfo = new ModLoaderInfo
+            (
+                loaderName switch
+                {
+                    "forge" => ModLoaderType.Forge,
+                    "neoforge" => ModLoaderType.NeoForge,
+                    "fabric-loader" => ModLoaderType.Fabric,
+                    "quilt-loader" => ModLoaderType.Quilt,
+                    _ => throw new NotSupportedException()
+                },
+                modpackManifest.Dependencies[loaderName]
+            );
+        }
 
         return new ModpackInfo
         {

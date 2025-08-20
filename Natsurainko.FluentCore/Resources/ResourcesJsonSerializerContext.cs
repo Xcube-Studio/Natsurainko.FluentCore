@@ -1,4 +1,5 @@
-﻿using Nrk.FluentCore.GameManagement.Installer.Modpack;
+﻿using Nrk.FluentCore.Resources.CurseForge;
+using Nrk.FluentCore.Resources.Modrinth;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 

@@ -3,9 +3,8 @@ using Nrk.FluentCore.Experimental.GameManagement.Modpacks;
 using Nrk.FluentCore.GameManagement;
 using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Installer;
-using Nrk.FluentCore.GameManagement.Installer.Modpack;
 using Nrk.FluentCore.GameManagement.Instances;
-using Nrk.FluentCore.Resources;
+using Nrk.FluentCore.Resources.Modrinth;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Generic;
@@ -29,11 +28,6 @@ public class ModrinthModpackInstaller : IInstanceInstaller
     /// 编译过程调用的 java.exe 路径
     /// </summary>
     public required string JavaPath { get; init; }
-
-    /// <summary>
-    /// CurseForge Api 客户端
-    /// </summary>
-    public required CurseForgeClient CurseForgeClient { get; init; }
 
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
@@ -60,10 +54,14 @@ public class ModrinthModpackInstaller : IInstanceInstaller
             ParseModrinthModpack(ModpackFilePath, cancellationToken, out packageArchive, out var modpackManifest, out var modLoaderInfo);
 
             stage = ModrinthModpackInstallationStage.SearchInstallData;
-            (VersionManifestItem, object) installData = await SearchInstallData(modpackManifest, modLoaderInfo, cancellationToken);
+            (VersionManifestItem, object?) installData = await SearchInstallData(modpackManifest, modLoaderInfo, cancellationToken);
 
-            stage = ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance;
-            instance = await InstallModifiedMinecraftInstance(installData, modpackManifest, modLoaderInfo, cancellationToken);
+            stage = modLoaderInfo is null 
+                ? ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance
+                : ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance;
+            instance = modLoaderInfo is null 
+                ? await InstallVanillaMinecraftInstance(installData, modpackManifest, cancellationToken)
+                : await InstallModifiedMinecraftInstance(((VersionManifestItem, object))installData!, modpackManifest, (ModLoaderInfo)modLoaderInfo, cancellationToken);
 
             stage = ModrinthModpackInstallationStage.DownloadModrinthFiles;
             await DownloadModrinthFiles(instance, modpackManifest, cancellationToken);
@@ -90,7 +88,6 @@ public class ModrinthModpackInstaller : IInstanceInstaller
         }
 
         return instance ?? throw new ArgumentNullException(nameof(instance), "Unexpected null reference to variable");
-
     }
 
     void ParseModrinthModpack(
@@ -98,7 +95,7 @@ public class ModrinthModpackInstaller : IInstanceInstaller
         CancellationToken cancellationToken,
         out ZipArchive packageArchive,
         out ModrinthModpackManifest modpackManifest,
-        out ModLoaderInfo modLoaderInfo)
+        out ModLoaderInfo? modLoaderInfo)
     {
         Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
             ModrinthModpackInstallationStage.ParseModrinthModpack,
@@ -116,9 +113,9 @@ public class ModrinthModpackInstaller : IInstanceInstaller
         ));
     }
 
-    async Task<(VersionManifestItem, object)> SearchInstallData(
+    async Task<(VersionManifestItem, object?)> SearchInstallData(
         ModrinthModpackManifest modpackManifest,
-        ModLoaderInfo modLoaderInfo,
+        ModLoaderInfo? modLoaderInfo,
         CancellationToken cancellationToken)
     {
         Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
@@ -144,12 +141,54 @@ public class ModrinthModpackInstaller : IInstanceInstaller
         return value;
     }
 
+    async Task<MinecraftInstance> InstallVanillaMinecraftInstance(
+        (VersionManifestItem, object?) modification,
+        ModrinthModpackManifest modpackManifest,
+        CancellationToken cancellationToken)
+    {
+        Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
+            ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance,
+            InstallerStageProgress.Skiped()
+        ));
+        Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
+            ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Starting()
+        ));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        IProgress<IInstallerProgress>? progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)
+            (ModLoaderType.Fabric, out IProgress<IInstallerProgress>? vanillaInstallationProgress);
+
+        foreach (var item in Enum.GetValues<FabricInstanceInstaller.FabricInstallationStage>())
+            progress?.Report(new InstallerProgress<FabricInstanceInstaller.FabricInstallationStage>(item, InstallerStageProgress.Skiped()));
+
+        IInstanceInstaller instanceInstaller = new VanillaInstanceInstaller
+        {
+            CheckAllDependencies = CheckAllDependencies,
+            CustomizedInstanceId = CustomizedInstanceId ?? modpackManifest.Name,
+            Downloader = Downloader,
+            McVersionManifestItem = modification.Item1,
+            MinecraftFolder = MinecraftFolder,
+            Progress = vanillaInstallationProgress,
+        };
+
+        Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
+            ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Finished()
+        ));
+        return await instanceInstaller.InstallAsync(cancellationToken);
+    }
+
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
         (VersionManifestItem, object) modification,
         ModrinthModpackManifest modpackManifest,
         ModLoaderInfo modLoaderInfo,
         CancellationToken cancellationToken)
     {
+        Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
+            ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Skiped()
+        ));
         Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
             ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance,
             InstallerStageProgress.Starting()
@@ -241,8 +280,11 @@ public class ModrinthModpackInstaller : IInstanceInstaller
 
         foreach (var file in modpackManifest.Files)
         {
-            if (!file.Environment.TryGetValue("client", out var environment)) continue;
-            if (environment != "client") continue;
+            if (file.Environment != null)
+            {
+                if (!file.Environment.TryGetValue("client", out var environment)) continue;
+                if (environment != "required") continue;
+            }
 
             downloadRequests.Add(new
             (
@@ -313,6 +355,7 @@ public class ModrinthModpackInstaller : IInstanceInstaller
     {
         ParseModrinthModpack,
         SearchInstallData,
+        InstallVanillaMinecraftInstance,
         InstallModifiedMinecraftInstance,
         DownloadModrinthFiles,
         CopyOverriddenFiles

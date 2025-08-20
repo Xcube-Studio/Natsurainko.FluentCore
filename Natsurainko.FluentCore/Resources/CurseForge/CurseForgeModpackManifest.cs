@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.Installer.Modpack;
+namespace Nrk.FluentCore.Resources.CurseForge;
 
 public class CurseForgeModpackManifest
 {

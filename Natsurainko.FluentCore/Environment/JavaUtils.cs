@@ -157,6 +157,17 @@ public static class JavaUtils
 
         #endregion
 
+        #region Validate: java.dll
+
+        // Prevent Java Like:
+        // C:\Program Files (x86)\Common Files\Oracle\Java\java8path\java(w).exe
+
+        result.Where(p => !File.Exists(Path.Combine(Path.GetDirectoryName(p)!, "java.dll")))
+            .ToList() // ToList to avoid modifying the collection while iterating
+            .ForEach(p => result.Remove(p));
+
+        #endregion
+
         return result.Distinct();
     }
 

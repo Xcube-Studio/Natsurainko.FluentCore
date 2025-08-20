@@ -13,7 +13,7 @@ public record ModpackInfo
 {
     public required string McVersion { get; set; }
 
-    public required ModLoaderInfo ModLoader { get; set; }
+    public required ModLoaderInfo? ModLoader { get; set; }
 
     public required ModpackType ModpackType { get; set; }
 

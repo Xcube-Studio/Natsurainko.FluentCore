@@ -3,9 +3,9 @@ using Nrk.FluentCore.Experimental.GameManagement.Modpacks;
 using Nrk.FluentCore.GameManagement;
 using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Installer;
-using Nrk.FluentCore.GameManagement.Installer.Modpack;
 using Nrk.FluentCore.GameManagement.Instances;
 using Nrk.FluentCore.Resources;
+using Nrk.FluentCore.Resources.CurseForge;
 using Nrk.FluentCore.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -13,10 +13,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using static Nrk.FluentCore.GameManagement.Installer.Modpack.CurseForgeModpackManifest;
+using static Nrk.FluentCore.Resources.CurseForge.CurseForgeModpackManifest;
 
 namespace Nrk.FluentCore.Experimental.GameManagement.Installer.Modpack;
 
@@ -67,10 +66,14 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
             ParseCurseForgeModpack(ModpackFilePath, cancellationToken, out packageArchive, out var modpackManifest, out var modLoaderInfo);
 
             stage = CurseForgeModpackInstallationStage.SearchInstallData;
-            (VersionManifestItem, object) installData = await SearchInstallData(modpackManifest, modLoaderInfo, cancellationToken);
+            (VersionManifestItem, object?) installData = await SearchInstallData(modpackManifest, modLoaderInfo, cancellationToken);
 
-            stage = CurseForgeModpackInstallationStage.InstallModifiedMinecraftInstance;
-            instance = await InstallModifiedMinecraftInstance(installData, modpackManifest, modLoaderInfo, cancellationToken);
+            stage = modLoaderInfo is null
+                ? CurseForgeModpackInstallationStage.InstallVanillaMinecraftInstance
+                : CurseForgeModpackInstallationStage.InstallModifiedMinecraftInstance;
+            instance = modLoaderInfo is null
+                ? await InstallVanillaMinecraftInstance(installData, modpackManifest, cancellationToken)
+                : await InstallModifiedMinecraftInstance(((VersionManifestItem, object))installData!, modpackManifest, (ModLoaderInfo)modLoaderInfo, cancellationToken);
 
             stage = CurseForgeModpackInstallationStage.ParseCurseForgeFiles;
             var requests = await ParseCurseForgeFiles(instance, modpackManifest, cancellationToken);
@@ -107,7 +110,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         CancellationToken cancellationToken,
         out ZipArchive packageArchive,
         out CurseForgeModpackManifest modpackManifest,
-        out ModLoaderInfo modLoaderInfo)
+        out ModLoaderInfo? modLoaderInfo)
     {
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.ParseCurseForgeModpack,
@@ -125,9 +128,9 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         ));
     }
 
-    async Task<(VersionManifestItem, object)> SearchInstallData(
+    async Task<(VersionManifestItem, object?)> SearchInstallData(
         CurseForgeModpackManifest modpackManifest, 
-        ModLoaderInfo modLoaderInfo, 
+        ModLoaderInfo? modLoaderInfo, 
         CancellationToken cancellationToken)
     {
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
@@ -153,12 +156,55 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         return value;
     }
 
+    async Task<MinecraftInstance> InstallVanillaMinecraftInstance(
+        (VersionManifestItem, object?) modification,
+        CurseForgeModpackManifest modpackManifest,
+        CancellationToken cancellationToken)
+    {
+        Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
+            CurseForgeModpackInstallationStage.InstallModifiedMinecraftInstance,
+            InstallerStageProgress.Skiped()
+        ));
+        Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
+            CurseForgeModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Starting()
+        ));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        IProgress<IInstallerProgress>? progress = (CreateModLoderInstallerProgressReporter ?? EmptyDelegate)
+            (ModLoaderType.Fabric, out IProgress<IInstallerProgress>? vanillaInstallationProgress);
+
+        foreach (var item in Enum.GetValues<FabricInstanceInstaller.FabricInstallationStage>())
+            progress?.Report(new InstallerProgress<FabricInstanceInstaller.FabricInstallationStage>(item, InstallerStageProgress.Skiped()));
+
+        IInstanceInstaller instanceInstaller = new VanillaInstanceInstaller
+        {
+            CheckAllDependencies = CheckAllDependencies,
+            CustomizedInstanceId = CustomizedInstanceId ?? modpackManifest.Name,
+            Downloader = Downloader,
+            McVersionManifestItem = modification.Item1,
+            MinecraftFolder = MinecraftFolder,
+            Progress = vanillaInstallationProgress,
+        };
+
+        Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
+            CurseForgeModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Finished()
+        ));
+
+        return await instanceInstaller.InstallAsync(cancellationToken);
+    }
+
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
         (VersionManifestItem, object) modification,
         CurseForgeModpackManifest modpackManifest,
         ModLoaderInfo modLoaderInfo, 
         CancellationToken cancellationToken)
     {
+        Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
+            CurseForgeModpackInstallationStage.InstallVanillaMinecraftInstance,
+            InstallerStageProgress.Skiped()
+        ));
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.InstallModifiedMinecraftInstance,
             InstallerStageProgress.Starting()
@@ -450,6 +496,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
     {
         ParseCurseForgeModpack,
         SearchInstallData,
+        InstallVanillaMinecraftInstance,
         InstallModifiedMinecraftInstance,
         ParseCurseForgeFiles,
         DownloadCurseForgeFiles,

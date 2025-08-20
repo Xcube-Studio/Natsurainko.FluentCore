@@ -84,8 +84,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             forgePackageFile = await DownloadForgePackage(cancellationToken);
 
             stage = ForgeInstallationStage.WriteDependenciesAndVersionFiles;
-            ParseForgePackage(forgePackageFile.FullName, cancellationToken, out var _packageArchive, out var installProfileJsonNode, out var isLegacyForgeVersion);
-            packageArchive = _packageArchive;
+            ParseForgePackage(forgePackageFile.FullName, cancellationToken, out packageArchive, out var installProfileJsonNode, out var isLegacyForgeVersion);
             forgeClientFile = await WriteDependenciesAndVersionFiles(isLegacyForgeVersion, installProfileJsonNode, packageArchive, cancellationToken);
 
             stage = ForgeInstallationStage.DownloadForgeDependencies;

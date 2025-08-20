@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Nrk.FluentCore.GameManagement.Installer.Modpack;
+namespace Nrk.FluentCore.Resources.Modrinth;
 
 public class ModrinthModpackManifest
 {
@@ -35,9 +35,8 @@ public class ModrinthModpackManifest
         [JsonPropertyName("downloads")]
         public required string[] Downloads { get; set; }
 
-        [JsonRequired]
         [JsonPropertyName("env")]
-        public required Dictionary<string, string> Environment { get; set; }
+        public Dictionary<string, string>? Environment { get; set; }
 
         [JsonRequired]
         [JsonPropertyName("path")]
