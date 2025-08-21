@@ -400,7 +400,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
 
             string targetFilePath = Path.Combine(
                 Path.GetDirectoryName(minecraftInstance.ClientJsonPath)!,
-                new string([.. entry.FullName.Skip(modpackManifest.Overrides.Length + 1)]));
+                entry.FullName[(modpackManifest.Overrides.Length + 1)..]);
             string targetDirectory = Path.GetDirectoryName(targetFilePath)!;
 
             if (!Directory.Exists(targetDirectory))

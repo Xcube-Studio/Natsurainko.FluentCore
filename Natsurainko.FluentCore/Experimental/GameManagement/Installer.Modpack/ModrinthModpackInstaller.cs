@@ -336,7 +336,7 @@ public class ModrinthModpackInstaller : IInstanceInstaller
 
             string targetFilePath = Path.Combine(
                 Path.GetDirectoryName(minecraftInstance.ClientJsonPath)!,
-                new ([.. entry.FullName.Skip(10)]));
+                entry.FullName[10..]);
             string targetDirectory = Path.GetDirectoryName(targetFilePath)!;
 
             if (!Directory.Exists(targetDirectory))

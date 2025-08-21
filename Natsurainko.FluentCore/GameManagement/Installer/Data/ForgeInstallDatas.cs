@@ -93,7 +93,7 @@ public static class ForgeInstallDataApi
             });
         }
 
-        string majorVersion = new([.. mcVersion.Skip(2)]);
+        string majorVersion = mcVersion[2..];
 
         foreach (var node in neoforgeNodes)
         {
