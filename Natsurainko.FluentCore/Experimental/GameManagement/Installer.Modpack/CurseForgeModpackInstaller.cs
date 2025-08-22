@@ -43,6 +43,8 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
 
     public IDownloader Downloader { get; init; } = HttpUtils.Downloader;
 
+    public bool DeletePackageAfterInstallation { get; init; } = false;
+
     public bool CheckAllDependencies { get; init; }
 
     /// <summary>
@@ -100,6 +102,12 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
         finally
         {
             packageArchive?.Dispose();
+
+            if (DeletePackageAfterInstallation)
+            {
+                try { File.Delete(ModpackFilePath); }
+                catch (Exception) { }
+            }
         }
 
         return instance ?? throw new ArgumentNullException(nameof(instance), "Unexpected null reference to variable");
