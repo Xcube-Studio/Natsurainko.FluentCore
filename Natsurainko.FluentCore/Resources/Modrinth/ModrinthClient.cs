@@ -32,9 +32,13 @@ public class ModrinthClient(HttpClient? httpClient = null)
         {
             string type = resourceType switch
             {
+                ModrinthResourceType.McMod => "mod",
                 ModrinthResourceType.ModPack => "modpack",
                 ModrinthResourceType.Resourcepack => "resourcepack",
-                _ => "mod"
+                ModrinthResourceType.Shader => "shader",
+                ModrinthResourceType.DataPack => "datapack",
+                ModrinthResourceType.Plugin => "plugin",
+                _ => string.Empty
             };
             facets.Add($"[\"project_type:{type}\"]");
         }
