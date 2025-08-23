@@ -1,9 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nrk.FluentCore.Environment;
-using Nrk.FluentCore.GameManagement.Downloader;
 using Nrk.FluentCore.GameManagement.Installer;
-using Nrk.FluentCore.Utils;
 using System.ComponentModel;
 using System.Net.Http;
 using System.Text.Json;
@@ -160,7 +158,7 @@ partial class ViewModel : ObservableObject
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
                 InstallData = (ForgeInstallData)SelectedInstallData,
-                Progress = (InstallationViewModel<ForgeInstallationStage>)stagesViewModel,
+                Progress = stagesViewModel,
                 VanillaInstallationProgress = vanillaStagesViewModel,
                 JavaPath = JavaPath,
                 IsNeoForgeInstaller = false
@@ -171,7 +169,7 @@ partial class ViewModel : ObservableObject
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
                 InstallData = (ForgeInstallData)SelectedInstallData,
-                Progress = (InstallationViewModel<ForgeInstallationStage>)stagesViewModel,
+                Progress = stagesViewModel,
                 VanillaInstallationProgress = vanillaStagesViewModel,
                 JavaPath = JavaPath,
                 IsNeoForgeInstaller = true
@@ -182,7 +180,7 @@ partial class ViewModel : ObservableObject
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
                 InstallData = (OptiFineInstallData)SelectedInstallData,
-                Progress = (InstallationViewModel<OptiFineInstallationStage>)stagesViewModel,
+                Progress = stagesViewModel,
                 VanillaInstallationProgress = vanillaStagesViewModel,
                 JavaPath = JavaPath
             },
@@ -192,7 +190,7 @@ partial class ViewModel : ObservableObject
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
                 InstallData = (FabricInstallData)SelectedInstallData,
-                Progress = (InstallationViewModel<FabricInstallationStage>)stagesViewModel,
+                Progress = stagesViewModel,
                 VanillaInstallationProgress = vanillaStagesViewModel
             },
             "Quilt" => new QuiltInstanceInstaller()
@@ -201,7 +199,7 @@ partial class ViewModel : ObservableObject
                 MinecraftFolder = MinecraftFolder,
                 CheckAllDependencies = true,
                 InstallData = (QuiltInstallData)SelectedInstallData,
-                Progress = (InstallationViewModel<QuiltInstallationStage>)stagesViewModel,
+                Progress = stagesViewModel,
                 VanillaInstallationProgress = vanillaStagesViewModel
             },
             _ => throw new InvalidOperationException()
@@ -212,7 +210,7 @@ partial class ViewModel : ObservableObject
 
     List<InstallationStageViewModel> GetInstallationViewModel(
         out InstallationViewModel<VanillaInstallationStage> vanillaStagesViewModel,
-        out object stagesViewModel)
+        out IProgress<IInstallerProgress> stagesViewModel)
     {
         List<InstallationStageViewModel> stageViewModels = new();
         vanillaStagesViewModel = new();
