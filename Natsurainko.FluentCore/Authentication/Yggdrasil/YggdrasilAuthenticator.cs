@@ -31,7 +31,7 @@ public class YggdrasilAuthenticator
 
     public YggdrasilAuthenticator(string serverUrl, HttpClient? httpClient = null)
         : this(serverUrl, Guid.NewGuid().ToString("N"), httpClient) { }
-    
+
     /// <summary>
     /// Login to Yggdrasil account
     /// </summary>
@@ -103,7 +103,7 @@ public class YggdrasilAuthenticator
 
             if (response?.AvailableProfiles is null && response?.SelectedProfile is null)
                 throw new FormatException("Response does not contain any profile");
-        } 
+        }
         catch (FormatException ex)
         {
             throw new YggdrasilAuthenticationException(ex.Message);
@@ -118,7 +118,7 @@ public class YggdrasilAuthenticator
             return [.. response.AvailableProfiles!.Select(profile =>
             {
                 if (profile.Name is null || profile.Id is null || response.AccessToken is null)
-                    throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());     
+                    throw new YggdrasilAuthenticationException(responseMessage.Content.ReadAsString());
 
                 if (!Guid.TryParse(profile.Id, out var uuid))
                     throw new YggdrasilAuthenticationException("Invalid UUID");
@@ -139,7 +139,7 @@ public class YggdrasilAuthenticator
 
             return
             [
-                new(response.SelectedProfile.Name, uuid, response.AccessToken, _serverUrl, _clientToken) 
+                new(response.SelectedProfile.Name, uuid, response.AccessToken, _serverUrl, _clientToken)
                 {
                     MetaData = GetMetaData(_clientToken)
                 }

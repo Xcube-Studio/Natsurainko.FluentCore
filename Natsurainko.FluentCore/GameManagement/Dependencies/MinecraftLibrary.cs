@@ -161,8 +161,8 @@ public abstract partial class MinecraftLibrary : MinecraftDependency
             || libNode.ClientRequest != null
             || libNode.ServerRequest != null)
         {
-            string legacyForgeLibraryUrl = (libNode.MavenUrl == "https://maven.minecraftforge.net/" 
-                ? "https://maven.minecraftforge.net/" 
+            string legacyForgeLibraryUrl = (libNode.MavenUrl == "https://maven.minecraftforge.net/"
+                ? "https://maven.minecraftforge.net/"
                 : "https://libraries.minecraft.net/") + GetLibraryPath(libNode.MavenName).Replace("\\", "/");
 
             return new LegacyForgeLibrary(libNode.MavenName, legacyForgeLibraryUrl)

@@ -1,7 +1,6 @@
 ﻿using Nrk.FluentCore.GameManagement.Downloader;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -29,8 +28,8 @@ public class ForgeInstallData
 public static class ForgeInstallDataApi
 {
     public static async Task<ForgeInstallData[]> GetForgeInstallDataAsync(string mcVersion,
-        HttpClient? httpClient = null, 
-        IDownloadMirror? downloadMirror = null, 
+        HttpClient? httpClient = null,
+        IDownloadMirror? downloadMirror = null,
         CancellationToken cancellationToken = default)
     {
         httpClient ??= new HttpClient();
@@ -93,7 +92,7 @@ public static class ForgeInstallDataApi
             });
         }
 
-        string majorVersion = new([.. mcVersion.Skip(2)]);
+        string majorVersion = mcVersion[2..];
 
         foreach (var node in neoforgeNodes)
         {

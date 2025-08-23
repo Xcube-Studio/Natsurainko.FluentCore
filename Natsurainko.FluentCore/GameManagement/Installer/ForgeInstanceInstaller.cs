@@ -53,15 +53,15 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// 继承的原版实例（可选）
     /// </summary>
     public VanillaMinecraftInstance? InheritedInstance { get; init; }
-        
+
     /// <summary>
     /// 自定义安装实例的 Id
     /// </summary>
     public string? CustomizedInstanceId { get; init; }
 
-    public IProgress<InstallerProgress<ForgeInstallationStage>>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
-    public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+    public IProgress<IInstallerProgress>? VanillaInstallationProgress { get; init; }
 
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
@@ -84,8 +84,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             forgePackageFile = await DownloadForgePackage(cancellationToken);
 
             stage = ForgeInstallationStage.WriteDependenciesAndVersionFiles;
-            ParseForgePackage(forgePackageFile.FullName, cancellationToken, out var _packageArchive, out var installProfileJsonNode, out var isLegacyForgeVersion);
-            packageArchive = _packageArchive;
+            ParseForgePackage(forgePackageFile.FullName, cancellationToken, out packageArchive, out var installProfileJsonNode, out var isLegacyForgeVersion);
             forgeClientFile = await WriteDependenciesAndVersionFiles(isLegacyForgeVersion, installProfileJsonNode, packageArchive, cancellationToken);
 
             stage = ForgeInstallationStage.DownloadForgeDependencies;
@@ -99,7 +98,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             }
             else
             {
-                Progress?.Report(new(
+                Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
                     ForgeInstallationStage.RunCompileProcess,
                     InstallerStageProgress.Skiped()
                 ));
@@ -115,12 +114,12 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                 forgeClientFile!.Directory?.Delete();
             }
 
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<ForgeInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<ForgeInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
         finally
@@ -139,13 +138,23 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<VanillaMinecraftInstance> ParseOrInstallVanillaInstance(CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Starting()
         ));
 
         if (InheritedInstance != null)
+        {
+            foreach (var item in Enum.GetValues<VanillaInstallationStage>())
+                VanillaInstallationProgress?.Report(new InstallerProgress<VanillaInstallationStage>(item, InstallerStageProgress.Skiped()));
+
+            Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
+                ForgeInstallationStage.ParseOrInstallVanillaInstance,
+                InstallerStageProgress.Finished()
+            ));
+
             return InheritedInstance;
+        }
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
@@ -159,7 +168,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Finished()
         ));
@@ -174,7 +183,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<FileInfo> DownloadForgePackage(CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.DownloadForgePackage,
             InstallerStageProgress.Starting()
         ));
@@ -191,12 +200,12 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         {
             List<string> identifiers = [InstallData.McVersion, InstallData.Version];
 
-            if (InstallData.Branch != null) 
+            if (InstallData.Branch != null)
                 identifiers.Add(InstallData.Branch);
 
             string loaderVersion = string.Join('-', identifiers);
 
-            packageUrl = $"https://maven.minecraftforge.net/releases/net/minecraftforge/forge/" 
+            packageUrl = $"https://maven.minecraftforge.net/releases/net/minecraftforge/forge/"
                 + loaderVersion + $"/forge-{loaderVersion}-installer.jar";
         }
 
@@ -215,7 +224,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             throw downloadResult.Exception!;
         }
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.DownloadForgePackage,
             InstallerStageProgress.Finished()
         ));
@@ -266,7 +275,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         ZipArchive packageArchive,
         CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.WriteDependenciesAndVersionFiles,
             InstallerStageProgress.Starting()
         ));
@@ -306,7 +315,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         jsonNode!["id"] = instanceId;
         await File.WriteAllTextAsync(jsonFile.FullName, jsonNode.ToJsonString(), cancellationToken);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.WriteDependenciesAndVersionFiles,
             InstallerStageProgress.Finished()
         ));
@@ -342,7 +351,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         MinecraftInstance instance,
         CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.DownloadForgeDependencies,
             InstallerStageProgress.Starting()
         ));
@@ -376,13 +385,13 @@ public class ForgeInstanceInstaller : IInstanceInstaller
                     dependencies.Add(item);
         }
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.DownloadForgeDependencies,
             InstallerStageProgress.UpdateTotalTasks(dependencies.Count)));
 
         var groupDownloadRequest = new GroupDownloadRequest(dependencies.OfType<IDownloadableDependency>().Select(x => new DownloadRequest(x.Url, x.FullPath)));
         groupDownloadRequest.SingleRequestCompleted += (_, _)
-            => Progress?.Report(new(
+            => Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
                 ForgeInstallationStage.DownloadForgeDependencies,
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
@@ -392,7 +401,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.DownloadForgeDependencies,
             InstallerStageProgress.Finished()
         ));
@@ -415,7 +424,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         string packageFilePath,
         CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.RunCompileProcess,
             InstallerStageProgress.Starting()
         ));
@@ -459,7 +468,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             .ToArray()
             ?? throw new InvalidDataException("Unable to parse Forge Processors");
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.RunCompileProcess,
             InstallerStageProgress.UpdateTotalTasks(forgeProcessors.Length)
         ));
@@ -529,13 +538,13 @@ public class ForgeInstanceInstaller : IInstanceInstaller
             if (_errorOutputs.Count > 0)
                 throw new ForgeCompileProcessException(_errorOutputs);
 
-            Progress?.Report(new(
+            Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
                 ForgeInstallationStage.RunCompileProcess,
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
         }
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<ForgeInstallationStage>(
             ForgeInstallationStage.RunCompileProcess,
             InstallerStageProgress.Finished()
         ));

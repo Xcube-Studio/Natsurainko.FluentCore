@@ -51,9 +51,9 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// </summary>
     public string? CustomizedInstanceId { get; init; }
 
-    public IProgress<InstallerProgress<OptiFineInstallationStage>>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
-    public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+    public IProgress<IInstallerProgress>? VanillaInstallationProgress { get; init; }
 
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
@@ -94,12 +94,12 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
                 optifineClientJson!.Directory?.Delete();
             }
 
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
         finally
@@ -118,13 +118,23 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<VanillaMinecraftInstance> ParseOrInstallVanillaInstance(CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Starting()
         ));
 
         if (InheritedInstance != null)
+        {
+            foreach (var item in Enum.GetValues<VanillaInstallationStage>())
+                VanillaInstallationProgress?.Report(new InstallerProgress<VanillaInstallationStage>(item, InstallerStageProgress.Skiped()));
+
+            Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
+                OptiFineInstallationStage.ParseOrInstallVanillaInstance,
+                InstallerStageProgress.Finished()
+            ));
+
             return InheritedInstance;
+        }
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
@@ -138,7 +148,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Finished()
         ));
@@ -153,7 +163,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<FileInfo> DownloadOptiFinePackage(CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.DownloadOptiFinePackage,
             InstallerStageProgress.Starting()
         ));
@@ -168,7 +178,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
             throw downloadResult.Exception!;
         }
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.DownloadOptiFinePackage,
             InstallerStageProgress.Finished()
         ));
@@ -209,7 +219,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     async Task<FileInfo> WriteDependenciesAndVersionFiles(VanillaMinecraftInstance instance, ZipArchive packageArchive,
         string launchwrapperVersion, string launchwrapperName, CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.WriteDependenciesAndVersionFiles,
             InstallerStageProgress.Starting()
         ));
@@ -259,7 +269,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
 
         File.Copy(instance.ClientJarPath, jsonFile.FullName.Replace(".json", ".jar"), true);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.WriteDependenciesAndVersionFiles,
             InstallerStageProgress.Finished()
         ));
@@ -293,7 +303,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
     /// <exception cref="OptiFineCompileProcessException"></exception>
     async Task RunCompileProcess(VanillaMinecraftInstance instance, string optifinePackagePath, CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.RunCompileProcess,
             InstallerStageProgress.Starting()
         ));
@@ -343,7 +353,7 @@ public class OptiFineInstanceInstaller : IInstanceInstaller
         if (_errorOutputs.Count > 0)
             throw new OptiFineCompileProcessException(_errorOutputs);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<OptiFineInstallationStage>(
             OptiFineInstallationStage.RunCompileProcess,
             InstallerStageProgress.Finished()
         ));

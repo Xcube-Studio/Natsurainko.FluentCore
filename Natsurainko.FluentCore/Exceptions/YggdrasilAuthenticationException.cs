@@ -4,7 +4,7 @@ using System.Text.Json.Nodes;
 namespace Nrk.FluentCore.Exceptions;
 
 public class YggdrasilAuthenticationException(
-    string responseJson, 
+    string responseJson,
     Exception? innerException = null) : Exception(ParseUnicodeContent(responseJson), innerException)
 {
     private static string ParseUnicodeContent(string content)

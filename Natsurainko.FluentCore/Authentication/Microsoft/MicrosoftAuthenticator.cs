@@ -203,7 +203,8 @@ public class MicrosoftAuthenticator
 
         // Parse response
         XBLAuthenticateResponse? xblResponse = null;
-        try {
+        try
+        {
             xblResponse = await xblResponseMessage
                 .EnsureSuccessStatusCode().Content
                 .ReadFromJsonAsync(AuthenticationJsonSerializerContext.Default.XBLAuthenticateResponse, cancellationToken);
@@ -390,7 +391,7 @@ public class MicrosoftAuthenticator
                 response.Id is null ||
                 !Guid.TryParse(response.Id, out guid))
             {
-                   throw new FormatException("Invalid response");
+                throw new FormatException("Invalid response");
             }
         }
         catch (Exception e) when (e is JsonException || e is FormatException)

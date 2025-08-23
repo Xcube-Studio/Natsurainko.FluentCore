@@ -79,7 +79,7 @@ public static class MinecraftInstanceExtensions
         MinecraftAssetIndex? assetIndex = null;
         IEnumerable<MinecraftAsset> assets = [];
 
-        if (instance is ModifiedMinecraftInstance { HasInheritance : true } modifiedMinecraftInstance)
+        if (instance is ModifiedMinecraftInstance { HasInheritance: true } modifiedMinecraftInstance)
         {
             if (File.Exists(modifiedMinecraftInstance.InheritedMinecraftInstance.AssetIndexJsonPath))
             {

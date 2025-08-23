@@ -34,7 +34,7 @@ public static class MinecraftModExtensions
             ?? throw new InvalidDataException("ModInfo has an invalid absolute path");
 
         string newFilePath = Path.Combine(
-            parentPath, 
+            parentPath,
             Path.GetFileNameWithoutExtension(originalPath) + (isEnable ? ".jar" : ".disabled"));
 
         File.Move(originalPath, newFilePath);

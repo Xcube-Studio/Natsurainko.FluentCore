@@ -104,7 +104,7 @@ public class MinecraftProcessBuilder
         var vmParameters = DefaultVmParameterParser.Parse(versionJsonNode);
         var gameParameters = DefaultGameParameterParser.Parse(versionJsonNode);
 
-        if (MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true} inst)
+        if (MinecraftInstance is ModifiedMinecraftInstance { HasInheritance: true } inst)
         {
             var inheritedVersionJsonNode = JsonNode.Parse(File.ReadAllText(inst.InheritedMinecraftInstance.ClientJsonPath))
                 ?? throw new JsonException("Failed to parse version.json");
@@ -307,7 +307,7 @@ public class MinecraftProcessBuilder
                     existsEqualLib = containedLib;
                     break;
                 }
-                else if (lib.Name == containedLib.Name 
+                else if (lib.Name == containedLib.Name
                     && lib.Classifier == containedLib.Classifier
                     && lib.Domain == containedLib.Domain)
                 {

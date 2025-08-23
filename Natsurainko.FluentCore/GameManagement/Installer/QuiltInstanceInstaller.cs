@@ -43,9 +43,9 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
     /// </summary>
     public string? CustomizedInstanceId { get; init; }
 
-    public IProgress<InstallerProgress<QuiltInstallationStage>>? Progress { get; init; }
+    public IProgress<IInstallerProgress>? Progress { get; init; }
 
-    public IProgress<InstallerProgress<VanillaInstallationStage>>? VanillaInstallationProgress { get; init; }
+    public IProgress<IInstallerProgress>? VanillaInstallationProgress { get; init; }
 
     Task<MinecraftInstance> IInstanceInstaller.InstallAsync(CancellationToken cancellationToken)
         => InstallAsync(cancellationToken).ContinueWith(MinecraftInstance (t) => t.Result);
@@ -78,12 +78,12 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
                 quiltClientJson!.Directory?.Delete();
             }
 
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<QuiltInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
         catch
         {
-            Progress?.Report(new(stage, InstallerStageProgress.Failed()));
+            Progress?.Report(new InstallerProgress<QuiltInstallationStage>(stage, InstallerStageProgress.Failed()));
             throw;
         }
 
@@ -97,13 +97,23 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<VanillaMinecraftInstance> ParseOrInstallVanillaInstance(CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Starting()
         ));
 
         if (InheritedInstance != null)
+        {
+            foreach (var item in Enum.GetValues<VanillaInstallationStage>())
+                VanillaInstallationProgress?.Report(new InstallerProgress<VanillaInstallationStage>(item, InstallerStageProgress.Skiped()));
+
+            Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
+                QuiltInstallationStage.ParseOrInstallVanillaInstance,
+                InstallerStageProgress.Finished()
+            ));
+
             return InheritedInstance;
+        }
 
         var vanillaInstanceInstaller = new VanillaInstanceInstaller()
         {
@@ -117,7 +127,7 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
 
         var instance = await vanillaInstanceInstaller.InstallAsync(cancellationToken);
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.ParseOrInstallVanillaInstance,
             InstallerStageProgress.Finished()
         ));
@@ -133,7 +143,7 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
     /// <returns></returns>
     async Task<FileInfo> DownloadQuiltClientJson(VanillaMinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.DownloadQuiltClientJson,
             InstallerStageProgress.Starting()
         ));
@@ -149,7 +159,7 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
             throw downloadResult.Exception!;
         }
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.DownloadQuiltClientJson,
             InstallerStageProgress.Finished()
         ));
@@ -181,7 +191,7 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
     /// <exception cref="InvalidOperationException"></exception>
     async Task DownloadQuiltLibraries(MinecraftInstance instance, CancellationToken cancellationToken)
     {
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.DownloadQuiltLibraries,
             InstallerStageProgress.Starting()
         ));
@@ -194,12 +204,12 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
         };
 
         dependencyResolver.InvalidDependenciesDetermined += (_, e)
-            => Progress?.Report(new(
+            => Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
                 QuiltInstallationStage.DownloadQuiltLibraries,
                 InstallerStageProgress.UpdateTotalTasks(e.Count())
             ));
         dependencyResolver.DependencyDownloaded += (_, _)
-            => Progress?.Report(new(
+            => Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
                 QuiltInstallationStage.DownloadQuiltLibraries,
                 InstallerStageProgress.IncrementFinishedTasks()
             ));
@@ -211,7 +221,7 @@ public partial class QuiltInstanceInstaller : IInstanceInstaller
         if (CheckAllDependencies && groupDownloadResult.Failed.Count > 0)
             throw new IncompleteDependenciesException(groupDownloadResult.Failed, "Some dependent files encountered errors during download");
 
-        Progress?.Report(new(
+        Progress?.Report(new InstallerProgress<QuiltInstallationStage>(
             QuiltInstallationStage.DownloadQuiltLibraries,
             InstallerStageProgress.Finished()
         ));

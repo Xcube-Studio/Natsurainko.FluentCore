@@ -35,7 +35,12 @@ public readonly record struct InstallerStageProgress(
         => new(InstallerStageProgressType.Skiped, null, null);
 }
 
+public interface IInstallerProgress
+{
+    InstallerStageProgress StageProgress { get; }
+}
+
 public readonly record struct InstallerProgress<TStage>(
     TStage Stage,
-    InstallerStageProgress StageProgress)
+    InstallerStageProgress StageProgress) : IInstallerProgress
     where TStage : notnull;

@@ -54,7 +54,7 @@ public class YggdrasilOAuthAuthenticator
     {
         var (name, guid) = await GetMinecraftProfileAsync(oAuth2TokenResponse.AccessToken, cancellationToken);
 
-        return new YggdrasilAccount(name, guid, oAuth2TokenResponse.AccessToken, _serverUrl) 
+        return new YggdrasilAccount(name, guid, oAuth2TokenResponse.AccessToken, _serverUrl)
         {
             MetaData = GetMetaData(oAuth2TokenResponse.RefreshToken, oAuth2TokenResponse.ExpiresIn.GetValueOrDefault(259200))
         };
@@ -165,7 +165,7 @@ public class YggdrasilOAuthAuthenticator
         if (jsonNode["shared_client_id"]?.GetValue<string>() is not string publicClientId)
             throw new NotSupportedException("The server does not support public client");
 
-        return new YggdrasilOAuthAuthenticator(serverUrl) 
+        return new YggdrasilOAuthAuthenticator(serverUrl)
         {
             ClientId = publicClientId,
             TokenEndpoint = jsonNode["token_endpoint"]?.GetValue<string>()

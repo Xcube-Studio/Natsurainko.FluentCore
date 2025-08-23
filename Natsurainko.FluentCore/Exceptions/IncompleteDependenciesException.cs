@@ -10,7 +10,7 @@ namespace Nrk.FluentCore.Exceptions;
 /// 依赖补全不完整错误
 /// </summary>
 public class IncompleteDependenciesException(
-    IReadOnlyList<(DownloadRequest, DownloadResult)> failed, 
+    IReadOnlyList<(DownloadRequest, DownloadResult)> failed,
     string message) : Exception(GenerateMessage(failed, message))
 {
     public IReadOnlyList<(DownloadRequest, DownloadResult)> Failed { get; init; } = failed;

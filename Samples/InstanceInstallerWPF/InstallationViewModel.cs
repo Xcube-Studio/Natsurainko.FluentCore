@@ -1,15 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Nrk.FluentCore.GameManagement.Installer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InstanceInstallerWPF;
 
 // Used in Launcher
-class InstallationViewModel<TStage> : IProgress<InstallerProgress<TStage>>
+class InstallationViewModel<TStage> : IProgress<IInstallerProgress>
     where TStage : notnull
 {
     public Dictionary<TStage, InstallationStageViewModel> Stages { get; } = new();
@@ -21,14 +16,15 @@ class InstallationViewModel<TStage> : IProgress<InstallerProgress<TStage>>
         {
             Stages.Add((TStage)Enum.Parse(typeof(TStage), name), new InstallationStageViewModel { TaskName = name });
         }
-
-
     }
 
-    public void Report(InstallerProgress<TStage> value)
+    public void Report(IInstallerProgress value)
     {
-        var vm = Stages[value.Stage];
-        vm.UpdateProgress(value.StageProgress);
+        if (value is InstallerProgress<TStage> progress)
+        {
+            var vm = Stages[progress.Stage];
+            vm.UpdateProgress(value.StageProgress);
+        }
     }
 }
 

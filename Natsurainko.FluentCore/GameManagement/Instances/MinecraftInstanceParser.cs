@@ -255,7 +255,7 @@ file static class ParsingHelpers
 
         string assetIndexJsonPath = hasInheritance
             ? inheritedInstance.AssetIndexJsonPath
-            : clientJsonObject.AssetIndex?.Id == null 
+            : clientJsonObject.AssetIndex?.Id == null
                 ? throw new InvalidDataException("Asset index ID does not exist in client.json")
                 : Path.Combine(partialData.MinecraftFolderPath, "assets", "indexes", $"{clientJsonObject.AssetIndex.Id}.json");
 
