@@ -99,9 +99,9 @@ public record MicrosoftAccount(
 /// </summary>
 /// <param name="YggdrasilServerUrl">外置验证服务器Url</param>
 public record YggdrasilAccount(
-    string Name, 
-    Guid Uuid, 
-    string AccessToken, 
+    string Name,
+    Guid Uuid,
+    string AccessToken,
     string YggdrasilServerUrl,
     string? ClientToken = default) : Account(Name, Uuid, AccessToken)
 {
@@ -131,8 +131,8 @@ public record YggdrasilAccount(
 /// 离线账户
 /// </summary>
 public record OfflineAccount(
-    string Name, 
-    Guid Uuid, 
+    string Name,
+    Guid Uuid,
     string AccessToken) : Account(Name, Uuid, AccessToken)
 {
     public override AccountType Type => AccountType.Offline;

@@ -53,7 +53,7 @@ public class ForgeInstanceInstaller : IInstanceInstaller
     /// 继承的原版实例（可选）
     /// </summary>
     public VanillaMinecraftInstance? InheritedInstance { get; init; }
-        
+
     /// <summary>
     /// 自定义安装实例的 Id
     /// </summary>
@@ -200,12 +200,12 @@ public class ForgeInstanceInstaller : IInstanceInstaller
         {
             List<string> identifiers = [InstallData.McVersion, InstallData.Version];
 
-            if (InstallData.Branch != null) 
+            if (InstallData.Branch != null)
                 identifiers.Add(InstallData.Branch);
 
             string loaderVersion = string.Join('-', identifiers);
 
-            packageUrl = $"https://maven.minecraftforge.net/releases/net/minecraftforge/forge/" 
+            packageUrl = $"https://maven.minecraftforge.net/releases/net/minecraftforge/forge/"
                 + loaderVersion + $"/forge-{loaderVersion}-installer.jar";
         }
 

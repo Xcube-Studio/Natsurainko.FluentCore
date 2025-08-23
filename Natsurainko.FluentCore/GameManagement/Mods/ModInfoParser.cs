@@ -102,7 +102,7 @@ public static class ModInfoParser
 
     private static MinecraftMod ParseModsToml(ref MinecraftMod mod, string tomlContent)
     {
-        var tomlTable = ((Toml.ToModel(tomlContent)["mods"] as TomlTableArray)?.FirstOrDefault()) 
+        var tomlTable = ((Toml.ToModel(tomlContent)["mods"] as TomlTableArray)?.FirstOrDefault())
             ?? throw new InvalidDataException("Invalid mods.toml");
 
         mod.DisplayName = tomlTable.GetString("displayName");

@@ -80,7 +80,8 @@ public static class JavaUtils
             }
 
             return result;
-        };
+        }
+        ;
 
         using var reg = Registry.LocalMachine.OpenSubKey("SOFTWARE");
 

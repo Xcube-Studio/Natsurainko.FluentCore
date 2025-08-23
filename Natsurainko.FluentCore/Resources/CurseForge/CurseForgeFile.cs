@@ -27,52 +27,52 @@ public record CurseForgeFile
 public record CurseForgeFileDetails
 {
     [JsonRequired]
-    [JsonPropertyName("id")] 
+    [JsonPropertyName("id")]
     public required int Id { get; set; }
 
-    [JsonPropertyName("displayName")] 
+    [JsonPropertyName("displayName")]
     public required string DisplayName { get; init; }
 
-    [JsonPropertyName("fileName")] 
+    [JsonPropertyName("fileName")]
     public required string FileName { get; init; }
 
-    [JsonPropertyName("fileDate")] 
+    [JsonPropertyName("fileDate")]
     public DateTime FileDate { get; set; }
 
-    [JsonPropertyName("fileLength")] 
+    [JsonPropertyName("fileLength")]
     public int FileLength { get; set; }
 
-    [JsonPropertyName("releaseType")] 
+    [JsonPropertyName("releaseType")]
     public int ReleaseType { get; set; }
 
-    [JsonPropertyName("fileStatus")] 
+    [JsonPropertyName("fileStatus")]
     public int FileStatus { get; set; }
 
-    [JsonPropertyName("downloadUrl")] 
+    [JsonPropertyName("downloadUrl")]
     public string? DownloadUrl { get; set; }
 
-    [JsonPropertyName("isAlternate")] 
+    [JsonPropertyName("isAlternate")]
     public bool IsAlternate { get; set; }
 
-    [JsonPropertyName("alternateFileId")] 
+    [JsonPropertyName("alternateFileId")]
     public int AlternateFileId { get; set; }
 
-    [JsonPropertyName("isAvailable")] 
+    [JsonPropertyName("isAvailable")]
     public bool IsAvailable { get; set; }
 
-    [JsonPropertyName("modules")] 
+    [JsonPropertyName("modules")]
     public ModuleJsonObject[]? Modules { get; set; }
 
     [JsonPropertyName("packageFingerprint")]
     public long PackageFingerprint { get; set; }
 
-    [JsonPropertyName("fileFingerprint")] 
+    [JsonPropertyName("fileFingerprint")]
     public long FileFingerprint { get; set; }
 
-    [JsonPropertyName("gameVersions")] 
+    [JsonPropertyName("gameVersions")]
     public required string[] GameVersions { get; init; }
 
-    [JsonPropertyName("hasInstallScript")] 
+    [JsonPropertyName("hasInstallScript")]
     public bool HasInstallScript { get; set; }
 
     [JsonPropertyName("isCompatibleWithClient")]
@@ -84,30 +84,30 @@ public record CurseForgeFileDetails
     [JsonPropertyName("restrictProjectFileAccess")]
     public int RestrictProjectFileAccess { get; set; }
 
-    [JsonPropertyName("projectStatus")] 
+    [JsonPropertyName("projectStatus")]
     public int ProjectStatus { get; set; }
 
-    [JsonPropertyName("projectId")] 
+    [JsonPropertyName("projectId")]
     public long ProjectId { get; set; }
 
     [JsonPropertyName("packageFingerprintId")]
     public long PackageFingerprintId { get; set; }
 
-    [JsonPropertyName("gameId")] 
+    [JsonPropertyName("gameId")]
     public int GameId { get; set; }
 
-    [JsonPropertyName("isServerPack")] 
+    [JsonPropertyName("isServerPack")]
     public bool IsServerPack { get; set; }
 
     public class ModuleJsonObject
     {
-        [JsonPropertyName("foldername")] 
+        [JsonPropertyName("foldername")]
         public string? FolderName { get; set; }
 
-        [JsonPropertyName("fingerprint")] 
+        [JsonPropertyName("fingerprint")]
         public long Fingerprint { get; set; }
 
-        [JsonPropertyName("type")] 
+        [JsonPropertyName("type")]
         public int Type { get; set; }
     }
 }

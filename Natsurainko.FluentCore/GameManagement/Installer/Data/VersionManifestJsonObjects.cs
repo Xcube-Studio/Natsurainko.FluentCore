@@ -40,14 +40,14 @@ public class VersionManifestItem
 }
 
 public static class VersionManifestApi
-{ 
+{
     public static async Task<VersionManifestJsonObject> GetVersionManifestAsync(HttpClient httpClient,
         IDownloadMirror? downloadMirror = null,
         CancellationToken cancellationToken = default)
     {
         string requestUrl = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
-        if (downloadMirror != null) 
+        if (downloadMirror != null)
             requestUrl = downloadMirror.GetMirrorUrl(requestUrl);
 
         return JsonSerializer.Deserialize(

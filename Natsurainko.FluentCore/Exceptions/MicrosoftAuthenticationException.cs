@@ -1,5 +1,5 @@
-﻿using System;
-using Nrk.FluentCore.Authentication;
+﻿using Nrk.FluentCore.Authentication;
+using System;
 
 namespace Nrk.FluentCore.Exceptions;
 

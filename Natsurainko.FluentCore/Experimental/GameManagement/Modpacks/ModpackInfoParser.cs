@@ -30,9 +30,7 @@ public static class ModpackInfoParser
                 return true;
             }
         }
-        catch (Exception ex) 
-        {
-        }
+        catch (Exception) { }
 
         modpackInfo = null;
         return false;

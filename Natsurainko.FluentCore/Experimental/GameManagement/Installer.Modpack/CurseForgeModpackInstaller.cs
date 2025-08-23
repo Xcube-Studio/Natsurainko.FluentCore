@@ -137,8 +137,8 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
     }
 
     async Task<(VersionManifestItem, object?)> SearchInstallData(
-        CurseForgeModpackManifest modpackManifest, 
-        ModLoaderInfo? modLoaderInfo, 
+        CurseForgeModpackManifest modpackManifest,
+        ModLoaderInfo? modLoaderInfo,
         CancellationToken cancellationToken)
     {
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
@@ -206,7 +206,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
         (VersionManifestItem, object) modification,
         CurseForgeModpackManifest modpackManifest,
-        ModLoaderInfo modLoaderInfo, 
+        ModLoaderInfo modLoaderInfo,
         CancellationToken cancellationToken)
     {
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
@@ -315,7 +315,7 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
                 Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
                     CurseForgeModpackInstallationStage.ParseCurseForgeFiles,
                     InstallerStageProgress.IncrementFinishedTasks()
-                )); 
+                ));
                 return;
             }
 

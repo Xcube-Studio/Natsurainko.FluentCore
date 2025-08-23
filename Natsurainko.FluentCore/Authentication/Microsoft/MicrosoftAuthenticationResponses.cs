@@ -165,7 +165,7 @@ public class OAuth2DeviceCodeResponse
 internal class DeviceFlowPollResult
 {
     public bool? Success { get; init; }
-    
+
     // Not null when Success is true
     public OAuth2TokenResponse? OAuth20TokenResponse { get; init; }
 

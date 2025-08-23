@@ -32,10 +32,10 @@ public class MultipartDownloader : IDownloader
     public bool EnableMultiPartDownload { get; init; }
 
     public MultipartDownloader(
-        HttpClient? httpClient, 
-        long chunkSize = 1048576 /* 1MB */, 
-        int workersPerDownloadTask = 16, 
-        int concurrentDownloadTasks = 5, 
+        HttpClient? httpClient,
+        long chunkSize = 1048576 /* 1MB */,
+        int workersPerDownloadTask = 16,
+        int concurrentDownloadTasks = 5,
         IDownloadMirror? mirror = null,
         bool enableMultiPartDownload = true,
         int maxRetryCount = 8)
@@ -126,10 +126,10 @@ public class MultipartDownloader : IDownloader
             //}
             //else // Check if the server supports range requests by sending a range request
             //{
-                using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
-                rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
-                using var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
+            using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, url);
+            rangeRequest.Headers.Range = new RangeHeaderValue(0, 0); // Request first byte
+            using var rangeResponse = await _httpClient.SendAsync(rangeRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            useMultiPart = rangeResponse.StatusCode == HttpStatusCode.PartialContent;
             //}
         }
 

@@ -58,10 +58,10 @@ public class ModrinthModpackInstaller : IInstanceInstaller
             stage = ModrinthModpackInstallationStage.SearchInstallData;
             (VersionManifestItem, object?) installData = await SearchInstallData(modpackManifest, modLoaderInfo, cancellationToken);
 
-            stage = modLoaderInfo is null 
+            stage = modLoaderInfo is null
                 ? ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance
                 : ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance;
-            instance = modLoaderInfo is null 
+            instance = modLoaderInfo is null
                 ? await InstallVanillaMinecraftInstance(installData, modpackManifest, cancellationToken)
                 : await InstallModifiedMinecraftInstance(((VersionManifestItem, object))installData!, modpackManifest, (ModLoaderInfo)modLoaderInfo, cancellationToken);
 

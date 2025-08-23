@@ -44,8 +44,8 @@ public class DependencyResolver
     }
 
     public async Task<GroupDownloadResult> VerifyAndDownloadDependenciesAsync(
-        IDownloader? downloader = null, 
-        int fileVerificationParallelism = 10, 
+        IDownloader? downloader = null,
+        int fileVerificationParallelism = 10,
         CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fileVerificationParallelism);
