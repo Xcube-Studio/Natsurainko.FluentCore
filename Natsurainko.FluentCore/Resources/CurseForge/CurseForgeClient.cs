@@ -29,6 +29,7 @@ public class CurseForgeClient(string apiKey, HttpClient? httpClient = null)
         CurseForgeResourceType? resourceType = null,
         string? version = null,
         int categoryId = 0,
+        bool slugMode = false,
         CancellationToken cancellationToken = default)
     {
         // Build URL
@@ -44,7 +45,7 @@ public class CurseForgeClient(string apiKey, HttpClient? httpClient = null)
         if (version is not null)
             stringBuilder.Append($"&gameVersion={version}");
 
-        stringBuilder.Append($"&searchFilter={HttpUtility.UrlEncode(searchFilter)}");
+        stringBuilder.Append($"&{(slugMode ? "slug" : "searchFilter")}={HttpUtility.UrlEncode(searchFilter)}");
 
         string url = stringBuilder.ToString();
 
