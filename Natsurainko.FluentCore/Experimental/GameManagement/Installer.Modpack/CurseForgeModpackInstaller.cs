@@ -194,13 +194,14 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
             MinecraftFolder = MinecraftFolder,
             Progress = vanillaInstallationProgress,
         };
+        var instance = await instanceInstaller.InstallAsync(cancellationToken);
 
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.InstallVanillaMinecraftInstance,
             InstallerStageProgress.Finished()
         ));
 
-        return await instanceInstaller.InstallAsync(cancellationToken);
+        return instance;
     }
 
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
@@ -280,13 +281,14 @@ public class CurseForgeModpackInstaller : IInstanceInstaller
             },
             _ => throw new NotImplementedException()
         };
+        var instance = await instanceInstaller.InstallAsync(cancellationToken);
 
         Progress?.Report(new InstallerProgress<CurseForgeModpackInstallationStage>(
             CurseForgeModpackInstallationStage.InstallModifiedMinecraftInstance,
             InstallerStageProgress.Finished()
         ));
 
-        return await instanceInstaller.InstallAsync(cancellationToken);
+        return instance;
     }
 
     async Task<DownloadRequest[]> ParseCurseForgeFiles(

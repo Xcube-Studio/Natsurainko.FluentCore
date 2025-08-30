@@ -179,12 +179,14 @@ public class ModrinthModpackInstaller : IInstanceInstaller
             MinecraftFolder = MinecraftFolder,
             Progress = vanillaInstallationProgress,
         };
+        var instance = await instanceInstaller.InstallAsync(cancellationToken);
 
         Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
             ModrinthModpackInstallationStage.InstallVanillaMinecraftInstance,
             InstallerStageProgress.Finished()
         ));
-        return await instanceInstaller.InstallAsync(cancellationToken);
+
+        return instance;
     }
 
     async Task<MinecraftInstance> InstallModifiedMinecraftInstance(
@@ -264,13 +266,14 @@ public class ModrinthModpackInstaller : IInstanceInstaller
             },
             _ => throw new NotImplementedException()
         };
+        var instance = await instanceInstaller.InstallAsync(cancellationToken);
 
         Progress?.Report(new InstallerProgress<ModrinthModpackInstallationStage>(
             ModrinthModpackInstallationStage.InstallModifiedMinecraftInstance,
             InstallerStageProgress.Finished()
         ));
 
-        return await instanceInstaller.InstallAsync(cancellationToken);
+        return instance;
     }
 
     async Task DownloadModrinthFiles(
